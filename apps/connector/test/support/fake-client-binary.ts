@@ -45,6 +45,7 @@ export type FakeClientRun = {
   stdin: string;
   hadConnectionUrl: boolean;
   mcpConfig: { text: string; mode: number } | null;
+  probe: string | null;
   startedAt: number;
   endedAt: number | null;
   exitCode: number | null;
@@ -59,6 +60,7 @@ type RecordLine = {
   stdin?: string;
   hadConnectionUrl?: boolean;
   mcpConfig?: { text: string; mode: number } | null;
+  probe?: string | null;
   at: number;
   event: 'started' | 'ended';
   exitCode?: number | null;
@@ -77,6 +79,7 @@ export type FakeClients = {
   readRuns: () => Promise<FakeClientRun[]>;
   writeSession: (input: { client: ConnectorClient; sessionId: string; modifiedAtSeconds?: number }) => Promise<void>;
   writeDecoy: (input: { client: ConnectorClient; name: string; url: string }) => Promise<void>;
+  writeCommand: (input: { client: ConnectorClient; name: string }) => Promise<void>;
   cleanup: () => Promise<void>;
 };
 
@@ -110,6 +113,7 @@ function mergeRuns(input: { lines: RecordLine[] }): FakeClientRun[] {
       stdin: line.stdin === undefined ? '' : line.stdin,
       hadConnectionUrl: line.hadConnectionUrl === true,
       mcpConfig: line.mcpConfig === undefined ? null : line.mcpConfig,
+      probe: line.probe === undefined ? null : line.probe,
       startedAt: line.at,
       endedAt: ended === undefined ? null : ended.at,
       exitCode: ended === undefined || ended.exitCode === undefined ? null : ended.exitCode,
@@ -124,16 +128,18 @@ export function runAt(input: { runs: FakeClientRun[]; index: number }): FakeClie
   return run;
 }
 
+async function writeBinary(input: { binaryDirectory: string; name: string; client: ConnectorClient }): Promise<void> {
+  const entry = pathToFileURL(join(SUPPORTED_DIRECTORY, input.client, FAKE_BINARY_FOLDER, FAKE_CLIENT_ENTRY)).href;
+  const binary = join(input.binaryDirectory, input.name);
+  await writeFile(binary, `#!/usr/bin/env node\nimport(${JSON.stringify(entry)});\n`);
+  await chmod(binary, EXECUTABLE_MODE);
+}
+
 async function writeBinaries(input: { rootDirectory: string }): Promise<string> {
   const binaryDirectory = join(input.rootDirectory, BINARY_DIRECTORY_NAME);
   await mkdir(binaryDirectory, { recursive: true });
   await Promise.all(
-    CONNECTOR_CLIENTS.map(async (client) => {
-      const entry = pathToFileURL(join(SUPPORTED_DIRECTORY, client, FAKE_BINARY_FOLDER, FAKE_CLIENT_ENTRY)).href;
-      const binary = join(binaryDirectory, CONNECTOR_RUNTIMES[client].binaryName);
-      await writeFile(binary, `#!/usr/bin/env node\nimport(${JSON.stringify(entry)});\n`);
-      await chmod(binary, EXECUTABLE_MODE);
-    }),
+    CONNECTOR_CLIENTS.map((client) => writeBinary({ binaryDirectory, name: CONNECTOR_RUNTIMES[client].binaryName, client })),
   );
   return binaryDirectory;
 }
@@ -194,6 +200,10 @@ export async function createFakeClients(): Promise<FakeClients> {
     await writer({ homeDirectory: homeDirectoryOf({ client: input.client }), name: input.name, url: input.url });
   }
 
+  async function writeCommand(input: { client: ConnectorClient; name: string }): Promise<void> {
+    await writeBinary({ binaryDirectory, name: input.name, client: input.client });
+  }
+
   async function cleanup(): Promise<void> {
     await rm(rootDirectory, { recursive: true, force: true });
   }
@@ -210,6 +220,7 @@ export async function createFakeClients(): Promise<FakeClients> {
     readRuns,
     writeSession,
     writeDecoy,
+    writeCommand,
     cleanup,
   };
 }

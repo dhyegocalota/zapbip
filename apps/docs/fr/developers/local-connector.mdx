@@ -11,11 +11,11 @@ Il fonctionne avec Claude Code et Codex. Votre ordinateur doit être allumé et 
 
 ## Commandes
 
-| Commande  | Ce qu'elle fait                                                                               |
-| --------- | --------------------------------------------------------------------------------------------- |
-| `connect` | Réveille une session fermée quand vous écrivez. Accepte `--client`, `--cwd` et `--session`.   |
-| `listen`  | Affiche une ligne JSON par message, pour un agent qui surveille une commande en arrière-plan. |
-| `channel` | Lance un canal MCP local qui place chaque message dans une session Claude Code ouverte.       |
+| Commande  | Ce qu'elle fait                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| `connect` | Réveille une session fermée quand vous écrivez. Accepte `--client`, `--cwd`, `--session` et `--config`. |
+| `listen`  | Affiche une ligne JSON par message, pour un agent qui surveille une commande en arrière-plan.           |
+| `channel` | Lance un canal MCP local qui place chaque message dans une session Claude Code ouverte.                 |
 
 `ZAPBIP_CONNECTION_URL` contient le lien de connexion. `connect` et `listen` le demandent quand il n'est pas défini.
 
@@ -66,6 +66,44 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | `--client`  | `claude-code` ou `codex`. Obligatoire.                                                 |
 | `--cwd`     | Le dossier de travail. Par défaut, le dossier dans lequel vous avez lancé la commande. |
 | `--session` | Un identifiant de session (UUID) à toujours reprendre, au lieu de la plus récente.     |
+| `--config`  | Un fichier `zapbip.json` à utiliser à la place de celui du dossier.                    |
+
+## Changer le programme qu'il lance
+
+Par défaut, `connect` lance `claude` pour Claude Code et `codex` pour Codex. Si vous lancez votre IA par un autre programme, comme un wrapper, ou si vous avez besoin d'autres arguments, placez un fichier `zapbip.json` dans le dossier où l'IA est réveillée, celui que désigne `--cwd` :
+
+```json
+{
+  "$schema": "https://docs.zapbip.com/schemas/connector-config.json",
+  "agents": {
+    "claude-code": {
+      "command": "ccs",
+      "args": ["--some-flag"]
+    }
+  }
+}
+```
+
+Chaque entrée a pour clé le client, `claude-code` ou `codex`. Tous les champs sont facultatifs :
+
+| Champ                 | Ce qu'il fait                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------- |
+| `command`             | Le programme à lancer. Par défaut, `claude` ou `codex`.                                           |
+| `args`                | Arguments placés avant ceux que le connecteur ajoute pour la session. Ceux du connecteur restent. |
+| `environment`         | Variables d'environnement supplémentaires pour le programme.                                      |
+| `timeoutMilliseconds` | Combien de temps un réveil peut durer avant que le connecteur l'arrête. Par défaut, 15 minutes.   |
+
+Un champ inconnu, un client inconnu ou une valeur incorrecte arrête `connect` en donnant la raison, avant qu'il demande le lien. Les éditeurs qui comprennent `$schema` complètent le fichier pour vous.
+
+Le connecteur utilise le premier de ceux-ci qu'il trouve :
+
+1. L'option `--config <file>` de `connect`.
+2. La variable `ZAPBIP_CONNECTOR_CONFIG`.
+3. `zapbip.json` dans le dossier où `connect` travaille.
+
+Si aucun n'existe, le programme et les arguments intégrés s'appliquent. Le connecteur lit le fichier au démarrage, redémarrez-le donc après avoir modifié le fichier.
+
+Ne placez un `zapbip.json` que dans un dossier de confiance. Le programme qu'il contient s'exécute avec vos droits quand un message arrive, comme le ferait un fichier `.mcp.json` dans ce dossier.
 
 ## Ce que l'IA peut faire quand elle est réveillée
 

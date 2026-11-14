@@ -5,6 +5,7 @@ import { ConnectorClient } from '@zapbip/agents/connector';
 import { CONNECTION_URL_VARIABLE, UUID_PATTERN } from '@zapbip/types';
 import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
+import { launchOf, readConnectorConfig, resolveConnectorConfigPath } from './connector-config';
 import { readHiddenLine } from './hidden-prompt';
 import { runListen } from './listen';
 
@@ -12,6 +13,7 @@ export type ConnectArguments = {
   client: ConnectorClient;
   workingDirectory: string;
   pinnedSessionId: string | null;
+  configPath: string | null;
 };
 
 enum CliCommand {
@@ -24,13 +26,14 @@ enum CliFlag {
   Client = '--client',
   WorkingDirectory = '--cwd',
   Session = '--session',
+  Config = '--config',
 }
 
 type CliCommandHandler = (input: { argv: string[] }) => Promise<number>;
 
 const CHANNEL_LINK_MESSAGE = `the channel reads the connection link from ${CONNECTION_URL_VARIABLE}`;
 const CONNECTION_PROMPT = 'Connection link: ';
-const USAGE = `usage: zapbip ${CliCommand.Connect} ${CliFlag.Client} ${Object.values(ConnectorClient).join('|')} [${CliFlag.WorkingDirectory} <directory>] [${CliFlag.Session} <uuid>]`;
+const USAGE = `usage: zapbip ${CliCommand.Connect} ${CliFlag.Client} ${Object.values(ConnectorClient).join('|')} [${CliFlag.WorkingDirectory} <directory>] [${CliFlag.Session} <uuid>] [${CliFlag.Config} <file>]`;
 const FAILURE_EXIT_CODE = 1;
 const CLEAN_EXIT_CODE = 0;
 const HELP_FLAG = '--help';
@@ -73,12 +76,19 @@ function readPinnedSessionId(input: { flags: Map<string, string> }): string | nu
   return flagValue;
 }
 
+function readConfigPath(input: { flags: Map<string, string> }): string | null {
+  const flagValue = input.flags.get(CliFlag.Config);
+  if (flagValue === undefined) return null;
+  return resolve(flagValue);
+}
+
 export function parseConnectArguments(input: { argv: string[] }): ConnectArguments {
   const flags = readFlags(input);
   return {
     client: readClient({ flags }),
     workingDirectory: readWorkingDirectory({ flags }),
     pinnedSessionId: readPinnedSessionId({ flags }),
+    configPath: readConfigPath({ flags }),
   };
 }
 
@@ -96,11 +106,22 @@ function startShutdownController(): AbortController {
 }
 
 async function connectCommand(input: { argv: string[] }): Promise<number> {
-  const { client, workingDirectory, pinnedSessionId } = parseConnectArguments(input);
+  const { client, workingDirectory, pinnedSessionId, configPath } = parseConnectArguments(input);
+  const config = await readConnectorConfig({
+    configPath: await resolveConnectorConfigPath({ flagPath: configPath, environment: process.env, workingDirectory }),
+  });
   const connectionLink = await readConnectionLink();
   const { socketLink } = deriveConnectorLinks({ connectionLink });
   const abortController = startShutdownController();
-  return runConnection({ connectionLink, socketLink, client, workingDirectory, pinnedSessionId, signal: abortController.signal });
+  return runConnection({
+    connectionLink,
+    socketLink,
+    client,
+    launch: launchOf({ config, client }),
+    workingDirectory,
+    pinnedSessionId,
+    signal: abortController.signal,
+  });
 }
 
 function assertNoArguments(input: { argv: string[] }): void {

@@ -22,6 +22,7 @@ import {
   SECRET_REVOKED_MESSAGE,
   HttpStatus,
 } from '@zapbip/types';
+import type { ConnectorLaunch } from './connector-config';
 import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from './log';
 import { findNewestSessionId } from './session-lookup';
 import { REAL_TIMERS, type CancelTimer, type ConnectorTimers } from './timers';
@@ -279,13 +280,14 @@ export async function runConnection(input: {
   connectionLink: string;
   socketLink: string;
   client: ConnectorClient;
+  launch: ConnectorLaunch;
   workingDirectory: string;
   pinnedSessionId: string | null;
   signal: AbortSignal;
   timers?: ConnectorTimers;
   random?: () => number;
 }): Promise<number> {
-  const { connectionLink, socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
+  const { connectionLink, socketLink, client, launch, workingDirectory, pinnedSessionId, signal, timers, random } = input;
   const wakeAbortController = new AbortController();
   await removeStaleWakeDirectories();
   signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
@@ -308,6 +310,7 @@ export async function runConnection(input: {
         });
         const result = await runWake({
           client,
+          launch,
           connectionLink,
           sessionSource,
           sessionId,
