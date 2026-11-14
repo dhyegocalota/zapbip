@@ -230,6 +230,12 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: 'はい。AIアシスタントをお使いなら、1行を貼り付けるだけで接続できます。',
   [SiteCopyKey.FaqOthersQuestion]: 'ほかの人にもメッセージを送りますか？',
   [SiteCopyKey.FaqOthersAnswer]: 'いいえ。zapbipはいつものWhatsAppで、公式のWhatsApp Cloud APIを通じて、あなたとだけやり取りします。',
+  [SiteCopyKey.FaqMessageKindsQuestion]: 'どのWhatsAppメッセージが使えますか？',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    'テキスト、写真、動画、音声とボイスメッセージ、ファイル、スタンプ、位置情報、連絡先カード、リアクション、ボタンやリストのタップに対応しています。それ以外の種類は非対応です。短いお知らせが届き、AIには何も届きません。',
+  [SiteCopyKey.FaqUnofficialQuestion]: '非公式のWhatsAppツールは使えますか？',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    'いいえ。zapbipはMetaの公式WhatsApp Cloud APIだけを使います。WhatsApp Webの自動化、Baileysのような非公式ライブラリ、個人アカウントを接続するQRコードには対応していません。',
   [SiteCopyKey.FaqManyQuestion]: '複数のエージェントで共有できますか？',
   [SiteCopyKey.FaqManyAnswer]: 'はい。すべてのエージェントがzapbipの番号からメッセージを送り、返信は質問したエージェントに届きます。',
   [SiteCopyKey.FaqReferralQuestion]: '招待のしくみは？',

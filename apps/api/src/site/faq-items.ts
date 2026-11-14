@@ -10,6 +10,8 @@ const FAQ_ITEMS: FaqItem[] = [
   { question: SiteCopyKey.FaqOwnNumberQuestion, answer: SiteCopyKey.FaqOwnNumberAnswer },
   { question: SiteCopyKey.FaqDeveloperQuestion, answer: SiteCopyKey.FaqDeveloperAnswer },
   { question: SiteCopyKey.FaqOthersQuestion, answer: SiteCopyKey.FaqOthersAnswer },
+  { question: SiteCopyKey.FaqMessageKindsQuestion, answer: SiteCopyKey.FaqMessageKindsAnswer },
+  { question: SiteCopyKey.FaqUnofficialQuestion, answer: SiteCopyKey.FaqUnofficialAnswer },
   { question: SiteCopyKey.FaqManyQuestion, answer: SiteCopyKey.FaqManyAnswer },
   { question: SiteCopyKey.FaqReferralQuestion, answer: SiteCopyKey.FaqReferralAnswer },
   { question: SiteCopyKey.FaqDataQuestion, answer: SiteCopyKey.FaqDataAnswer },

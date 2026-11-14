@@ -1,0 +1,52 @@
+---
+title: 지원하는 메시지
+description: AI가 받고 보낼 수 있는 WhatsApp 메시지 종류, zapbip이 무시하는 것, 그리고 공식 API만 쓰는 이유.
+---
+
+zapbip은 아래 메시지 종류를 양방향으로 지원해요. 여기에 없는 종류는 지원하지 않아요.
+
+## AI가 받는 것
+
+| 종류       | 보내는 것                    | AI가 받는 것                                                    |
+| ---------- | ---------------------------- | --------------------------------------------------------------- |
+| `text`     | 메시지                       | 텍스트                                                          |
+| `image`    | 사진                         | 사진. zapbip이 저장해요                                         |
+| `video`    | 동영상                       | 동영상. zapbip이 저장해요                                       |
+| `audio`    | 오디오 파일 또는 음성 메시지 | 오디오. zapbip이 저장해요. 음성 메시지는 그렇다고 표시되어 와요 |
+| `document` | PDF 같은 파일                | 파일. 이름과 종류와 함께 zapbip이 저장해요                      |
+| `sticker`  | 스티커                       | 스티커. zapbip이 저장해요                                       |
+| `location` | 위치 핀                      | 위도, 경도, 이름, 주소                                          |
+| `contacts` | 하나 이상의 연락처 카드      | 연락처 카드                                                     |
+| `reaction` | 이모지 반응                  | 이모지와 반응한 메시지. 반응을 지우면 이모지 없이 와요          |
+| `choice`   | 버튼이나 목록 항목 탭        | 질문에 대한 답인 선택                                           |
+
+AI 메시지에 대한 답장은 그 메시지를 보낸 AI에게 전달돼요.
+
+그 밖의 종류를 보내면 아직 지원하지 않는다는 짧은 안내가 가고, AI에는 아무것도 전달되지 않아요. 주문(order)이나 WhatsApp Flow 응답도 마찬가지예요. zapbip 안내의 열기 버튼을 탭하면 [24시간 창](/ko/features/the-24-hour-window)만 열려요. 통화나 그 밖의 계정 이벤트는 무시돼요.
+
+## AI가 보낼 수 있는 것
+
+| 종류       | AI가 보낼 수 있는 것                                                   |
+| ---------- | ---------------------------------------------------------------------- |
+| `text`     | 최대 4,096자의 텍스트 메시지                                           |
+| `image`    | 사진: JPEG, PNG 또는 WebP, 최대 5 MB                                   |
+| `video`    | 동영상: 3GP 또는 MP4, 최대 16 MB                                       |
+| `audio`    | 오디오 파일: AAC, AMR, MP3, M4A 또는 OGG, 최대 16 MB. 또는 음성 메시지 |
+| `document` | 파일: PDF, Word, Excel, PowerPoint 또는 일반 텍스트, 최대 100 MB       |
+| `sticker`  | 정적 WebP 스티커, 최대 100 KB                                          |
+| `location` | 위치 핀                                                                |
+| `contacts` | 하나 이상의 연락처 카드                                                |
+| `reaction` | 내 메시지 중 하나에 대한 이모지 반응, 또는 지우기                      |
+| `choice`   | 버튼 최대 3개가 달린 질문, 또는 4~10개 옵션의 목록                     |
+
+zapbip은 이 한도를 넘는 전송을 거부하고 잘못된 항목을 알려 줘요. 투표, 주문, 결제, WhatsApp Flows, 통화는 사용할 수 없어요. AI는 WhatsApp 템플릿을 고를 수 없으며, zapbip은 24시간 창이 닫혔을 때만 자체 안내를 보내요.
+
+## 공식 WhatsApp Cloud API만 사용
+
+zapbip은 Meta의 공식 WhatsApp Cloud API를 통해서만, zapbip 번호로 보내고 받아요. 다음은 지원하지 않아요.
+
+- Baileys, whatsapp-web.js, WPPConnect, Evolution API 같은 공식이 아닌 WhatsApp 클라이언트와 라이브러리;
+- WhatsApp Web 자동화, 그리고 개인 계정이나 QR 코드로 로그인하는 모든 브리지;
+- 개인 WhatsApp 번호. 모든 AI는 zapbip 번호에서 메시지를 보내고, 평소의 WhatsApp으로 답해요.
+
+짧은 답변은 [자주 묻는 질문](/ko/help/faq)에서 확인하세요.

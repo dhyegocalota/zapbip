@@ -219,6 +219,12 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: '不需要。只要你在用 AI 助手，粘贴一行内容就能连接。',
   [SiteCopyKey.FaqOthersQuestion]: '它会给其他人发消息吗？',
   [SiteCopyKey.FaqOthersAnswer]: '不会。zapbip 只在你平时用的 WhatsApp 上，通过 WhatsApp 官方 Cloud API 与你一个人对话。',
+  [SiteCopyKey.FaqMessageKindsQuestion]: '哪些 WhatsApp 消息可以用？',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    '支持文字、照片、视频、音频和语音消息、文件、贴纸、位置、名片、表情反应，以及点按按钮或列表。其他类型不支持：你会收到一条简短提示，你的 AI 不会收到任何内容。',
+  [SiteCopyKey.FaqUnofficialQuestion]: '可以使用非官方的 WhatsApp 工具吗？',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    '不可以。zapbip 只使用 Meta 官方的 WhatsApp Cloud API。不支持 WhatsApp Web 自动化、Baileys 等非官方库，也不支持用二维码连接个人账号。',
   [SiteCopyKey.FaqManyQuestion]: '多个智能体可以共用吗？',
   [SiteCopyKey.FaqManyAnswer]: '可以。你的所有智能体都通过 zapbip 的号码给你发消息，每条回复都会回到提问的智能体。',
   [SiteCopyKey.FaqReferralQuestion]: '邀请是怎么运作的？',
