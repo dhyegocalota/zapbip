@@ -3,6 +3,7 @@
 **Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** the owner asked on 2026-11-14 for a demo image in the repository and for the README to say why zapbip is not a full WhatsApp channel, and that agent-specific details stop leaking out of the agent folders
+**Ratchet removed:** on 2026-11-14 the owner decided that docs and web pages may name agents, so the prose count test and its baseline were deleted; the demo image, the README section and the leak scan of code stay
 **ADRs:** [0064](../../adr/0064-a-wake-provider-and-a-channel-protocol-belong-to-the-agent-folder.md)
 **Not changing:** the docs pages that still name agents (counted by the baseline), the leak scan of code
 
