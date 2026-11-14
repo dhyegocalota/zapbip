@@ -1,6 +1,7 @@
 import type { AgentName, MediaStore, MessageSender, RecordedWakeRequest, ScriptedWakeResponse, WakeTransport } from '@zapbip/core';
 import { createScriptedWakeTransport } from '@zapbip/core/wake-testing';
 import { AccountInbox } from '../account-inbox/account-inbox';
+import { PINNED_WAKE_PROVIDERS } from '../adapters/wake/pinned-wake-providers';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import type { DevAccountInboxRpc, ScreenEntry } from '../contract/account-inbox-rpc';
 
@@ -15,7 +16,7 @@ export class DevAccountInbox
     >
 {
   private fakeSender: FakeWhatsAppSender | null = null;
-  private readonly scriptedTransport = createScriptedWakeTransport();
+  private readonly scriptedTransport = createScriptedWakeTransport(PINNED_WAKE_PROVIDERS);
 
   protected createWakeTransport(): WakeTransport {
     return this.scriptedTransport;

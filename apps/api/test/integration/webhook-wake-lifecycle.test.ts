@@ -10,7 +10,7 @@ import {
   DEBOUNCE_ADVANCE_MS,
   WAKE_ACCOUNT,
   WAKE_AGENT,
-  enableGrokWake,
+  enablePinnedWake,
   expectOk,
   mentionText,
   readLastRequestedAt,
@@ -55,7 +55,7 @@ beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});
-  await enableGrokWake({ stub });
+  await enablePinnedWake({ stub });
 });
 
 afterEach(async () => {

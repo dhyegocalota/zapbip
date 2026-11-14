@@ -20,6 +20,14 @@ export function connectorAgentsOf(input: { agents: ResolvedAgent[] }): ResolvedA
   return orderedAgentsOf({ agents: input.agents }).filter((agent) => agent.facets.includes(AgentFacet.Connector));
 }
 
+export function wakeAgentsOf(input: { agents: ResolvedAgent[] }): ResolvedAgent[] {
+  return orderedAgentsOf({ agents: input.agents }).filter((agent) => agent.facets.includes(AgentFacet.Wake));
+}
+
+export function channelAgentsOf(input: { agents: ResolvedAgent[] }): ResolvedAgent[] {
+  return orderedAgentsOf({ agents: input.agents }).filter((agent) => agent.facets.includes(AgentFacet.Channel));
+}
+
 export function pluginAgentsOf(input: { agents: ResolvedAgent[] }): PluginAgentEntry[] {
   return orderedAgentsOf({ agents: input.agents }).filter((agent): agent is PluginAgentEntry => agent.plugin !== null);
 }

@@ -3,12 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
-import { CHANNEL_NOTIFICATION_METHOD, CONNECTION_URL_VARIABLE, ConnectorLogEvent } from '@zapbip/types';
+import { CONNECTION_URL_VARIABLE, ConnectorLogEvent } from '@zapbip/types';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createFakeClients, runAt, type FakeClientBehavior, type FakeClients } from '../support/fake-client-binary';
 import { startStack, type Stack } from './support/stack';
 import { CONNECTOR_CLIENTS, SUBJECT_CLIENT } from '../support/connector-clients';
+import { CHANNEL_PROTOCOL } from '../../src/channel-protocol';
 
 const CLI_BUNDLE = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
 const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
@@ -37,7 +38,7 @@ const SESSION_MODIFIED_SECONDS = 1_700_000_000;
 const DISABLE_TLS_VERIFICATION = { NODE_TLS_REJECT_UNAUTHORIZED: '0' };
 const SUITE_TIMEOUT_MS = 120_000;
 const ChannelNotificationSchema = z.object({
-  method: z.literal(CHANNEL_NOTIFICATION_METHOD),
+  method: z.literal(CHANNEL_PROTOCOL.notificationMethod),
   params: z.object({ content: z.string(), meta: z.record(z.string(), z.string()) }),
 });
 

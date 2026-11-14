@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { SetWakeStatus, WakeMode, WakeProvider, WakeRung } from '@zapbip/types';
+import { SetWakeStatus, WakeMode, WakeRung, GENERIC_WAKE_PROVIDER } from '@zapbip/types';
 import { env } from 'cloudflare:workers';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
@@ -8,11 +8,12 @@ import { applyDirectoryMigration } from '../support/seed';
 import { openConnector } from '../support/connector-session';
 import { accountInboxStub } from '../support/workers-env';
 import { callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
+import { FIRST_PINNED_URL, SECOND_PINNED_URL, FIRST_PINNED_PROVIDER, SECOND_PINNED_PROVIDER } from '../support/pinned-wake';
 
 const ACCOUNT_ID = 'acc_1';
 const AGENT = 'alpha';
-const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
-const CLAUDE_URL = 'https://api.anthropic.com/v1/claude_code/routines/trig_01abc/fire';
+const PINNED_WAKE_URL = FIRST_PINNED_URL;
+
 const GENERIC_HOST = 'hooks.example.com';
 const GENERIC_URL = `https://${GENERIC_HOST}/wake`;
 const INSECURE_URL = `http://${GENERIC_HOST}/wake`;
@@ -54,26 +55,26 @@ describe('set_wake over MCP', () => {
   });
 
   it('saves a Grok routine without echoing the url or the token', async () => {
-    const result = await setWake({ mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN });
+    const result = await setWake({ mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_TOKEN });
     expect(result.structuredContent).toEqual({
       status: SetWakeStatus.Saved,
       wake_mode: WakeMode.Webhook,
       effective_rung: WakeRung.Webhook,
-      provider: WakeProvider.GrokRoutine,
+      provider: FIRST_PINNED_PROVIDER,
     });
     const text = errorText(result);
-    expect(text).not.toContain(GROK_URL);
+    expect(text).not.toContain(PINNED_WAKE_URL);
     expect(text).not.toContain(PINNED_TOKEN);
   });
 
   it('saves a Claude routine', async () => {
-    const result = await setWake({ mode: WakeMode.Webhook, url: CLAUDE_URL, token: PINNED_TOKEN });
-    expect(result.structuredContent?.provider).toBe(WakeProvider.ClaudeRoutine);
+    const result = await setWake({ mode: WakeMode.Webhook, url: SECOND_PINNED_URL, token: PINNED_TOKEN });
+    expect(result.structuredContent?.provider).toBe(SECOND_PINNED_PROVIDER);
   });
 
   it('saves a generic webhook without returning its host', async () => {
     const result = await setWake({ mode: WakeMode.Webhook, url: GENERIC_URL, token: GENERIC_TOKEN });
-    expect(result.structuredContent?.provider).toBe(WakeProvider.GenericWebhook);
+    expect(result.structuredContent?.provider).toBe(GENERIC_WAKE_PROVIDER);
     expect(errorText(result)).not.toContain(GENERIC_HOST);
   });
 
@@ -85,7 +86,7 @@ describe('set_wake over MCP', () => {
   });
 
   it('rejects a short token naming the field and not echoing the value', async () => {
-    const result = await setWake({ mode: WakeMode.Webhook, url: GROK_URL, token: SHORT_TOKEN });
+    const result = await setWake({ mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: SHORT_TOKEN });
     expect(result.isError).toBe(true);
     expect(errorText(result)).toContain('token');
     expect(errorText(result)).not.toContain(SHORT_TOKEN);
@@ -98,7 +99,7 @@ describe('set_wake over MCP', () => {
   });
 
   it('clears a saved webhook', async () => {
-    await setWake({ mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN });
+    await setWake({ mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_TOKEN });
     const result = await setWake({ mode: WakeMode.None });
     expect(result.structuredContent).toEqual({
       status: SetWakeStatus.Saved,
@@ -140,7 +141,7 @@ describe('set_wake over MCP', () => {
     const setWakeRejection = await callTool({
       client,
       name: McpToolName.SetWake,
-      arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN },
+      arguments: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_TOKEN },
     }).then(
       () => null,
       (error: Error) => error.message,

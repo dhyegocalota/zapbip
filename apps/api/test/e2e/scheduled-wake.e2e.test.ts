@@ -7,6 +7,7 @@ import type { ScreenEntry } from '../../src/contract/account-inbox-rpc';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import type { WakeAccount } from './global-setup';
 import { callTool, mcpUrl, stack } from './stack';
+import { FIRST_PINNED_URL } from '../support/pinned-wake';
 
 const SCHEDULED_INTERVAL_MINUTES = 60;
 const NOTE_DELAY_MS = 10 * MINUTE_MS;
@@ -15,8 +16,8 @@ const STALE_WAIT_MS = 15_000;
 const TEST_TIMEOUT_MS = 30_000;
 const PRIMARY = 'agent-ten';
 const STANDBY = 'agent-eight';
-const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
-const GROK_TOKEN = 'grok-token-sixteen-chars';
+const PINNED_WAKE_URL = FIRST_PINNED_URL;
+const PINNED_WAKE_TOKEN = 'pinned-token-sixteen-chars';
 const ACCEPTED = { statusCode: 200, errorName: null, retryAfterMs: null };
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const OWNER_TEXT = 'oi';
@@ -175,7 +176,7 @@ describe('scheduled wake against wrangler dev', { timeout: TEST_TIMEOUT_MS }, ()
     const webhook = await callTool({
       client: standby,
       name: McpToolName.SetWake,
-      arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN },
+      arguments: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_WAKE_TOKEN },
     });
     expect(webhook.isError).toBe(false);
     const script = await fetch(ownerUrl({ phone, path: `/agents/${STANDBY}/wake/script` }), {

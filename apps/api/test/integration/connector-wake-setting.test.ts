@@ -1,4 +1,4 @@
-import { REPLACED_CLOSE_CODE, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { REPLACED_CLOSE_CODE, WakeMode, WakeStatus } from '@zapbip/types';
 import type { StoredWake, WakeRepository } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
 import { runInDurableObject } from 'cloudflare:test';
@@ -9,10 +9,11 @@ import { receiveOwnerText } from '../support/inbox-session';
 import { expectOk } from '../support/wake-session';
 import { accountInboxStub } from '../support/workers-env';
 import { inboxOf, seedAccount, type SeededAccount } from './route-fixtures';
+import { FIRST_PINNED_URL, FIRST_PINNED_PROVIDER, FIRST_PINNED_HOST } from '../support/pinned-wake';
 
 const AGENT = 'ana';
-const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
-const GROK_TOKEN = 'p'.repeat(16);
+const PINNED_WAKE_URL = FIRST_PINNED_URL;
+const PINNED_WAKE_TOKEN = 'p'.repeat(16);
 const OTHER_TOKEN = 'q'.repeat(16);
 
 type WakeHolder = { wake: { repository: WakeRepository } };
@@ -45,11 +46,11 @@ async function registeredAccount(): Promise<SeededAccount> {
 
 async function enableWebhook(input: { account: SeededAccount; token?: string }): Promise<StoredWake> {
   const { account } = input;
-  const token = input.token === undefined ? GROK_TOKEN : input.token;
+  const token = input.token === undefined ? PINNED_WAKE_TOKEN : input.token;
   expectOk(
     await inboxOf({ accountId: account.accountId }).setWake({
       connection: account.connection,
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token, intervalMinutes: null, standbyAgent: null },
+      setting: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token, intervalMinutes: null, standbyAgent: null },
     }),
   );
   const stored = await findWake({ account });
@@ -69,7 +70,7 @@ describe('restore record', () => {
     const previous = storedWakeOf({
       agent: AGENT,
       mode: WakeMode.Webhook,
-      target: { provider: WakeProvider.GrokRoutine, host: 'api2.cursor.sh', sealedTarget: 'sealed', keyVersion: 1 },
+      target: { provider: FIRST_PINNED_PROVIDER, host: FIRST_PINNED_HOST, sealedTarget: 'sealed', keyVersion: 1 },
       status: WakeStatus.Failing,
       lastDeliveredAt: 5,
     });

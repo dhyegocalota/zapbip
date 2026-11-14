@@ -6,18 +6,19 @@ import { advanceClock, receiveOwnerText } from '../support/inbox-session';
 import { applyDirectoryMigration } from '../support/seed';
 import {
   ACCEPTED,
-  GROK_TOKEN,
-  GROK_URL,
+  PINNED_WAKE_TOKEN,
+  PINNED_WAKE_URL,
   UNAVAILABLE,
   WAKE_ACCOUNT,
   WAKE_AGENT,
-  enableGrokWake,
+  enablePinnedWake,
   mentionText,
   expectOk,
   replaceWakeDependencies,
   wakeStub,
   applyWakeDirectory,
 } from '../support/wake-session';
+import { FIRST_PINNED_PROVIDER } from '../support/pinned-wake';
 
 const OWNER_TEXT = 'segredo-do-dono';
 const GROK_PATH = 'automations/webhook';
@@ -46,7 +47,7 @@ beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});
-  await enableGrokWake({ stub });
+  await enablePinnedWake({ stub });
 });
 
 afterEach(async () => {
@@ -62,7 +63,7 @@ describe('webhook wake observability', () => {
     await runThreeRetriesAndDelivery();
     const lines = [...logSpy.mock.calls, ...errorSpy.mock.calls].flat().map(String);
     expect(lines.length).toBeGreaterThan(0);
-    [GROK_TOKEN, GROK_PATH, OWNER_TEXT, `Bearer`].forEach((secret) => lines.forEach((line) => expect(line).not.toContain(secret)));
+    [PINNED_WAKE_TOKEN, GROK_PATH, OWNER_TEXT, `Bearer`].forEach((secret) => lines.forEach((line) => expect(line).not.toContain(secret)));
   });
 
   it('writes one data point per attempt with provider, outcome and status class', async () => {
@@ -71,10 +72,10 @@ describe('webhook wake observability', () => {
     await runThreeRetriesAndDelivery();
     expect(points).toHaveLength(ATTEMPTS);
     expect(points.map((point) => point.blobs)).toEqual([
-      ['grok_routine', 'retry', '5xx'],
-      ['grok_routine', 'retry', '5xx'],
-      ['grok_routine', 'retry', '5xx'],
-      ['grok_routine', 'delivered', '2xx'],
+      [FIRST_PINNED_PROVIDER, 'retry', '5xx'],
+      [FIRST_PINNED_PROVIDER, 'retry', '5xx'],
+      [FIRST_PINNED_PROVIDER, 'retry', '5xx'],
+      [FIRST_PINNED_PROVIDER, 'delivered', '2xx'],
     ]);
   });
 
@@ -86,7 +87,7 @@ describe('webhook wake observability', () => {
       patch: {
         transport: {
           send: async () => {
-            throw new Error(`request to ${GROK_URL} failed`);
+            throw new Error(`request to ${PINNED_WAKE_URL} failed`);
           },
         },
       },
@@ -95,7 +96,7 @@ describe('webhook wake observability', () => {
     await advanceClock({ stub, advanceMs: 3_000 });
     await runDurableObjectAlarm(stub);
     const lines = [...logSpy.mock.calls, ...errorSpy.mock.calls].flat().map(String);
-    lines.forEach((line) => expect(line).not.toContain(GROK_URL));
+    lines.forEach((line) => expect(line).not.toContain(PINNED_WAKE_URL));
     lines.forEach((line) => expect(line).not.toContain(GROK_PATH));
   });
 });

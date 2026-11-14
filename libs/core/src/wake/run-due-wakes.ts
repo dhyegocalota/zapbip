@@ -63,7 +63,7 @@ function observeAttempt(input: Attempt & { name: WakeLogEventName }): void {
   });
 }
 
-function guardTarget(input: { url: string; token: string; publicHost: string }): WakeTarget | null {
+function guardTarget(input: Parameters<typeof assertWakeTarget>[0]): WakeTarget | null {
   try {
     return assertWakeTarget(input);
   } catch (error) {
@@ -81,7 +81,7 @@ async function openTarget(input: JobRun & { stored: WebhookWake }): Promise<Wake
   });
   if (plain === null) return null;
   const { url, token } = JSON.parse(plain) as { url: string; token: string };
-  return guardTarget({ url, token, publicHost });
+  return guardTarget({ url, token, publicHost, pinnedProviders: wake.pinnedProviders });
 }
 
 async function sendWake(input: JobRun & { stored: WebhookWake }): Promise<WakeAttemptResult> {

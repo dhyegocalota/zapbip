@@ -12,7 +12,9 @@ import {
   type GenerationPlan,
 } from '@zapbip/agents/generate';
 import { CONNECTOR_RUNTIMES } from '@zapbip/agents/connector';
-import { PAGE_FACETS, type AgentConnectorRuntime } from '@zapbip/agents';
+import { CHANNEL_PROTOCOLS } from '@zapbip/agents/channel';
+import { WAKE_TARGETS } from '@zapbip/agents/wake';
+import { PAGE_FACETS, type AgentChannelProtocol, type AgentConnectorRuntime, type AgentWakeTarget } from '@zapbip/agents';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { AGENTS_GROUP_INDEX, DOCS_GROUPS, agentPagePathOf, snippetPathOf, twinPathOf } from '@zapbip/agents/docs';
 import { trackedFiles, readRepositoryFile } from './repository-files';
@@ -274,11 +276,17 @@ describe('page rules', () => {
 });
 
 describe('agent knowledge', () => {
-  const runtimeOf = (id: string): AgentConnectorRuntime | null => {
-    const found = Object.entries(CONNECTOR_RUNTIMES).find(([runtimeId]) => runtimeId === id);
+  const facetOf = <Facet>(input: { registry: Record<string, Facet>; id: string }): Facet | null => {
+    const found = Object.entries(input.registry).find(([facetId]) => facetId === input.id);
     return found === undefined ? null : found[1];
   };
-  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, definition, runtime: runtimeOf(id) }));
+  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({
+    id,
+    definition,
+    runtime: facetOf<AgentConnectorRuntime>({ registry: CONNECTOR_RUNTIMES, id }),
+    wake: facetOf<AgentWakeTarget>({ registry: WAKE_TARGETS, id }),
+    channel: facetOf<AgentChannelProtocol>({ registry: CHANNEL_PROTOCOLS, id }),
+  }));
   const files = trackedFiles().map((path) => ({ path, text: readRepositoryFile(path) }));
   const leaks = treeLeakViolationsOf({ agents, files });
 

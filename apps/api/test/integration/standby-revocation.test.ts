@@ -14,7 +14,15 @@ import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { readScreen, receiveOwnerText } from '../support/inbox-session';
-import { applyWakeDirectory, GROK_TOKEN, GROK_URL, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
+import {
+  applyWakeDirectory,
+  PINNED_WAKE_TOKEN,
+  PINNED_WAKE_URL,
+  WAKE_ACCOUNT,
+  enablePinnedWake,
+  expectOk,
+  wakeStub,
+} from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
 import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
@@ -71,7 +79,7 @@ beforeEach(applyWakeDirectory);
 beforeEach(async () => {
   accountId = WAKE_ACCOUNT;
   stub = wakeStub({});
-  await enableGrokWake({ stub, agent: STANDBY });
+  await enablePinnedWake({ stub, agent: STANDBY });
   expectOk(await setStandby({ agent: PRIMARY, standbyAgent: STANDBY }));
 });
 
@@ -142,7 +150,7 @@ describe('revoking the standby by the owner command', () => {
     return expectOk(
       await stub.setWake({
         connection: connectionFor({ agent: input.agent }),
-        setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
+        setting: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_WAKE_TOKEN, intervalMinutes: null, standbyAgent: null },
       }),
     );
   }

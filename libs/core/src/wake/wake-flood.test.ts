@@ -6,7 +6,7 @@ import { scheduleWake } from './schedule-wake';
 import {
   addUnreadOwnerMessage,
   createWakeEnvironment,
-  GROK_URL,
+  ALPHA_URL,
   PINNED_TOKEN,
   PUBLIC_HOST,
   setWebhook,
@@ -121,6 +121,6 @@ describe('wake flood limits', () => {
     await run({ wakeEnvironment });
     const serialized = JSON.stringify(wakeEnvironment.observer.events);
     expect(serialized).not.toContain(PINNED_TOKEN);
-    expect(serialized).not.toContain(new URL(GROK_URL).pathname);
+    expect(serialized).not.toContain(new URL(ALPHA_URL).pathname);
   });
 });

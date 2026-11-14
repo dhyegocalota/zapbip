@@ -12,10 +12,10 @@ import {
   type RecordingWakeObserver,
   type ScriptedWakeTransport,
 } from './wake-doubles';
+import { ALPHA_URL, FIXTURE_PINNED_PROVIDERS } from './wake-pinned-fixtures';
 
 export const PUBLIC_HOST = 'zapbip.example';
-export const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
-export const CLAUDE_URL = 'https://api.anthropic.com/v1/claude_code/routines/trig_01abc/fire';
+export { ALPHA_HOST, ALPHA_PROVIDER, ALPHA_URL, BETA_HOST, BETA_PROVIDER, BETA_URL } from './wake-pinned-fixtures';
 export const PINNED_TOKEN = 'p'.repeat(24);
 
 export type WakeEnvironment = {
@@ -35,6 +35,7 @@ export async function createWakeEnvironment(): Promise<WakeEnvironment> {
     secretBox: createInMemoryWakeSecretBox(),
     repository: createInMemoryWakeRepository({ clock: environment.clock }),
     observer,
+    pinnedProviders: FIXTURE_PINNED_PROVIDERS,
   };
   return { environment, transport, observer, wake, context: { dependencies: environment.dependencies, wake } };
 }
@@ -46,7 +47,7 @@ export function setWebhook(input: {
   token?: string;
   ownerLocale?: OwnerLocale;
 }): Promise<SetWakeResult> {
-  const { wakeEnvironment, agent, url = GROK_URL, token = PINNED_TOKEN, ownerLocale } = input;
+  const { wakeEnvironment, agent, url = ALPHA_URL, token = PINNED_TOKEN, ownerLocale } = input;
   return setWake({
     ...wakeEnvironment.context,
     connection: connectionOf({ agent, ownerLocale }),

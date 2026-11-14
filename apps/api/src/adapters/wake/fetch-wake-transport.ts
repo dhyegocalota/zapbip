@@ -1,5 +1,4 @@
 import {
-  PINNED_WAKE_PROVIDER_RULES,
   WAKE_CONTENT_TYPE,
   WAKE_REQUEST_TIMEOUT_MS,
   WAKE_RETRY_AFTER_STATUSES,
@@ -8,15 +7,13 @@ import {
   isWakeTimeout,
   WAKE_TIMESTAMP_HEADER,
   signWakeRequest,
-  type PinnedWakeProvider,
   type WakeAttemptRequest,
   type WakeAttemptResult,
   type WakeTransport,
 } from '@zapbip/core';
-import { SECOND_MS, WakeAttemptOutcome, WakeProvider } from '@zapbip/types';
+import { GENERIC_WAKE_PROVIDER, SECOND_MS, WakeAttemptOutcome } from '@zapbip/types';
 import { encodeHex } from '../platform/encoding';
-
-type HeaderBuilder = (input: WakeAttemptRequest) => Promise<Record<string, string>>;
+import { PINNED_WAKE_PROVIDERS } from './pinned-wake-providers';
 
 const HMAC_ALGORITHM = { name: 'HMAC', hash: 'SHA-256' };
 const SUCCESS_STATUS_FLOOR = 200;
@@ -59,10 +56,6 @@ async function hmacHex(input: { key: string; text: string }): Promise<string> {
   return encodeHex({ bytes: new Uint8Array(signature) });
 }
 
-function pinnedHeaders(input: { provider: PinnedWakeProvider }): HeaderBuilder {
-  return async ({ target }) => PINNED_WAKE_PROVIDER_RULES[input.provider].buildHeaders({ token: target.token });
-}
-
 async function signedHeaders({ target, body, nowMs }: WakeAttemptRequest): Promise<Record<string, string>> {
   const timestampSeconds = Math.floor(nowMs / SECOND_MS);
   const signature = await hmacHex({ key: target.token, text: signWakeRequest({ timestampSeconds, body }) });
@@ -73,16 +66,18 @@ async function signedHeaders({ target, body, nowMs }: WakeAttemptRequest): Promi
   };
 }
 
-const HEADER_BUILDERS: Record<WakeProvider, HeaderBuilder> = {
-  [WakeProvider.GrokRoutine]: pinnedHeaders({ provider: WakeProvider.GrokRoutine }),
-  [WakeProvider.ClaudeRoutine]: pinnedHeaders({ provider: WakeProvider.ClaudeRoutine }),
-  [WakeProvider.GenericWebhook]: signedHeaders,
-};
+async function headersOf(input: WakeAttemptRequest): Promise<Record<string, string>> {
+  const { provider, token } = input.target;
+  if (provider === GENERIC_WAKE_PROVIDER) return signedHeaders(input);
+  const rule = PINNED_WAKE_PROVIDERS.find((candidate) => candidate.providerId === provider);
+  if (rule === undefined) throw new Error(`no pinned wake provider ${provider}`);
+  return rule.buildHeaders({ token });
+}
 
 async function post(input: WakeAttemptRequest): Promise<Response> {
   return fetch(input.target.url, {
     method: 'POST',
-    headers: await HEADER_BUILDERS[input.target.provider](input),
+    headers: await headersOf(input),
     body: input.body,
     redirect: 'manual',
     signal: AbortSignal.timeout(WAKE_REQUEST_TIMEOUT_MS),

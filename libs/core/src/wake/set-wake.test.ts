@@ -1,13 +1,15 @@
-import { InboxErrorCode, MINUTE_MS, OwnerLocale, SetWakeStatus, WakeMode, WakeProvider, WakeRung, WakeStatus } from '@zapbip/types';
+import { InboxErrorCode, MINUTE_MS, OwnerLocale, SetWakeStatus, WakeMode, WakeRung, WakeStatus } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { ACCOUNT_ID, connectionOf } from '../inbox/testing/fixtures';
 import { captureInboxError } from '../inbox/testing/capture-inbox-error';
 import { setWake } from './set-wake';
 import { WAKE_SEALED_KEY_VERSION } from './constants';
 import {
-  CLAUDE_URL,
+  ALPHA_PROVIDER,
+  ALPHA_URL,
+  BETA_PROVIDER,
+  BETA_URL,
   createWakeEnvironment,
-  GROK_URL,
   PINNED_TOKEN,
   PUBLIC_HOST,
   setWebhook,
@@ -17,7 +19,7 @@ import {
 const AGENT = 'agent-one';
 
 describe('setWake', () => {
-  test('seals a Grok target and answers without the url or the token', async () => {
+  test('seals an alpha target and answers without the url or the token', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const result = await setWebhook({ wakeEnvironment, agent: AGENT });
     const stored = await wakeEnvironment.wake.repository.findWake({ agent: AGENT });
@@ -25,24 +27,24 @@ describe('setWake', () => {
       status: SetWakeStatus.Saved,
       wakeMode: WakeMode.Webhook,
       effectiveRung: WakeRung.Webhook,
-      provider: WakeProvider.GrokRoutine,
+      provider: ALPHA_PROVIDER,
     });
-    expect(JSON.stringify(result)).not.toContain(GROK_URL);
+    expect(JSON.stringify(result)).not.toContain(ALPHA_URL);
     expect(JSON.stringify(result)).not.toContain(PINNED_TOKEN);
     expect(stored).toMatchObject({
       agent: AGENT,
       mode: WakeMode.Webhook,
       status: WakeStatus.Active,
-      target: { provider: WakeProvider.GrokRoutine, host: 'api2.cursor.sh', keyVersion: WAKE_SEALED_KEY_VERSION },
+      target: { provider: ALPHA_PROVIDER, host: 'alpha-routines.example', keyVersion: WAKE_SEALED_KEY_VERSION },
     });
-    expect(stored?.target?.sealedTarget).not.toBe(GROK_URL);
+    expect(stored?.target?.sealedTarget).not.toBe(ALPHA_URL);
     expect(stored?.target?.sealedTarget).not.toBe(PINNED_TOKEN);
   });
 
-  test('a Claude URL selects claude_routine', async () => {
+  test('a beta URL selects beta_routine', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    const result = await setWebhook({ wakeEnvironment, agent: AGENT, url: CLAUDE_URL });
-    expect(result.provider).toBe(WakeProvider.ClaudeRoutine);
+    const result = await setWebhook({ wakeEnvironment, agent: AGENT, url: BETA_URL });
+    expect(result.provider).toBe(BETA_PROVIDER);
   });
 
   test('stores the lowercase host of a mixed-case generic URL', async () => {
@@ -57,7 +59,7 @@ describe('setWake', () => {
     const seal = vi.spyOn(wakeEnvironment.wake.secretBox, 'seal');
     await setWebhook({ wakeEnvironment, agent: AGENT });
     expect(seal).toHaveBeenCalledWith({
-      plain: JSON.stringify({ url: GROK_URL, token: PINNED_TOKEN }),
+      plain: JSON.stringify({ url: ALPHA_URL, token: PINNED_TOKEN }),
       associatedData: `${ACCOUNT_ID}:${AGENT}`,
     });
   });
@@ -81,7 +83,7 @@ describe('setWake', () => {
 
   test.each([
     ['a missing url', { url: null, token: PINNED_TOKEN }, 'invalid url'],
-    ['a missing token', { url: GROK_URL, token: null }, 'invalid token'],
+    ['a missing token', { url: ALPHA_URL, token: null }, 'invalid token'],
   ])('%s saves nothing', async (_name, fields, message) => {
     const wakeEnvironment = await createWakeEnvironment();
     const error = await captureInboxError(() =>
@@ -99,7 +101,7 @@ describe('setWake', () => {
   test.each([
     ['none', WakeMode.None, { intervalMinutes: 5 }],
     ['local', WakeMode.Local, { standbyAgent: 'agent-eight' }],
-    ['webhook', WakeMode.Webhook, { url: GROK_URL, token: PINNED_TOKEN, intervalMinutes: 5 }],
+    ['webhook', WakeMode.Webhook, { url: ALPHA_URL, token: PINNED_TOKEN, intervalMinutes: 5 }],
   ])('%s with a foreign field saves nothing', async (_name, mode, fields) => {
     const wakeEnvironment = await createWakeEnvironment();
     await setWebhook({ wakeEnvironment, agent: AGENT });

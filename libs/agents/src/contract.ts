@@ -1,4 +1,4 @@
-import type { InstallSection } from '@zapbip/core';
+import type { InstallSection, PinnedWakeProviderRule } from '@zapbip/core';
 import { DocsPageLanguage, type OwnerLocale, type WakeMode, type WakeRung } from '@zapbip/types';
 
 export type SessionLookupInput = { workingDirectory: string; homeDirectory: string };
@@ -50,6 +50,10 @@ export type AgentConnectorRuntime = {
   isNewSessionFallback: (input: { stderrText: string }) => boolean;
 };
 
+export type AgentChannelProtocol = { capability: string; notificationMethod: string };
+
+export type AgentWakeTarget = PinnedWakeProviderRule & { exampleUrl: string };
+
 export enum PluginRegistry {
   Npm = 'npm',
   SelfHostedWheel = 'self-hosted-wheel',
@@ -95,6 +99,8 @@ export enum AgentFacet {
   Install = 'install.ts',
   Connector = 'connector.ts',
   Plugin = 'plugin.ts',
+  Wake = 'wake.ts',
+  Channel = 'channel.ts',
   OwnerRunInstall = 'install-e2e.sh',
 }
 

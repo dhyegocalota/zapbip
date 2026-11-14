@@ -3,6 +3,7 @@ import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:tes
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
+import { FIRST_PINNED_URL } from '../support/pinned-wake';
 
 const ACCOUNT = 'acc_admission';
 const AGENT = 'alpha';
@@ -10,8 +11,8 @@ const SECRET = `zb_conn_${'K'.repeat(43)}`;
 const NEW_SECRET = `zb_conn_${'L'.repeat(43)}`;
 const REVOKED_AT = 1;
 const UNSEEDED_ACCOUNT = 'acc_unseeded';
-const WAKE_URL = 'https://api2.cursor.sh/automations/webhook/abc12345';
-const WAKE_TOKEN = 'grok-token-sixteen-chars';
+const WAKE_URL = FIRST_PINNED_URL;
+const WAKE_TOKEN = 'pinned-token-sixteen-chars';
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });

@@ -138,8 +138,8 @@ describe('assertWakeSetting foreign fields', () => {
 
   test('a standby name outside the agent-name pattern is refused', async () => {
     const error = await rejection({
-      setting: { ...STANDBY_SETTING, standbyAgent: 'Grok Bot!' },
-      standby: storedWakeOf({ agent: 'Grok Bot!', mode: WakeMode.Webhook }),
+      setting: { ...STANDBY_SETTING, standbyAgent: 'Delta Bot!' },
+      standby: storedWakeOf({ agent: 'Delta Bot!', mode: WakeMode.Webhook }),
     });
     expect(error.code).toBe(InboxErrorCode.InvalidInput);
     expect(error.message).toContain('standby_agent');

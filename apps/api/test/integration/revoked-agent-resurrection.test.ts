@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { receiveOwnerText } from '../support/inbox-session';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
-import { ACCEPTED, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
+import { ACCEPTED, WAKE_ACCOUNT, enablePinnedWake, expectOk, wakeStub } from '../support/wake-session';
 import { connectionOf, testEnv } from '../support/workers-env';
 
 const ACCOUNT = WAKE_ACCOUNT;
@@ -109,7 +109,7 @@ describe('a revoked agent is not resurrected by an in-flight call', () => {
   });
 
   it('makes no copy for a revoked standby that still has a stale wake row', async () => {
-    await enableGrokWake({ stub, agent: STANDBY });
+    await enablePinnedWake({ stub, agent: STANDBY });
     expectOk(await setStandby({ agent: PRIMARY, standbyAgent: STANDBY }));
     await stub.recordRevocation({ agent: STANDBY });
     await injectGhostWake({ agent: STANDBY });
@@ -123,7 +123,7 @@ describe('a revoked agent is not resurrected by an in-flight call', () => {
 
 describe('revoking a standby releases what the primary handed off', () => {
   beforeEach(async () => {
-    await enableGrokWake({ stub, agent: STANDBY });
+    await enablePinnedWake({ stub, agent: STANDBY });
     await stub.devScriptWake({ agent: STANDBY, responses: [ACCEPTED] });
     expectOk(await setStandby({ agent: PRIMARY, standbyAgent: STANDBY }));
   });

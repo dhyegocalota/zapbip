@@ -19,7 +19,13 @@ export function registryCheckViolationsOf(input: { agents: CheckedAgent[]; files
   );
   const connectorEntries = withDefinition.flatMap((agent) => (agent.runtime === null ? [] : [{ id: agent.id, runtime: agent.runtime }]));
   const pluginEntries = withDefinition.flatMap((agent) => (agent.plugin === null ? [] : [{ id: agent.id, plugin: agent.plugin }]));
-  const scannedAgents = withDefinition.map((agent) => ({ id: agent.id, definition: agent.definition, runtime: agent.runtime }));
+  const scannedAgents = withDefinition.map((agent) => ({
+    id: agent.id,
+    definition: agent.definition,
+    runtime: agent.runtime,
+    wake: agent.wake,
+    channel: agent.channel,
+  }));
   return [
     ...installSectionViolationsOf({ entries: installSections }),
     ...guideParityViolationsOf({ entries: guideEntries }),

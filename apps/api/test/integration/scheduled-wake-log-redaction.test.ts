@@ -9,7 +9,7 @@ import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
   WAKE_ACCOUNT,
-  enableGrokWake,
+  enablePinnedWake,
   expectOk,
   wakeStub,
 } from '../support/wake-session';
@@ -50,7 +50,7 @@ beforeEach(applyWakeDirectory);
 beforeEach(async () => {
   stub = wakeStub({});
   await openWindow({ stub });
-  await enableGrokWake({ stub, agent: STANDBY });
+  await enablePinnedWake({ stub, agent: STANDBY });
   await stub.devScriptWake({ agent: STANDBY, responses: [ACCEPTED] });
   await setWake({ agent: PRIMARY, mode: WakeMode.Standby, standbyAgent: STANDBY, intervalMinutes: null });
   await setWake({ agent: POLLING, mode: WakeMode.Scheduled, standbyAgent: null, intervalMinutes: INTERVAL_MINUTES });

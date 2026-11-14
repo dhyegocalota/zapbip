@@ -12,7 +12,7 @@ import {
   WAKE_ACCOUNT,
   WAKE_AGENT,
   applyWakeDirectory,
-  enableGrokWake,
+  enablePinnedWake,
   expectOk,
   mentionText,
   wakeStub,
@@ -115,7 +115,7 @@ describe('activity meter in the account object', () => {
   });
 
   it('counts a wake that woke the agent', async () => {
-    await enableGrokWake({ stub });
+    await enablePinnedWake({ stub });
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
     expectOk(await receiveOwnerText({ stub, text: mentionText({ text: OWNER_TEXT }) }));
     expect(await countOf({ metric: ActivityMetric.WakesWoken })).toBe(1);

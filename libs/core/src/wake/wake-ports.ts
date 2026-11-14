@@ -1,7 +1,8 @@
-import type { OwnerLocale, SetWakeStatus, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeProvider, WakeRung } from '@zapbip/types';
+import type { OwnerLocale, SetWakeStatus, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeProviderId, WakeRung } from '@zapbip/types';
 import type { AgentName, ConnectionIdentity } from '../inbox/connection';
 import type { CoreDependencies } from '../inbox/ports';
 import type { PollState, ScheduledWake, StoredWake, WakeJob, WakeSettingInput, WakeTarget } from './wake-setting';
+import type { PinnedWakeProviderRule } from './wake-provider';
 
 export type WakeAttemptRequest = { agent: AgentName; target: WakeTarget; body: string; nowMs: number };
 
@@ -44,7 +45,7 @@ export interface WakeRepository {
 
 export type WakeLogEvent = {
   name: WakeLogEventName;
-  provider: WakeProvider | null;
+  provider: WakeProviderId | null;
   agent: AgentName;
   attempt: number;
   statusCode: number | null;
@@ -63,6 +64,7 @@ export type WakeDependencies = {
   secretBox: WakeSecretBox;
   repository: WakeRepository;
   observer: WakeObserver;
+  pinnedProviders: PinnedWakeProviderRule[];
 };
 
 export type WakeContext = {
@@ -80,7 +82,7 @@ export type SetWakeResult = {
   status: SetWakeStatus;
   wakeMode: WakeMode;
   effectiveRung: WakeRung;
-  provider: WakeProvider | null;
+  provider: WakeProviderId | null;
 };
 
 export type ScheduleWakeInput = WakeContext & { agent: AgentName };

@@ -1,15 +1,6 @@
 import { WAKE_SECRET_KEY_BYTES, type WakeTransport } from '@zapbip/core';
 import type { WakeLogEvent } from '@zapbip/core';
-import {
-  InboxErrorCode,
-  MessageKind,
-  OwnerLocale,
-  WakeAttemptOutcome,
-  WakeLogEventName,
-  WakeMode,
-  WakeProvider,
-  WakeStatus,
-} from '@zapbip/types';
+import { InboxErrorCode, MessageKind, OwnerLocale, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeStatus } from '@zapbip/types';
 import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -22,11 +13,11 @@ import { advanceClock, receiveOwnerText } from '../support/inbox-session';
 import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
-  GROK_TOKEN,
-  GROK_URL,
+  PINNED_WAKE_TOKEN,
+  PINNED_WAKE_URL,
   WAKE_ACCOUNT,
   WAKE_AGENT,
-  enableGrokWake,
+  enablePinnedWake,
   mentionText,
   expectOk,
   readRequests,
@@ -39,6 +30,7 @@ import {
 import { versionAfterLatest } from '../support/migration-versions';
 import { connectionOf, testEnv } from '../support/workers-env';
 import { applyDirectoryMigration } from '../support/seed';
+import { FIRST_PINNED_PROVIDER } from '../support/pinned-wake';
 
 const BASE64 = 'base64';
 const KEY_NAME = 'WAKE_SECRET_KEY';
@@ -51,7 +43,7 @@ const OTHER_AGENT = 'beta';
 
 const wakeEvent: WakeLogEvent = {
   name: WakeLogEventName.Delivered,
-  provider: WakeProvider.GrokRoutine,
+  provider: FIRST_PINNED_PROVIDER,
   agent: WAKE_AGENT,
   attempt: 1,
   statusCode: 200,
@@ -100,7 +92,7 @@ beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});
-  await enableGrokWake({ stub });
+  await enablePinnedWake({ stub });
 });
 
 afterEach(async () => {
@@ -111,7 +103,7 @@ describe('sealed wake storage', () => {
   it('stores neither the token nor the url path as text', async () => {
     const row = await readWakeRow({ stub });
     expect(row.sealed_target).not.toBeNull();
-    expect(row.sealed_target).not.toContain(GROK_TOKEN);
+    expect(row.sealed_target).not.toContain(PINNED_WAKE_TOKEN);
     expect(Buffer.from(row.sealed_target!, BASE64).toString('latin1')).not.toContain(GROK_PATH);
     expect(row.key_version).toBe(CURRENT_KEY_VERSION);
   });
@@ -119,7 +111,7 @@ describe('sealed wake storage', () => {
   it('refuses a target sealed for another agent', async () => {
     const box = createAesGcmWakeSecretBox({ base64Key: testEnv.WAKE_SECRET_KEY });
     const moved = await box.seal({
-      plain: JSON.stringify({ url: GROK_URL, token: GROK_TOKEN }),
+      plain: JSON.stringify({ url: PINNED_WAKE_URL, token: PINNED_WAKE_TOKEN }),
       associatedData: `${WAKE_ACCOUNT}:${OTHER_AGENT}`,
     });
     await rewriteRow({ set: 'sealed_target', value: moved });
@@ -128,7 +120,7 @@ describe('sealed wake storage', () => {
   });
 
   it('refuses the sealed target of another agent copied into this agent row', async () => {
-    await enableGrokWake({ stub, agent: OTHER_AGENT });
+    await enablePinnedWake({ stub, agent: OTHER_AGENT });
     const { sealed_target: otherSealedTarget } = await readWakeRow({ stub, agent: OTHER_AGENT });
     await rewriteRow({ set: 'sealed_target', value: otherSealedTarget! });
     await wakeAfterOwnerMessage();
@@ -156,7 +148,13 @@ describe('wake target guard', () => {
     const ownHost = new URL(testEnv.PUBLIC_ORIGIN).hostname;
     const outcome = await stub.setWake({
       connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
-      setting: { mode: WakeMode.Webhook, url: `https://${ownHost}/hook`, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
+      setting: {
+        mode: WakeMode.Webhook,
+        url: `https://${ownHost}/hook`,
+        token: PINNED_WAKE_TOKEN,
+        intervalMinutes: null,
+        standbyAgent: null,
+      },
     });
     expect(outcome).toEqual({ ok: false, errorCode: InboxErrorCode.InvalidInput, message: 'invalid url' });
   });
@@ -195,7 +193,7 @@ describe('wake dependencies', () => {
       return keyless
         .setWake({
           connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
-          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
+          setting: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_WAKE_TOKEN, intervalMinutes: null, standbyAgent: null },
         })
         .catch((error: Error) => error.message);
     });

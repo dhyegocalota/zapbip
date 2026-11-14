@@ -9,7 +9,7 @@ import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
   WAKE_AGENT,
-  enableGrokWake,
+  enablePinnedWake,
   mentionText,
   expectOk,
   readRequests,
@@ -43,7 +43,7 @@ beforeEach(() => {
 
 describe('clearWake', () => {
   beforeEach(async () => {
-    await enableGrokWake({ stub });
+    await enablePinnedWake({ stub });
     expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'oi' }) }));
   });
 
@@ -67,7 +67,7 @@ describe('clearWake', () => {
 
 describe('recordRevocation', () => {
   it('deletes the pending wake job and sends no request', async () => {
-    await enableGrokWake({ stub });
+    await enablePinnedWake({ stub });
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
     expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'oi' }) }));
     expect(await readWakeJobs({ stub })).toHaveLength(1);
@@ -86,13 +86,13 @@ describe('wake storage', () => {
   });
 
   it('keeps last_polled_at when set_wake saves after a poll', async () => {
-    await enableGrokWake({ stub });
+    await enablePinnedWake({ stub });
     await runInDurableObject(stub, (_instance, state) => {
       state.storage.sql.exec('UPDATE agent_wake SET last_polled_at = ? WHERE agent = ?', POLLED_AT, WAKE_AGENT);
     });
     const startedAt = Date.now();
     const offsetMs = await advanceClock({ stub, advanceMs: LATER_ADVANCE_MS });
-    await enableGrokWake({ stub });
+    await enablePinnedWake({ stub });
     const row = await readWakeRow({ stub });
     expect(row.last_polled_at).toBe(POLLED_AT);
     expect(row.updated_at).toBeGreaterThanOrEqual(startedAt + offsetMs);

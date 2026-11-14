@@ -1,4 +1,4 @@
-import type { WakeAttemptOutcome, WakeLogEventName, WakeProvider } from '@zapbip/types';
+import type { WakeAttemptOutcome, WakeLogEventName, WakeProviderId } from '@zapbip/types';
 
 export enum LogEvent {
   AuthRejected = 'auth_rejected',
@@ -67,7 +67,7 @@ export type LogFields = {
   route?: string;
   day?: string;
   gigabyteSeconds?: number;
-  provider?: WakeProvider | null;
+  provider?: WakeProviderId | null;
   attempt?: number;
   statusCode?: number | null;
   latencyMs?: number | null;

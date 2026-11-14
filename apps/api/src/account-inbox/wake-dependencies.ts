@@ -1,6 +1,7 @@
 import type { Clock, WakeDependencies, WakeTransport } from '@zapbip/core';
 import { createSqliteWakeRepository } from '../adapters/sqlite/sqlite-wake-repository';
 import { createAesGcmWakeSecretBox } from '../adapters/wake/aes-gcm-wake-secret-box';
+import { PINNED_WAKE_PROVIDERS } from '../adapters/wake/pinned-wake-providers';
 import { createCloudflareWakeObserver } from '../adapters/wake/wake-observer';
 import type { Bindings } from '../contract/env';
 
@@ -17,5 +18,6 @@ export function createWakeDependencies(input: {
     secretBox: createAesGcmWakeSecretBox({ base64Key: env.WAKE_SECRET_KEY }),
     repository: createSqliteWakeRepository({ storage, clock }),
     observer: createCloudflareWakeObserver({ dataset: env.WAKE_METRICS, accountId }),
+    pinnedProviders: PINNED_WAKE_PROVIDERS,
   };
 }

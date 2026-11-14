@@ -21,7 +21,7 @@ async function saveWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   const { url, token } = setting;
   if (url === null) throw invalidWakeField({ field: WakeTargetField.Url });
   if (token === null) throw invalidWakeField({ field: WakeTargetField.Token });
-  const target = assertWakeTarget({ url, token, publicHost });
+  const target = assertWakeTarget({ url, token, publicHost, pinnedProviders: wake.pinnedProviders });
   const sealedTarget = await wake.secretBox.seal({
     plain: JSON.stringify({ url, token }),
     associatedData: wakeAssociatedData(connection),

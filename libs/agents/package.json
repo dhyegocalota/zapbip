@@ -9,6 +9,8 @@
     "./install": "./src/install.ts",
     "./connector": "./src/connector.ts",
     "./plugins": "./src/plugins.ts",
+    "./wake": "./src/wake.ts",
+    "./channel": "./src/channel.ts",
     "./docs": "./src/docs.ts",
     "./checks/boundaries": "./src/checks/boundaries.ts",
     "./checks/leaks": "./src/checks/leaks.ts",

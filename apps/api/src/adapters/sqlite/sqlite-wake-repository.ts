@@ -1,11 +1,11 @@
 import { notFound, type Clock, type PollState, type ScheduledWake, type StoredWake, type WakeJob, type WakeRepository } from '@zapbip/core';
 import { CONNECTION_NOT_ACTIVE_MESSAGE } from '../../account-inbox/constants';
-import { WakeMode, WakeStatus, type OwnerLocale, type WakeAttemptOutcome, type WakeProvider } from '@zapbip/types';
+import { WakeMode, WakeStatus, type OwnerLocale, type WakeAttemptOutcome, type WakeProviderId } from '@zapbip/types';
 
 type WakeRow = {
   agent: string;
   mode: WakeMode;
-  provider: WakeProvider | null;
+  provider: WakeProviderId | null;
   host: string | null;
   sealed_target: string | null;
   key_version: number | null;

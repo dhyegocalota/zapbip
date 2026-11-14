@@ -1,5 +1,5 @@
 import type { ResolvedAgent } from './agent';
-import { connectorAgentsOf, installAgentsOf, orderedAgentsOf, pluginAgentsOf } from './agent';
+import { channelAgentsOf, connectorAgentsOf, installAgentsOf, orderedAgentsOf, pluginAgentsOf, wakeAgentsOf } from './agent';
 import { GENERATED_POINTER } from './header';
 
 function enumSourceOf(input: { enumName: string; agents: ResolvedAgent[] }): string {
@@ -15,5 +15,7 @@ export function renderIds(input: { agents: ResolvedAgent[] }): string {
     enumSourceOf({ enumName: 'InstallClient', agents: installAgentsOf({ agents: input.agents }) }),
     enumSourceOf({ enumName: 'ConnectorClient', agents: connectorAgentsOf({ agents: input.agents }) }),
     enumSourceOf({ enumName: 'PluginAgent', agents: pluginAgentsOf({ agents: input.agents }) }),
+    enumSourceOf({ enumName: 'WakeAgent', agents: wakeAgentsOf({ agents: input.agents }) }),
+    enumSourceOf({ enumName: 'ChannelAgent', agents: channelAgentsOf({ agents: input.agents }) }),
   ].join('\n\n');
 }
