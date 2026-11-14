@@ -10,7 +10,7 @@
 ```
 ---
 name: zapbip
-description: 通过 zapbip 在 WhatsApp 上与所有者交流的规则：提问、等待回答、写得简短。
+description: 通过 zapbip 在 WhatsApp 上与你所服务的人交流的规则：提问、等待回答、写得简短。
 ---
 Call check_inbox at the start of every task. If it returns new messages, handle them first.
 Use ask for any decision the owner must make. Do not guess. Then wait with wait_for_reply.

@@ -311,7 +311,7 @@ export const CHINESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AccessResultAlreadyActive]: '已是启用状态',
   [BackofficeCopyKey.AccessResultNotReleasable]: '无法开放（已暂停、删除中或不存在）',
   [BackofficeCopyKey.AccessResultSent]: '已通过 WhatsApp 通知',
-  [BackofficeCopyKey.AccessResultQueued]: '排在通知模板之后：对方点击“打开”',
+  [BackofficeCopyKey.AccessResultQueued]: '排在通知模板之后：对方用“打开”回复',
   [BackofficeCopyKey.AccessResultFailed]: '未通知：投递失败',
   [BackofficeCopyKey.AccessResultFailedList]: '未通知的账户',
   [BackofficeCopyKey.AccessResultBack]: '返回开放准入',

@@ -24,7 +24,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.ChineseSimplified]: '我没能唤醒智能体 {agent}。你的消息在收件箱里等候；请让它重新运行 set_wake。',
   },
   [WakeCopyKey.ExpectedDelayNote]: {
-    [OwnerLocale.PortugueseBrazil]: 'O agente {agent} olha a caixa {cadence}. {lastPoll} Sua mensagem espera lá até a próxima olhada.',
+    [OwnerLocale.PortugueseBrazil]: 'O agente {agent} confere o inbox {cadence}. {lastPoll} Sua mensagem espera lá até a próxima checagem.',
     [OwnerLocale.EnglishUs]: 'The agent {agent} checks the inbox {cadence}. {lastPoll} Your message waits there until the next check.',
     [OwnerLocale.Spanish]: 'El agente {agent} revisa la bandeja {cadence}. {lastPoll} Tu mensaje espera allí hasta la próxima revisión.',
     [OwnerLocale.German]:
@@ -107,7 +107,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.ChineseSimplified]: '上次检查是在 {count} 小时前。',
   },
   [WakeCopyKey.NeverPolled]: {
-    [OwnerLocale.PortugueseBrazil]: 'Ainda não olhou a caixa.',
+    [OwnerLocale.PortugueseBrazil]: 'Ainda não conferiu o inbox.',
     [OwnerLocale.EnglishUs]: 'It has not checked the inbox yet.',
     [OwnerLocale.Spanish]: 'Todavía no ha revisado la bandeja.',
     [OwnerLocale.German]: 'Er hat den Posteingang noch nicht geprüft.',

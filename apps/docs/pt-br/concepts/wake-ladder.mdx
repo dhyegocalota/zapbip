@@ -35,7 +35,7 @@ Quando você escreve, o zapbip diz mais ou menos quando esperar a resposta:
     { you: true, text: 'Consegue resumir o relatório?' },
     {
       notice: true,
-      text: 'O agente Claude olha a caixa de hora em hora. Última checagem há 20 min. Sua mensagem espera lá até a próxima olhada.',
+      text: 'O agente Claude confere o inbox de hora em hora. Última checagem há 20 min. Sua mensagem espera lá até a próxima checagem.',
     },
   ]}
 />
@@ -44,7 +44,7 @@ Se a tarefa para de rodar, o zapbip avisa uma vez, depois que passa o dobro do i
 
 <Chat contact="zapbip" messages={[{ notice: true, text: 'Claude não checa há 2 h: suas mensagens esperam' }]} />
 
-A próxima olhada encerra o aviso sem outra mensagem.
+A próxima checagem encerra o aviso sem outra mensagem.
 
 Quando a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada, esse recado não pode ser enviado como está. O zapbip envia um [aviso](/pt-br/concepts/owner-notices) de modelo por janela fechada, e o recado espera e chega quando você escrever.
 

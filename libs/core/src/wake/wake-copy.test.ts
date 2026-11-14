@@ -45,7 +45,7 @@ describe('expectedDelayNoteCopy', () => {
   });
 
   test('a connection that never polled says so', () => {
-    expect(note({ intervalMinutes: 60, elapsedSinceLastPollMs: null })).toContain('Ainda não olhou a caixa');
+    expect(note({ intervalMinutes: 60, elapsedSinceLastPollMs: null })).toContain('Ainda não conferiu o inbox');
   });
 
   test('speaks English to an en-US owner', () => {

@@ -325,7 +325,7 @@ export const GERMAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AccessResultAlreadyActive]: 'Bereits aktiv',
   [BackofficeCopyKey.AccessResultNotReleasable]: 'Nicht freigebbar (gesperrt, wird gelöscht oder nicht vorhanden)',
   [BackofficeCopyKey.AccessResultSent]: 'Auf WhatsApp benachrichtigt',
-  [BackofficeCopyKey.AccessResultQueued]: 'Hinter der Hinweisvorlage eingereiht: Die Person tippt auf Öffnen',
+  [BackofficeCopyKey.AccessResultQueued]: 'Hinter der Hinweisvorlage eingereiht: Die Person antwortet mit Öffnen',
   [BackofficeCopyKey.AccessResultFailed]: 'Nicht benachrichtigt: Zustellung fehlgeschlagen',
   [BackofficeCopyKey.AccessResultFailedList]: 'Nicht benachrichtigte Konten',
   [BackofficeCopyKey.AccessResultBack]: 'Zurück zu Zugang freigeben',

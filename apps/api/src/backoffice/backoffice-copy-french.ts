@@ -326,7 +326,7 @@ export const FRENCH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AccessResultAlreadyActive]: 'Déjà actifs',
   [BackofficeCopyKey.AccessResultNotReleasable]: 'Non libérables (suspendus, en cours de suppression ou inexistants)',
   [BackofficeCopyKey.AccessResultSent]: 'Prévenus sur WhatsApp',
-  [BackofficeCopyKey.AccessResultQueued]: 'En file derrière le modèle de notification\u00a0: la personne touche Ouvrir',
+  [BackofficeCopyKey.AccessResultQueued]: 'En file derrière le modèle de notification\u00a0: la personne répond avec Ouvrir',
   [BackofficeCopyKey.AccessResultFailed]: 'Non prévenus\u00a0: échec de la livraison',
   [BackofficeCopyKey.AccessResultFailedList]: 'Comptes non prévenus',
   [BackofficeCopyKey.AccessResultBack]: 'Retour à Libérer l’accès',

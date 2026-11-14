@@ -35,13 +35,13 @@ const COMPANY_LINE_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([
 
 const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   [AccountReplyIntent.Waitlisted]: {
-    [OwnerLocale.PortugueseBrazil]: `O zapbip é o seu WhatsApp pessoal para conversar com seus agentes de IA. O acesso é por lista de espera e você já está nela: avisamos aqui quando abrir. Para ir se preparando, veja como conectar seus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.PortugueseBrazil]}\n\nQuer entrar mais cedo? Peça acesso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.PortugueseBrazil]}\n\nEnvie "ajuda" quando o acesso abrir.`,
+    [OwnerLocale.PortugueseBrazil]: `O zapbip é o seu WhatsApp pessoal para conversar com seus agentes de IA. O acesso é por lista de espera e você já está nela: avisamos aqui quando seu acesso for liberado. Para ir se preparando, veja como conectar seus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.PortugueseBrazil]}\n\nQuer entrar mais cedo? Peça acesso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.PortugueseBrazil]}\n\nEnvie "ajuda" quando seu acesso for liberado.`,
     [OwnerLocale.EnglishUs]: `zapbip is your personal WhatsApp for talking to your AI agents. Access is by waitlist and you are already on it: we will tell you here when it opens. To get ready, see how to connect your agents: ${ONBOARDING_SETUP_LINKS[OwnerLocale.EnglishUs]}\n\nWant in sooner? Request access: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.EnglishUs]}\n\nSend "help" when access opens.`,
     [OwnerLocale.Spanish]: `zapbip es tu WhatsApp personal para hablar con tus agentes de IA. El acceso es por lista de espera y ya estás en ella: te avisaremos aquí cuando se abra. Para ir preparándote, mira cómo conectar tus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Spanish]}\n\n¿Quieres entrar antes? Pide acceso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Spanish]}\n\nEnvía "ayuda" cuando se abra el acceso.`,
     [OwnerLocale.German]: `zapbip ist dein persönliches WhatsApp, um mit deinen KI-Agenten zu sprechen. Der Zugang läuft über eine Warteliste, und du stehst schon darauf: Wir sagen dir hier Bescheid, sobald er öffnet. Um dich vorzubereiten, sieh dir an, wie du deine Agenten verbindest: ${ONBOARDING_SETUP_LINKS[OwnerLocale.German]}\n\nDu willst früher rein? Frag den Zugang an: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.German]}\n\nSende "hilfe", sobald der Zugang öffnet.`,
     [OwnerLocale.French]: `zapbip est votre WhatsApp personnel pour parler à vos agents IA. L’accès se fait par liste d’attente et vous y êtes déjà\u00a0: nous vous préviendrons ici à l’ouverture. Pour vous préparer, voyez comment connecter vos agents\u00a0: ${ONBOARDING_SETUP_LINKS[OwnerLocale.French]}\n\nEnvie d’entrer plus tôt\u202f? Demandez l’accès\u00a0: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.French]}\n\nEnvoyez "aide" quand l’accès ouvrira.`,
     [OwnerLocale.Japanese]: `zapbipは、AIエージェントと話すためのあなた専用のWhatsAppです。アクセスはウェイトリスト制で、あなたはすでに登録されています。開放されたらここでお知らせします。準備のために、エージェントの接続方法をご覧ください: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Japanese]}\n\nもっと早く使いたい場合は、アクセスをリクエストしてください: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Japanese]}\n\nアクセスが開放されたら「ヘルプ」と送信してください。`,
-    [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp입니다. 이용은 대기자 명단으로 열리고, 이미 명단에 등록되어 있습니다. 열리면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용이 열리면 "도움말"을 보내 주세요.`,
+    [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp입니다. 이용은 대기자 명단으로 열리고, 이미 명단에 등록되어 있습니다. 이용할 수 있게 되면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용이 열리면 "도움말"을 보내 주세요.`,
     [OwnerLocale.ChineseSimplified]: `zapbip 是你用来和 AI 智能体对话的专属 WhatsApp。使用资格通过候补名单开放，你已经在名单中：开放时我们会在这里通知你。想提前准备，可以看看如何连接你的智能体：${ONBOARDING_SETUP_LINKS[OwnerLocale.ChineseSimplified]}\n\n想早点进来？申请使用：${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.ChineseSimplified]}\n\n使用资格开放后，请发送“帮助”。`,
   },
   [AccountReplyIntent.Suspended]: {
@@ -445,14 +445,14 @@ export function renderAccountReply(input: { reply: AccountReply }): string {
 }
 
 export const UNKNOWN_CLIENT_LABEL: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'cliente desconhecido',
+  [OwnerLocale.PortugueseBrazil]: 'app desconhecido',
   [OwnerLocale.EnglishUs]: 'unknown client',
-  [OwnerLocale.Spanish]: 'cliente desconocido',
-  [OwnerLocale.German]: 'unbekannter Client',
-  [OwnerLocale.French]: 'client inconnu',
-  [OwnerLocale.Japanese]: '不明なクライアント',
-  [OwnerLocale.Korean]: '알 수 없는 클라이언트',
-  [OwnerLocale.ChineseSimplified]: '未知客户端',
+  [OwnerLocale.Spanish]: 'app desconocida',
+  [OwnerLocale.German]: 'unbekannte App',
+  [OwnerLocale.French]: 'appli inconnue',
+  [OwnerLocale.Japanese]: '不明なアプリ',
+  [OwnerLocale.Korean]: '알 수 없는 앱',
+  [OwnerLocale.ChineseSimplified]: '未知应用',
 };
 
 export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {
