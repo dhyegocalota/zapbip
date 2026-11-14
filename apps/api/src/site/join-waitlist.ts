@@ -6,6 +6,7 @@ import { readReferralCap } from './site-settings';
 export type WaitlistJoinResult =
   | {
       outcome: WaitlistJoinOutcome.Joined | WaitlistJoinOutcome.AlreadyJoined;
+      email: string;
       referralCode: string;
       creditedCount: number;
       cap: number;
@@ -85,7 +86,7 @@ async function joinWithAttempts(input: {
   const written = await insertAndRead({ join, email, referralCode: generateReferralCode(), referrerCode });
   if (written === null) return joinWithAttempts({ join, email, cap, attemptsLeft: attemptsLeft - 1 });
   const outcome = written.isNew ? WaitlistJoinOutcome.Joined : WaitlistJoinOutcome.AlreadyJoined;
-  return { outcome, ...written.stored, cap };
+  return { outcome, email, ...written.stored, cap };
 }
 
 export async function joinWaitlist(input: JoinWaitlistInput): Promise<WaitlistJoinResult> {
