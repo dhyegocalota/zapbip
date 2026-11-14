@@ -1,0 +1,45 @@
+---
+title: Deja que tu IA gestione zapbip
+description: Tu IA puede listar tus IAs, conectarlas y desconectarlas y abrirte la aplicación web, y cada cambio espera tu toque en WhatsApp.
+---
+
+Todo lo que haces en la [aplicación web](/es/features/web-app) o con un [comando de WhatsApp](/es/features/whatsapp-commands), tu IA puede hacerlo por ti. Tú sigues al mando: un cambio necesita tu toque en WhatsApp, y sin él no ocurre nada.
+
+## Qué puede hacer tu IA
+
+| Pide a tu IA que       | Qué ocurre                                                                                             | Necesita tu toque |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ | ----------------- |
+| Liste tus IAs          | Lee cada nombre, la app desde la que se conectó, cuándo se creó y cuándo estuvo activa por última vez. | No                |
+| Lea tu cuenta          | Lee el estado de tu cuenta y tu plan.                                                                  | No                |
+| Conecte una IA nueva   | zapbip te pregunta por WhatsApp y después la conecta.                                                  | Sí                |
+| Desconecte una IA      | zapbip te pregunta por WhatsApp y después detiene esa IA al instante.                                  | Sí                |
+| Abra la aplicación web | zapbip te envía el enlace de acceso por WhatsApp.                                                      | No                |
+
+Eliminar tu cuenta no está en la lista. Sigue siendo un comando de WhatsApp que solo tú puedes escribir.
+
+## Cómo funciona el toque
+
+Cuando tu IA pide conectar una IA nueva llamada `helper`, zapbip te escribe por WhatsApp, como la IA que lo pidió:
+
+- **Allow** la conecta y te envía a ti el enlace que se pega en esa IA, como hace `new agent`.
+- **Allow, send to agent** la conecta y entrega el enlace a la IA que lo pidió, para que termine ella misma la configuración.
+- **Deny** no cambia nada.
+
+Desconectar tiene dos botones, Allow y Deny. Solo cuenta un toque en un botón: un mensaje que escribas, aunque sea la palabra Allow, se lee como Deny. Cada pregunta termina con una referencia corta, así que la respuesta a una pregunta antigua nunca se usa para una nueva.
+
+Tu IA espera tu respuesta hasta 50 segundos. Si no respondes a tiempo, no cambia nada, y un toque posterior tampoco cambia nada. Tras un Deny o una respuesta que no llega, la misma petición de la misma IA se rechaza durante 10 minutos, para que no pueda seguir preguntando.
+
+## Qué se mantiene privado
+
+- El enlace para conectar una IA nueva te llega a ti por WhatsApp. Solo el botón **Allow, send to agent** se lo da a tu IA.
+- El enlace de acceso es solo para ti. Tu IA nunca lo ve. Si tu ventana de 24 horas está cerrada, zapbip no lo pone en cola: escribe a zapbip y pídeselo de nuevo a tu IA.
+- Tu IA nunca ve una clave, un código ni tu número de teléfono.
+
+## Límites
+
+Cada conexión, y tu cuenta en conjunto, puede iniciar 3 cambios por minuto. El cuarto recibe una respuesta corta de «inténtalo de nuevo en breve», para que un bucle por error no llene tu WhatsApp de preguntas.
+
+## A continuación
+
+- [Gestiona tus IAs](/es/features/manage-your-agents)
+- [La aplicación web](/es/features/web-app)

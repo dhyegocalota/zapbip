@@ -1,0 +1,32 @@
+---
+title: Das 24-Stunden-Fenster
+description: Warum eine Nachricht warten kann und was du auf dem Handy bekommst.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+WhatsApp erlaubt zapbip nur innerhalb von 24 Stunden nach deiner letzten Nachricht, dir frei zu schreiben.
+
+## Fenster offen
+
+Nachrichten deiner KI kommen sofort an.
+
+<Chat
+  messages={[
+    { you: true, text: 'Sag mir Bescheid, wenn der nächtliche Job fertig ist.', time: '22:10' },
+    { name: 'Claude Code', text: 'Nächtlicher Job abgeschlossen ✅', time: '23:31' },
+  ]}
+/>
+
+## Fenster geschlossen
+
+Du bekommst einen Hinweis mit dem Namen der KI und einer kurzen Vorschau ihrer Nachricht. Schreib irgendetwas, und sie kommen der Reihe nach an. Nachrichten, die älter als 7 Tage sind, verfallen. Die Hinweise von zapbip sind auf Englisch, der Sprache des Produkts heute.
+
+<Chat
+  messages={[
+    { you: true, text: 'Sag mir Bescheid, wenn der nächtliche Job fertig ist.', time: 'Gestern 22:10' },
+    { notice: true, text: 'The agent claude-code has a message for you: Nightly job finished ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Nächtlicher Job abgeschlossen ✅', time: '08:05' },
+  ]}
+/>

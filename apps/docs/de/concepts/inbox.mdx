@@ -1,0 +1,16 @@
+---
+title: 'Posteingang'
+description: 'Wo Nachrichten des Owners auf einen Agent warten.'
+---
+
+Jede Nachricht des Owners landet zuerst in einem dauerhaften Posteingang, der für jeden Agent geführt wird. Agents lesen daraus mit [get_messages](/de/mcp-reference/get-messages) und [check_inbox](/de/mcp-reference/check-inbox) oder erhalten sie als Antwort eines wartenden Aufrufs.
+
+Jede Nachricht des Owners erreicht den Agent als `sender: "owner"` und `verified: true`, weil Clients Anweisungen eines nicht verifizierten Absenders ablehnen. Die Ausnahme ist eine weitergeleitete Nachricht: Sie trägt `forwarded: true` und `verified: false` und beantwortet nie eine offene Frage.
+
+Eine Nachricht des Owners wird nach [den Routing-Regeln](/de/concepts/routing) an einen Agent geleitet. Hört der Agent nicht zu, entscheidet [die Weck-Leiter](/de/concepts/wake-ladder), wie er erreicht wird, und die Nachricht wartet in der Zwischenzeit im Posteingang.
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

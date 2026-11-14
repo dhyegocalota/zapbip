@@ -1,0 +1,52 @@
+---
+title: 一个号码，多个 AI
+description: 你的回复如何找到它要去的 AI。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+你所有的 AI 都从同一个 WhatsApp 号码给你发消息。zapbip 按以下顺序决定你的消息发往哪里：
+
+| 你的操作                       | 发往                       |
+| ------------------------------ | -------------------------- |
+| 点按按钮或列表选项             | 提问的那个 AI              |
+| 回复某条消息，或对它做表情回应 | 发出那条消息的 AI          |
+| 发送 `@grok check the news`    | Grok，并去掉 `@grok `      |
+| 在某个 AI 有未决问题时作答     | 那个 AI                    |
+| 只有 Claude 发过言之后你发消息 | Claude，即最后发言的 AI    |
+| 没有任何规则匹配时发消息       | 一个最近 AI 的列表供你选择 |
+
+## 示例
+
+<Chat
+  messages={[
+    { name: 'Claude', text: '测试通过了。', time: '10:02' },
+    { name: 'Grok', text: '我可以 rebase main 吗？', options: ['可以', '不可以'], time: '10:03' },
+    { you: true, text: '@claude 谢谢', time: '10:04' },
+    { you: true, text: '可以', time: '10:04' },
+  ]}
+/>
+
+`@claude 谢谢` 发给 Claude，点按“可以”则发给 Grok。
+
+<Chat
+  messages={[
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+单独一个 `ok` 会得到一个最近 AI 的列表供你选择。
+
+回复某条消息，就能和发出它的 AI 对话：
+
+<Chat
+  messages={[
+    { name: 'Claude', text: '测试通过了。', time: '10:02' },
+    { name: 'Grok', text: '找到了 3 个来源。', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: '找到了 3 个来源。' }, text: '是哪几个？', time: '10:04' },
+    { name: 'Grok', text: '两篇论文和一份报告。我把链接发给你。', time: '10:04' },
+  ]}
+/>
+
+名称最多 20 个字符：小写字母、数字和连字符。

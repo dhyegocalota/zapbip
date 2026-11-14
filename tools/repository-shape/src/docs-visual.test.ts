@@ -2,9 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
-import { DOCS_GROUPS, agentPagePathOf, twinPathOf } from '@zapbip/agents/docs';
+import { DOCS_GROUPS, agentPagePathOf, perLanguage, twinPathOf } from '@zapbip/agents/docs';
 import { agentOrderOf } from '@zapbip/agents';
-import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { compositeOver, contrastOf } from './contrast';
 import { docsNavigationOf } from './docs-experience';
 import { DOCS_ROOT, REPOSITORY_ROOT, PAGE_EXTENSION, capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
@@ -28,10 +28,7 @@ const IMPORT_PATTERN = /^import .*$/gm;
 const FIRST_SECTION_HEADING = /^## /m;
 const HERO_STATEMENT_MAX_WORDS = 7;
 const WORD_SEPARATOR = /\s+/;
-const OVERVIEW_PAGES: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'index',
-  [DocsLanguage.PortugueseBrazil]: `${PAGE_LANGUAGE_FOLDER}/index`,
-};
+const OVERVIEW_PAGES = perLanguage({ valueOf: (language) => twinPathOf({ path: 'index', language }) });
 const CHAT_SNIPPET_FILE = `${DOCS_ROOT}/snippets/chat.jsx`;
 const CHAT_COLOUR_PATTERN = /^ {2}const (\w+) = '(#[0-9A-Fa-f]{6})';$/gm;
 const TEAL_TEXT_PATTERN = /\bcolor: teal\b/;
@@ -72,6 +69,7 @@ const DARK_HERO_BASE = '#0D1B17';
 const DARK_PREFIX = '.dark ';
 const PROSE_MEASURE_SELECTOR = `.mdx-content > span[data-as='p'],\n.mdx-content > ul,\n.mdx-content > ol`;
 const AGENT_GROUP_INDEX = 1;
+const TRANSLATED_LANGUAGES = Object.values(DocsPageLanguage).filter((language) => language !== DocsPageLanguage.English);
 const MATRIX_PAGE = 'agents/supported-agents';
 const BASELINE_REFERENCE = 'origin/main';
 const LIGHT_PAGE = '#F6F8F5';
@@ -122,8 +120,21 @@ function withoutAddedPages({ key, value, knownPages }: { key: string; value: unk
   return value.filter((page) => typeof page !== 'string' || knownPages.has(page));
 }
 
-function navigationFingerprintOf({ navigation, knownPages }: { navigation: unknown; knownPages: Set<string> }): string {
-  return JSON.stringify(navigation, (key, value) => withoutAddedPages({ key, value: withoutAgentPages({ value }), knownPages }));
+function knownLanguagesOf({ navigation }: { navigation: unknown }): unknown[] {
+  return (navigation as { languages: unknown[] }).languages;
+}
+
+function navigationFingerprintOf({
+  navigation,
+  knownPages,
+  knownLanguages,
+}: {
+  navigation: unknown;
+  knownPages: Set<string>;
+  knownLanguages: string[];
+}): string {
+  const languages = knownLanguagesOf({ navigation }).filter((entry) => knownLanguages.includes((entry as { language: string }).language));
+  return JSON.stringify(languages, (key, value) => withoutAddedPages({ key, value: withoutAgentPages({ value }), knownPages }));
 }
 
 function requiredColour({ colour, name }: { colour?: string; name: string }): string {
@@ -191,17 +202,17 @@ describe('docs visual: logo', () => {
 type HeroLink = { name: string; label: string; href: string };
 type HeroProps = { names: string[]; texts: Record<string, string>; links: HeroLink[] };
 
-function overviewOf({ language }: { language: DocsLanguage }): string {
+function overviewOf({ language }: { language: DocsPageLanguage }): string {
   return readRepositoryFile(`${DOCS_ROOT}/${OVERVIEW_PAGES[language]}${PAGE_EXTENSION}`);
 }
 
-function heroOpeningOf({ language }: { language: DocsLanguage }): string {
+function heroOpeningOf({ language }: { language: DocsPageLanguage }): string {
   const opening = overviewOf({ language }).match(HERO_OPENING_PATTERN);
   if (!opening) throw new Error(`${OVERVIEW_PAGES[language]} has no Hero`);
   return opening[0];
 }
 
-function heroPropsOf({ language }: { language: DocsLanguage }): HeroProps {
+function heroPropsOf({ language }: { language: DocsPageLanguage }): HeroProps {
   const opening = heroOpeningOf({ language });
   const texts = [...opening.matchAll(HERO_TEXT_PROP_PATTERN)].map((match) => [match[1], match[2]] as [string, string]);
   const links = [...opening.matchAll(HERO_LINK_PATTERN)].map((match) => ({ name: match[1], label: match[2], href: match[3] }) as HeroLink);
@@ -228,7 +239,7 @@ describe('docs visual: hero snippet', () => {
 });
 
 describe('docs visual: hero on the Overview pages', () => {
-  test.each(Object.values(DocsLanguage))('the %s Overview places Hero after the imports and above the first section', (language) => {
+  test.each(Object.values(DocsPageLanguage))('the %s Overview places Hero after the imports and above the first section', (language) => {
     const markdown = overviewOf({ language });
     const lastImportEnd = [...markdown.matchAll(IMPORT_PATTERN)].map((match) => match.index + match[0].length).at(-1);
     const heroStart = markdown.indexOf('<Hero');
@@ -238,32 +249,32 @@ describe('docs visual: hero on the Overview pages', () => {
     expect(markdown).toContain("import { Hero } from '/snippets/hero.jsx';");
   });
 
-  test('both Overview pages pass the same set of props', () => {
-    const english = heroPropsOf({ language: DocsLanguage.English });
-    const portuguese = heroPropsOf({ language: DocsLanguage.PortugueseBrazil });
+  test.each(TRANSLATED_LANGUAGES)('the %s Overview passes the same set of props as the English one', (language) => {
+    const english = heroPropsOf({ language: DocsPageLanguage.English });
+    const translated = heroPropsOf({ language });
     expect([...english.names].sort()).toEqual(['accent', 'eyebrow', 'lead', 'primary', 'secondary', 'statement']);
-    expect([...portuguese.names].sort()).toEqual([...english.names].sort());
+    expect([...translated.names].sort()).toEqual([...english.names].sort());
   });
 
-  test('no pt-BR prop equals its English counterpart', () => {
-    const english = heroPropsOf({ language: DocsLanguage.English });
-    const portuguese = heroPropsOf({ language: DocsLanguage.PortugueseBrazil });
-    const sameTexts = Object.keys(english.texts).filter((name) => english.texts[name] === portuguese.texts[name]);
+  test.each(TRANSLATED_LANGUAGES)('no %s prop equals its English counterpart', (language) => {
+    const english = heroPropsOf({ language: DocsPageLanguage.English });
+    const translated = heroPropsOf({ language });
+    const sameTexts = Object.keys(english.texts).filter((name) => english.texts[name] === translated.texts[name]);
     const sameLabels = english.links.filter((link) =>
-      portuguese.links.some((other) => other.name === link.name && other.label === link.label),
+      translated.links.some((other) => other.name === link.name && other.label === link.label),
     );
     expect([...sameTexts, ...sameLabels.map((link) => link.name)]).toEqual([]);
   });
 
-  test.each(Object.values(DocsLanguage))('the %s links point at existing pages', (language) => {
+  test.each(Object.values(DocsPageLanguage))('the %s links point at existing pages', (language) => {
     const { links } = heroPropsOf({ language });
-    const prefix = language === DocsLanguage.English ? '/' : `/${PAGE_LANGUAGE_FOLDER}/`;
+    const prefix = language === DocsPageLanguage.English ? '/' : `/${twinPathOf({ path: '', language })}`;
     expect(links.map((link) => link.name).sort()).toEqual(['primary', 'secondary']);
     expect(links.filter((link) => !link.href.startsWith(prefix))).toEqual([]);
     expect(links.filter((link) => !existsSync(repositoryPath(`${DOCS_ROOT}${link.href}${PAGE_EXTENSION}`)))).toEqual([]);
   });
 
-  test.each(Object.values(DocsLanguage))('the %s statement is under eight words', (language) => {
+  test.each(Object.values(DocsPageLanguage))('the %s statement is under eight words', (language) => {
     const { statement } = heroPropsOf({ language }).texts;
     expect(statement?.split(WORD_SEPARATOR).length).toBeLessThanOrEqual(HERO_STATEMENT_MAX_WORDS);
   });
@@ -296,14 +307,15 @@ describe('docs visual: theme', () => {
     const baseline = baselineConfig();
     expect(config.favicon).toBe(baseline.favicon);
     const knownPages = pagesOf({ navigation: baseline.navigation });
-    expect(navigationFingerprintOf({ navigation: config.navigation, knownPages })).toBe(
-      navigationFingerprintOf({ navigation: baseline.navigation, knownPages }),
+    const knownLanguages = knownLanguagesOf({ navigation: baseline.navigation }).map((entry) => (entry as { language: string }).language);
+    expect(navigationFingerprintOf({ navigation: config.navigation, knownPages, knownLanguages })).toBe(
+      navigationFingerprintOf({ navigation: baseline.navigation, knownPages, knownLanguages }),
     );
   });
 });
 
 describe('docs visual: agent navigation', () => {
-  test.each(Object.values(DocsLanguage))('the %s agent group lists the matrix, then the agents in registry order', (language) => {
+  test.each(Object.values(DocsPageLanguage))('the %s agent group lists the matrix, then the agents in registry order', (language) => {
     const group = docsNavigationOf({ language }).groups[AGENT_GROUP_INDEX];
     const registryPages = agentOrderOf({ definitions: AGENT_DEFINITIONS }).map((client) => agentPagePathOf({ client, language }));
     expect(group?.group).toBe(DOCS_GROUPS[language][AGENT_GROUP_INDEX]);

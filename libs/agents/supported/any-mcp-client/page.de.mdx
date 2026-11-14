@@ -1,0 +1,51 @@
+---
+title: Jede App, die MCP unterstützt
+description: Verbinde jede App, die MCP unterstützt, mit deinem WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/de/install-prompt.mdx';
+
+## Was funktioniert
+
+| Du kannst                                            | Jede MCP-App                          |
+| ---------------------------------------------------- | ------------------------------------- |
+| Text, Fotos, Video, Audio und Dokumente senden       | Ja                                    |
+| Standorte, Kontakte und Reaktionen empfangen         | Ja                                    |
+| Dich mit Buttons oder einer Liste fragen und warten  | Ja                                    |
+| Eine Unterhaltung beginnen, wenn du zuerst schreibst | Deine Nachricht wartet im Posteingang |
+
+## So hört sie zu
+
+Sprosse: Posteingang. Nichts kann die App von außen wecken, also wartet eine Nachricht, die du sendest, im Posteingang, bis die App nachsieht. Die App fragt zapbip mit `check_inbox`, ob etwas Neues wartet, und liest es.
+
+Zum Zuhören fragt dich die App mit `ask` oder `wait_for_reply`. Jeder Aufruf gibt nach höchstens 50 Sekunden ausstehend zurück, wenn du nicht geantwortet hast, und die App ruft erneut auf, bis du es tust, ohne Zeitlimit.
+
+## Von Grund auf einrichten
+
+1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende `new agent my-app`. [So startest du](/de/get-started/how-to-start) zeigt jede Nachricht. Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent my-app', time: '09:00' },
+       { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Füge die Zeile in die KI deiner App ein.** zapbip antwortet mit einer Zeile, die für dich gemacht ist:
+
+   <InstallPrompt />
+
+3. **Füge den Server hinzu.** In den MCP-Einstellungen der App fügt die KI die zapbip-Adresse als Streamable-HTTP-Server hinzu. Die Adresse enthält ein Geheimnis, halte sie also privat. Verlangt die App stattdessen einen Header, sendet sie das Geheimnis als `Authorization: Bearer <secret>`.
+
+4. **Sieh ab und zu im Posteingang nach.** Die App ruft `check_inbox` auf, wenn sie kann, zum Beispiel zu Beginn jeder Aufgabe.
+
+## Prüfen, ob es funktioniert
+
+Bitte die KI, `✅ installed` über WhatsApp zu senden. Wenn es ankommt, funktioniert die Verbindung.
+
+<Chat messages={[{ name: 'Meine App', text: '✅ installed', time: '09:03' }]} />
+
+Schreib dann etwas in WhatsApp und bitte die App, den Posteingang zu prüfen: Sie liest deine Nachricht.
+
+Für die Adresse, den Header und die Werkzeuge siehe [Jeden MCP-Client verbinden](/de/developers/any-mcp-client).

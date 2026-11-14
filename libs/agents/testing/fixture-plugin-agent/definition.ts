@@ -1,15 +1,20 @@
-import { DocsLanguage, WakeRung } from '@zapbip/types';
+import { DocsPageLanguage, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'FixturePluginAgent',
   idIsOrdinaryWord: false,
   docs: {
-    matrixName: { [DocsLanguage.English]: 'Fixture Plugin Agent', [DocsLanguage.PortugueseBrazil]: 'Agente plugin de teste' },
-    linkName: { [DocsLanguage.English]: 'Fixture Plugin Agent', [DocsLanguage.PortugueseBrazil]: 'Agente plugin de teste' },
+    matrixName: {
+      ...perLanguage({ valueOf: () => 'Fixture Plugin Agent' }),
+      [DocsPageLanguage.PortugueseBrazil]: 'Agente plugin de teste',
+    },
+    linkName: { ...perLanguage({ valueOf: () => 'Fixture Plugin Agent' }), [DocsPageLanguage.PortugueseBrazil]: 'Agente plugin de teste' },
     pageFacts: {
-      [DocsLanguage.English]: ['Fixture Plugin Agent hears you'],
-      [DocsLanguage.PortugueseBrazil]: ['O Agente plugin de teste ouve você'],
+      ...perLanguage({ valueOf: () => ['Fixture Plugin Agent'] }),
+      [DocsPageLanguage.English]: ['Fixture Plugin Agent hears you'],
+      [DocsPageLanguage.PortugueseBrazil]: ['O Agente plugin de teste ouve você'],
     },
     speakerNames: ['Fixture Plugin Agent'],
   },

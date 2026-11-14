@@ -1,0 +1,58 @@
+---
+title: 始め方
+description: あなたのWhatsAppから、AIからの最初のメッセージまで。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ja/start-link.mdx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+WhatsAppのコマンドは、今のところ英語かポルトガル語の言葉で入力します。このページでは英語の言葉を使います。
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** 任意のテキスト、たとえば `hi` を送ってください。最初のメッセージでアカウントが作られ、その電話があなたのものだと確認されます。
+
+   <StartLink />
+
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
+
+2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。`new agent` と名前を送ります。たとえば `new agent claude` です。
+
+3. **プロンプトを受け取ります。** zapbipが、あなた専用の1〜2行で返信します。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **AIに貼り付けます。** ChatGPT、Claude、Grok、または普段使っているAIを開き、zapbipから届いた1行を貼り付けます。次のような内容です。
+
+   <InstallPrompt />
+
+   AIはオンラインで指示を読み、自分で設定を行います。
+
+5. **AIからメッセージが届きます。** 接続を確認するために、WhatsAppに最初のメッセージを送ってきます。
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
+
+<Note>
+  claude.ai、ChatGPT、Web版のGrokでは、お願いが1つあります。AIが、設定でコネクタを追加するよう案内します。その案内に従ってください。これはそれらのアプリの決まりです。
+</Note>
+
+## 知っておくこと
+
+- すべてのAIに使うWhatsApp番号は1つです。AIごとに1行が発行されるので、見分けられます。
+- その1行は1回だけ使え、30 分で期限が切れます。期限が切れたら `rotate claude` と送ると新しいものが届きます。
+- いつでも自分から書けます。AIは時間制限なく聞き続けます。
+- ウェイトリストに載っている場合は、この後どうなるかを[FAQ](/ja/help/faq)で確認してください。
+- 使うAIを選んで、[対応エージェント](/ja/agents/supported-agents)にあるそのページに従ってください。

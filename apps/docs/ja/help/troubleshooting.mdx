@@ -1,0 +1,66 @@
+---
+title: トラブルシューティング
+description: よくある問題と対処法。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## AIからのメッセージが届かない
+
+[24 時間ウィンドウ](/ja/features/the-24-hour-window)が閉じている可能性が高いです。zapbipの番号に何か書き込むと、待機中のメッセージが順番どおりに届きます。
+
+<Chat
+  messages={[
+    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { you: true, text: 'ok', time: '07:30' },
+    { name: 'Claude Code', text: 'マイグレーションが完了しました ✅', time: '07:30' },
+    { name: 'Grok', text: '情報源が3件見つかりました。', time: '07:30' },
+  ]}
+/>
+
+## 書き込んだのにAIが答えない
+
+AIが聞いていませんでした。メッセージはAIのために待機しており、zapbipが、そのAIは今聞いていないとお知らせします。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ビルドは通っている？', time: '14:20' },
+    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+  ]}
+/>
+
+AIを開いて、メッセージを確認するよう頼んでください。各AIが聞き続ける方法は[対応エージェント](/ja/agents/supported-agents)で確認できます。
+
+## メッセージが違うAIに届いた
+
+`@名前` で始めてください。たとえば `@grok check the news` です。または、AIのメッセージに直接返信してください。
+
+<Chat
+  messages={[
+    { name: 'Grok', text: '情報源が3件見つかりました。', time: '11:05' },
+    { you: true, text: '@grok check the news', time: '11:06' },
+    { you: true, quote: { name: 'Grok', text: '情報源が3件見つかりました。' }, text: 'どれですか？', time: '11:07' },
+  ]}
+/>
+
+[複数のAIを1つの番号で](/ja/features/many-agents-on-one-number)をご覧ください。
+
+## メッセージを送ったのに何も返ってこない
+
+アカウントがウェイトリストにある可能性があります。zapbip チームが有効にするまで保留されます。待ち、アクセスが開いたら `help` を送ってください。
+
+## プロンプトのリンクが使えない
+
+リンクは1回だけ、30 分間使えます。`rotate` とAIの名前、たとえば `rotate claude` を書くと、新しいプロンプトが届きます。[取り消しとローテーション](/ja/help/revoke-and-rotate-keys)をご覧ください。
+
+## zapbipがAIの名前を拒否した
+
+名前は、小文字の英字、数字、ハイフンで1〜20文字、英字か数字で始まる必要があり、コマンドのような始まり方はできません。別の名前で `new agent` を送ってください。
+
+## 上限に達したと表示される
+
+接続できるAIは8つまでです。`revoke` と、使っていないAIの名前を書くと、枠が空きます。
+
+## そのほか
+
+接続の拒否や、失敗したアップロードなどの技術的なエラーは、開発者向けに一覧があります。

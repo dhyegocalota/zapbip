@@ -1,7 +1,8 @@
-import { WebLanguageTag, WebLocale } from '@zapbip/types';
+import { DOCS_LANGUAGE_FOLDERS, DocsPageLanguage, WebLanguageTag, WebLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { Flag } from '../../src/web-shell/flags';
 import { LOCALE_PROFILES, MENU_LOCALES, languageOf } from '../../src/web-shell/locale-profiles';
+import { docsUrlOf } from '../../src/web-shell/shell-links';
 
 const LOCALES = Object.values(WebLocale);
 const FLAG_PATTERN = /data-flag="([a-z]+)"/;
@@ -30,8 +31,27 @@ describe('the locale profiles', () => {
     expect(LOCALE_PROFILES[WebLocale.ChineseSimplified].nativeName).toBe('简体中文');
   });
 
-  it('point every language without translated documentation at the English documentation', () => {
-    expect(LOCALES.filter((locale) => LOCALE_PROFILES[locale].docsPath !== '')).toEqual([WebLocale.PortugueseBrazil]);
+  it('point every language at the documentation folder of its own language', () => {
+    LOCALES.forEach((locale) => {
+      const tag = LOCALE_PROFILES[locale].languageTag;
+      const docsLanguage = Object.values(DocsPageLanguage).find(
+        (candidate) => (tag as string) === candidate || tag.startsWith(`${candidate}-`),
+      )!;
+      const folder = DOCS_LANGUAGE_FOLDERS[docsLanguage];
+      expect(LOCALE_PROFILES[locale].docsPath).toBe(folder === '' ? '' : `/${folder}`);
+    });
+  });
+
+  it.each([
+    [WebLocale.Spanish, '/es'],
+    [WebLocale.German, '/de'],
+    [WebLocale.French, '/fr'],
+    [WebLocale.Japanese, '/ja'],
+    [WebLocale.Korean, '/ko'],
+    [WebLocale.ChineseSimplified, '/zh'],
+  ])('sends the documentation link of %s to %s', (locale, folder) => {
+    expect(docsUrlOf({ locale, path: '' })).toBe(`https://docs.zapbip.com${folder}`);
+    expect(docsUrlOf({ locale, path: '/mcp' })).toBe(`https://docs.zapbip.com${folder}/mcp`);
   });
 });
 

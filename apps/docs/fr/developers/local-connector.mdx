@@ -1,0 +1,144 @@
+---
+title: 'Connecteur local'
+description: "Les commandes connect, listen et channel de zapbip : options, variable d'environnement, isolation du réveil et journaux."
+---
+
+Normalement, votre IA ne lit WhatsApp que lorsqu'elle travaille déjà. Si vous lui écrivez pendant qu'elle est inactive, votre message attend.
+
+Le connecteur zapbip règle cela. C'est un petit programme qui reste ouvert sur votre ordinateur. Quand vous écrivez sur WhatsApp, il réveille la session d'IA que vous utilisiez déjà, lui remet votre message et la laisse vous répondre. Cela prend environ 7 secondes avec Claude Code et 6 avec Codex.
+
+Il fonctionne avec Claude Code et Codex. Votre ordinateur doit être allumé et éveillé, et le connecteur doit tourner.
+
+## Commandes
+
+| Commande  | Ce qu'elle fait                                                                               |
+| --------- | --------------------------------------------------------------------------------------------- |
+| `connect` | Réveille une session fermée quand vous écrivez. Accepte `--client`, `--cwd` et `--session`.   |
+| `listen`  | Affiche une ligne JSON par message, pour un agent qui surveille une commande en arrière-plan. |
+| `channel` | Lance un canal MCP local qui place chaque message dans une session Claude Code ouverte.       |
+
+`ZAPBIP_CONNECTION_URL` contient le lien de connexion. `connect` et `listen` le demandent quand il n'est pas défini.
+
+## Ce qu'il vous faut
+
+- Claude Code ou Codex, déjà connecté à zapbip.
+- Au moins une session antérieure dans le dossier où vous voulez que l'IA travaille.
+- Node 24 ou plus récent.
+- Votre lien de connexion, le même lien `https://.../c/<secret>/mcp` que votre IA utilise pour parler à zapbip. Traitez-le comme un mot de passe.
+
+## Le démarrer
+
+Ouvrez un terminal dans le dossier où vous utilisez votre IA et lancez l'une de ces commandes :
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client claude-code
+```
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client codex
+```
+
+Si vous ne définissez pas `ZAPBIP_CONNECTION_URL`, le connecteur vous demande le lien. Il ne prend jamais le lien en argument, car les arguments apparaissent dans l'historique de votre shell et dans la liste des processus.
+
+Laissez le terminal ouvert. Le connecteur affiche une ligne pour chaque événement et s'arrête quand vous appuyez sur `Ctrl+C`. Pour le garder en marche sans terminal, voir [L'exécuter en arrière-plan](/fr/developers/background-running).
+
+## Ce qui se passe quand vous écrivez
+
+1. Vous écrivez à votre IA sur WhatsApp.
+2. Le connecteur reçoit votre message et réveille la session la plus récente du dossier.
+3. L'IA lit votre message et vous répond sur WhatsApp.
+4. Si plusieurs messages arrivent ensemble, ils sont traités un par un, dans l'ordre.
+
+Si vous étiez hors ligne ou si le connecteur était arrêté, vos messages ne sont pas perdus. Quand il se reconnecte, il récupère tous les messages restés sans réponse.
+
+## Choisir la session
+
+Par défaut, le connecteur utilise la session la plus récente du dossier. Si vous avez le même dossier ouvert dans une autre fenêtre, un réveil peut s'ajouter à cette conversation. Pour l'éviter, épinglez une session :
+
+```bash
+npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+```
+
+| Option      | Ce qu'elle fait                                                                        |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `--client`  | `claude-code` ou `codex`. Obligatoire.                                                 |
+| `--cwd`     | Le dossier de travail. Par défaut, le dossier dans lequel vous avez lancé la commande. |
+| `--session` | Un identifiant de session (UUID) à toujours reprendre, au lieu de la plus récente.     |
+
+## Ce que l'IA peut faire quand elle est réveillée
+
+Une seule chose : vous renvoyer un message. Le connecteur donne à l'IA une configuration privée qui ne contient que zapbip, si bien que les outils de vos autres serveurs MCP ne lui sont pas disponibles. Claude Code s'exécute en outre sans vos fichiers de réglages et avec tous les outils intégrés désactivés, et Codex s'exécute avec un bac à sable en lecture seule et avec les autres serveurs MCP qu'il trouve dans vos fichiers de configuration Codex désactivés. S'il ne peut pas lire l'un de ces fichiers, il ne réveille pas Codex et laisse le message non lu. Il refuse aussi quand un fichier Codex géré définit une clé hors d'une courte liste de clés inoffensives, quand un profil définit le bac à sable, l'approbation, les outils ou les fonctionnalités (ou une clé hors de cette liste), quand un fichier active un interrupteur de recherche web, ou quand `zapbip` est défini ailleurs que dans le `config.toml` du dossier personnel de Codex. La recherche web de Codex est désactivée. Il reste à Codex `send_message` et un shell en lecture seule ; les apps et connecteurs de votre compte Codex ne sont pas désactivés, et les préférences gérées macOS `com.openai.codex` et les réglages de politique gérée de Claude Code s'appliquent toujours. Votre message lui parvient comme un message de vous, marqué comme vérifié. Un message que vous avez transféré de quelqu'un d'autre arrive marqué comme non vérifié, avec une étiquette de transfert, et l'IA ne le traite pas comme votre instruction.
+
+Si l'application Codex a déjà la conversation ouverte, Codex refuse de la reprendre. Le connecteur démarre alors une nouvelle session dans le même dossier, qui commence sans la conversation précédente, et l'utilise ensuite.
+
+## Garder une session ouverte à l'écoute
+
+`connect` réveille une session fermée. Pour une session que vous avez ouverte en ce moment, Claude Code peut vous entendre aussitôt, sans réveil et sans attente. Il y a deux façons, et la première est la meilleure.
+
+Le canal est le premier choix. C'est un petit programme que Claude Code lance lui-même, comme n'importe quel autre outil. Il place chaque message que vous écrivez sur WhatsApp directement dans la session ouverte, comme un message de vous, marqué comme vérifié (un message transféré est marqué comme non vérifié). Définissez `ZAPBIP_CONNECTION_URL` dans l'environnement où tourne Claude Code, et Claude Code le lance avec :
+
+```bash
+npx zapbip@0.1.0 channel
+```
+
+Le canal ne peut pas vous demander le lien, il ne le lit donc que dans `ZAPBIP_CONNECTION_URL`. Il n'accepte aucun argument.
+
+Déclarez les deux serveurs dans le `.mcp.json` du dossier où vous travaillez. Le canal apporte vos messages ; le serveur HTTP de zapbip, sous une autre clé, donne à la session l'outil `send_message` avec lequel elle répond :
+
+```json
+{
+  "mcpServers": {
+    "zapbip-channel": {
+      "command": "npx",
+      "args": ["zapbip@0.1.0", "channel"],
+      "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
+    },
+    "zapbip": {
+      "type": "http",
+      "url": "https://<host>/c/<secret>/mcp"
+    }
+  }
+}
+```
+
+La session répond via `zapbip`. Sans lui, la session vous entend mais n'a aucun moyen de répondre. Lancez ensuite Claude Code avec :
+
+```bash
+claude --dangerously-load-development-channels server:zapbip-channel
+```
+
+`zapbip` est la clé du serveur de canal dans `.mcp.json`. La ligne de démarrage affiche `Channels (experimental)`. Claude Code vous demande d'accepter le canal de développement et le serveur MCP du projet ; acceptez les deux.
+
+Le listener est la solution de secours. Il affiche une ligne pour chaque message que vous écrivez, et Claude Code surveille ces lignes avec son outil Monitor. Chaque ligne réveille la session ouverte, et rien n'est dépensé tant que vous restez silencieux :
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 listen
+```
+
+Chaque ligne est du JSON avec l'identifiant du message, son type, `"sender":"owner"`, `"verified"` (`true` pour votre propre message, `false` pour un message transféré), `"forwarded"` et le texte. Une surveillance Monitor dure jusqu'à 30 minutes, donc l'IA relance la surveillance chaque fois qu'une se termine. D'autres agents qui peuvent garder une commande en arrière-plan et réagir à sa sortie, comme OpenClaw et Hermes, peuvent utiliser `npx zapbip@0.1.0 listen` de la même façon.
+
+Les deux programmes restent ouverts et se reconnectent d'eux-mêmes, comme `connect`. Les deux ne marquent un message comme traité qu'après l'avoir transmis, de sorte qu'un message n'est jamais perdu ni affiché deux fois. Leurs journaux vont sur la sortie d'erreur et ne contiennent jamais vos messages ni votre lien.
+
+Les trois façons se complètent donc : le canal pour une session ouverte, `listen` comme secours, et `connect` pour une session fermée.
+
+## Un connecteur par connexion
+
+Si vous démarrez un second connecteur pour la même connexion, le premier termine le réveil en cours et s'arrête. Lancez-le sur un seul ordinateur à la fois. Si un message arrive au moment où vous changez, les deux connecteurs peuvent réveiller votre IA une fois pour ce même message ; zapbip livre au moins une fois, jamais zéro fois.
+
+Tant qu'un connecteur est attaché, zapbip réveille votre IA par lui. Quand il se ferme, zapbip revient au réglage que vous aviez avant.
+
+## Ce qu'il affiche
+
+Chaque ligne est du JSON avec une heure et un événement, comme `wake_started` et `wake_finished`. Les lignes portent des identifiants, des types, des résultats et des durées. Elles ne portent jamais vos messages, les réponses de l'IA ni votre lien de connexion.
+
+## Quand quelque chose ne fonctionne pas
+
+| Ce que vous voyez                 | Ce que cela signifie                                                                                                                                        |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Le connecteur se termine aussitôt | Le lien est inconnu ou révoqué. Demandez-en un nouveau.                                                                                                     |
+| Votre message reste sans réponse  | Il n'y a pas encore de session dans le dossier, ou `claude` ou `codex` n'est pas installé là où tourne le connecteur. Ouvrez l'IA une fois dans ce dossier. |
+| Il se reconnecte sans cesse       | Votre réseau est coupé. Il réessaie avec des attentes croissantes, jusqu'à 30 secondes, et reprend là où il s'était arrêté.                                 |
+| Il s'est arrêté tout seul         | Vous avez démarré un autre connecteur pour la même connexion.                                                                                               |

@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: '画像、動画、音声、ボイスメッセージ、ドキュメント、スタンプを送ります。'
+---
+
+画像、動画、音声、ボイスメッセージ、ドキュメント、スタンプを送ります。
+
+## 入力
+
+| フィールド  | 型                                               | 備考                                                                                         |
+| ----------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `kind`      | `image`、`video`、`audio`、`document`、`sticker` | 上限: 5 MB、16 MB、16 MB、100 MB、100 KB。                                                   |
+| `url`       | string                                           | httpsリンク。これか `upload_id` のどちらかを指定します。                                     |
+| `upload_id` | string                                           | [create_upload](/ja/mcp-reference/create-upload) から。これか `url` のどちらかを指定します。 |
+| `caption`   | string、任意                                     | 最大1024文字。                                                                               |
+| `filename`  | string、任意                                     | 最大240文字。                                                                                |
+| `voice`     | boolean、任意                                    | 音声をボイスメッセージとして送ります。                                                       |
+| `reply_to`  | string、任意                                     | 引用するメッセージのid。                                                                     |
+
+## 出力
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` は[24 時間ウィンドウ](/ja/concepts/24-hour-window)が閉じていることを意味します。
+
+スタンプは `image/webp` である必要があります。サイズとタイプは、何かが送信される前に検査されます。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

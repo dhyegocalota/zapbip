@@ -1,4 +1,4 @@
-import { OwnerLocale, PricingCurrency, WebLocale } from './enums';
+import { DocsLanguage, DocsPageLanguage, OwnerLocale, PricingCurrency, WebLocale } from './enums';
 
 export const SECOND_MS = 1_000;
 export const MINUTE_MS = 60 * SECOND_MS;
@@ -81,7 +81,36 @@ export const COMPANY = {
   contactEmail: 'dhyego@logicbit.com.br',
 } as const;
 export const BYTES_PER_MEGABYTE = 1_000_000;
-export const PAGE_LANGUAGE_FOLDER = 'pt-br';
+export const DOCS_LANGUAGE_FOLDERS: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: '',
+  [DocsPageLanguage.PortugueseBrazil]: 'pt-br',
+  [DocsPageLanguage.Spanish]: 'es',
+  [DocsPageLanguage.German]: 'de',
+  [DocsPageLanguage.French]: 'fr',
+  [DocsPageLanguage.Japanese]: 'ja',
+  [DocsPageLanguage.Korean]: 'ko',
+  [DocsPageLanguage.Chinese]: 'zh',
+};
+export const DOCS_START_LINK_LANGUAGES: Record<DocsPageLanguage, DocsLanguage> = {
+  [DocsPageLanguage.English]: DocsLanguage.English,
+  [DocsPageLanguage.PortugueseBrazil]: DocsLanguage.PortugueseBrazil,
+  [DocsPageLanguage.Spanish]: DocsLanguage.English,
+  [DocsPageLanguage.German]: DocsLanguage.English,
+  [DocsPageLanguage.French]: DocsLanguage.English,
+  [DocsPageLanguage.Japanese]: DocsLanguage.English,
+  [DocsPageLanguage.Korean]: DocsLanguage.English,
+  [DocsPageLanguage.Chinese]: DocsLanguage.English,
+};
+export const DOCS_OWNER_LOCALES: Record<DocsPageLanguage, OwnerLocale> = {
+  [DocsPageLanguage.English]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
+  [DocsPageLanguage.Spanish]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.German]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.French]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.Japanese]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.Korean]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.Chinese]: OwnerLocale.EnglishUs,
+};
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
 export const PRODUCTION_ZONE = 'zapbip.com';
 export const PRODUCTION_PUBLIC_ORIGIN = `https://mcp.${PRODUCTION_ZONE}`;

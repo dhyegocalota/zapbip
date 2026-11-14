@@ -1,0 +1,48 @@
+---
+title: 'Canal de WhatsApp'
+description: 'Cómo viaja un mensaje entre el propietario y un agente, y los límites que fija WhatsApp.'
+---
+
+zapbip habla con el propietario a través de la API oficial de WhatsApp Cloud, con un solo número compartido por todas las cuentas.
+
+## Mensajes entrantes
+
+El propietario escribe al número. zapbip comprueba la firma de cada notificación, guarda cada mensaje una sola vez aunque WhatsApp lo entregue dos veces, y lo enruta a un agente con [las reglas de enrutamiento](/es/concepts/routing).
+
+| El propietario envía                                         | El agente recibe                                                                              |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| texto, imagen, vídeo, audio, nota de voz, documento, sticker | el mensaje, con sus archivos guardados por zapbip                                             |
+| ubicación, tarjeta de contacto                               | el mensaje                                                                                    |
+| un toque en un botón o en una fila de lista                  | la elección, que responde a la pregunta                                                       |
+| una reacción                                                 | la reacción, enrutada al agente que envió el mensaje reaccionado; al quitarla llega sin emoji |
+| un mensaje de otro tipo                                      | nada; se le dice al propietario que ese tipo aún no es compatible                             |
+
+Un mensaje que envía el propietario abre la [ventana de 24 horas](/es/concepts/24-hour-window). Una reacción no.
+
+Si un archivo no se puede descargar, el agente recibe el mensaje con `media_id: null` y `media_status: "unavailable"`, y se le pide al propietario que lo envíe de nuevo.
+
+## Mensajes salientes
+
+Dentro de la ventana, todos los tipos salen al instante. Fuera de ella el mensaje queda en cola y el propietario recibe [un aviso](/es/concepts/owner-notices).
+
+| Tipo      | Límite                                                                                                                                                             |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| texto     | 4096 caracteres                                                                                                                                                    |
+| botones   | hasta 3 botones, pregunta de hasta 1024 caracteres, título de hasta 20 caracteres                                                                                  |
+| lista     | hasta 10 filas, pregunta de hasta 1024 caracteres, botón de hasta 20 caracteres, título de fila de hasta 24 caracteres, descripción de fila de hasta 72 caracteres |
+| reacción  | el mensaje reaccionado debe tener como máximo 30 días, estar en el mismo hilo y no estar borrado                                                                   |
+| imagen    | JPEG, PNG o WebP, hasta 5 MB                                                                                                                                       |
+| vídeo     | 3GP o MP4, hasta 16 MB                                                                                                                                             |
+| audio     | AAC, AMR, MP3, M4A u OGG, hasta 16 MB                                                                                                                              |
+| documento | PDF, Word, Excel, PowerPoint o texto sin formato, hasta 100 MB                                                                                                     |
+| sticker   | WebP estático, hasta 100 KB                                                                                                                                        |
+
+zapbip rechaza un envío que rompe un límite y la herramienta devuelve un error que nombra el campo.
+
+## Entrega
+
+La `delivery` de un mensaje solo avanza: `sent`, `delivered`, `read`. Un envío que WhatsApp rechaza pasa a `failed`. Un mensaje que ya es `delivered` o `read` nunca pasa a `failed`.
+
+## Número restringido
+
+Cuando WhatsApp informa de que el número está restringido o la cuenta está inhabilitada, zapbip deja de enviar durante 24 horas y se avisa al operador. Los mensajes enviados en ese tiempo devuelven `delivery: "failed"`.

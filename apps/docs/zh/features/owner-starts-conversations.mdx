@@ -1,0 +1,59 @@
+---
+title: 由你开启对话
+description: 从 WhatsApp 先给你的 AI 发消息。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+你不必等 AI 先开口。给 zapbip 发一条消息，它会发给你指名的那个 AI，或者最后发言的那个。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude 构建通过了吗？', time: '09:00' },
+    { name: 'Claude', text: '通过了，212 个测试全部通过。', time: '09:00' },
+  ]}
+/>
+
+## 你的 AI 如何听到你
+
+AI 只有在被唤醒时才会回答。zapbip 会使用每个 AI 允许的最佳方式：
+
+| 唤醒方式         | 发生什么                                | 通常等待时间                        |
+| ---------------- | --------------------------------------- | ----------------------------------- |
+| 你电脑上的连接器 | 你电脑上的会话立即恢复。                | Claude Code 7 秒，Codex 6 秒        |
+| Webhook          | zapbip 调用 AI 自己的链接，它随即启动。 | Grok Bot 9 秒，claude.ai 16 秒      |
+| 定时任务         | AI 按定时器检查你的消息。               | 最长一个定时间隔，ChatGPT 为 1 小时 |
+| 你的另一个 AI    | 你的第二个 AI 代替它回答。              | 取决于那个 AI，例如网页版 Grok      |
+| 仅收件箱         | 你的消息等待，直到 AI 来查看。          | 直到 AI 检查                        |
+
+你的消息不会丢失。如果无法唤醒这个 AI，消息会在它的收件箱里等待。
+
+## 当你的 AI 没有在监听
+
+zapbip 会立即告诉你，让你知道消息在等待。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude 构建通过了吗？', time: '09:00' },
+    {
+      notice: true,
+      text: 'The agent claude is not listening right now. Your message waits in the inbox.',
+      time: '09:00',
+    },
+  ]}
+/>
+
+## 当 24 小时窗口关闭时
+
+WhatsApp 只允许 zapbip 在你最后一条消息之后的 24 小时内自由发消息。窗口一旦关闭，zapbip 每个关闭的窗口发送一条通知，其余的先扣留。随便写点什么，窗口就会重新打开。zapbip 自己的提示也是如此。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude 构建通过了吗？', time: '昨天 09:00' },
+    { notice: true, text: 'The agent claude has a message for you: Yes, all 212 tests pass.', time: '10:30' },
+    { you: true, text: 'ok', time: '10:31' },
+    { name: 'Claude', text: '通过了，212 个测试全部通过。', time: '10:31' },
+  ]}
+/>
+
+参见 [24 小时窗口](/zh/features/the-24-hour-window)和[一个号码，多个 AI](/zh/features/many-agents-on-one-number)。

@@ -1,0 +1,79 @@
+---
+title: claude.ai
+description: Connectez claude.ai à votre WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/fr/start-link.mdx';
+import InstallPrompt from '/snippets/fr/install-prompt.mdx';
+
+## Ce qui fonctionne
+
+| Vous voulez                            | claude.ai                                                               |
+| -------------------------------------- | ----------------------------------------------------------------------- |
+| Recevoir ses messages                  | Texte, photos, vidéos, audio, documents, positions, contacts, réactions |
+| Lui répondre d'un toucher              | Boutons et listes ; elle attend votre toucher                           |
+| Écrire en premier depuis WhatsApp      | Oui, une tâche la réveille en environ 16 secondes                       |
+| Garder une question ouverte des heures | Oui, il n'y a aucune limite de temps                                    |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Le rapport est terminé. Je l’envoie à l’équipe ?', options: ['Oui', 'Pas encore'], time: '08:15' },
+    { you: true, text: 'Oui', time: '08:16' },
+  ]}
+/>
+
+## Comment elle écoute
+
+Type de réveil : **Webhook**. Quand vous écrivez sur WhatsApp, zapbip déclenche le lien d'une tâche claude.ai, et la tâche s'exécute dans le cloud avec vos connecteurs. Elle répond environ 16 secondes après que vous avez écrit, sans demande d'approbation.
+
+- Les tâches claude.ai s'exécutent selon un calendrier, au plus une fois par heure. C'est pourquoi vous créez aussi une tâche toutes les heures qui vérifie vos messages : ce n'est qu'un filet de sécurité, pour que rien n'attende plus d'une heure si un réveil est manqué.
+
+Quand votre IA vous demande quelque chose, zapbip garde la question et répond « en attente » au plus toutes les 50 secondes. claude.ai rappelle alors, et continue de rappeler à nouveau jusqu'à ce que vous répondiez, sans limite de temps.
+
+claude.ai attend environ 4 minutes une seule réponse et réessaie de lui-même, il n'y a donc aucune limite au total.
+
+## Configurer de zéro
+
+1. **Écrivez au numéro de zapbip sur WhatsApp.** Envoyez n'importe quel texte, par exemple `hi`.
+
+   <StartLink />
+
+2. **Demandez un nouvel agent.** Un agent est une IA que vous connectez.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
+         time: '08:00',
+       },
+     ]}
+   />
+
+   Les commandes et les réponses de zapbip sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+
+3. **Collez la ligne dans claude.ai.**
+
+   <InstallPrompt />
+
+   claude.ai lit les instructions et les suit dans l'ordre. Le lien est secret : ne le laissez pas dans des conversations que vous partagez.
+
+4. **Collez le connecteur.** claude.ai vous demande de coller `<connectionLink>` comme connecteur personnalisé dans les Réglages. Vous le faites vous-même, car claude.ai ne permet de l'ajouter qu'à vous.
+
+5. **Créez la tâche de réveil.** Il vous demande de créer une tâche avec un déclencheur d'API sur claude.ai/code/routines, puis de coller son URL de déclenchement et son jeton dans le chat. Le second collage est aussi le vôtre, car claude.ai ne montre le jeton qu'à vous.
+
+6. **Dites à zapbip comment la réveiller.** Si vous vous arrêtez avant que la tâche n'existe, il appelle `set_wake({mode: "none"})` et vous dit que le chat ne voit les nouveaux messages que lorsque vous l'ouvrez. Sinon, il appelle `set_wake({mode: "webhook", url, token})`.
+
+7. **Créez le filet de sécurité horaire.** Il vous demande de créer une tâche toutes les heures qui appelle `check_inbox`, pour que rien n'attende plus d'une heure si un réveil est manqué.
+
+8. **Testez.** Dans le chat, il appelle `send_message` avec ✅ installed.
+
+## Vérifier que ça marche
+
+claude.ai envoie `✅ installed` à votre WhatsApp une fois connecté.
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+
+Si rien n'arrive, voyez [Dépannage](/fr/help/troubleshooting).

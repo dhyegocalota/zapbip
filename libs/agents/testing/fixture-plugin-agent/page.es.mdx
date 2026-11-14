@@ -1,0 +1,31 @@
+---
+title: Fixture Plugin Agent
+description: Conecta Fixture Plugin Agent a tu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Qué funciona
+
+Fixture Plugin Agent te escucha y responde por WhatsApp.
+
+## Cómo escucha
+
+Tipo de activación: **Local**. Fixture Plugin Agent ejecuta un listener en tu ordenador. Cuando zapbip tiene una pregunta para ti, responde "pendiente" como máximo cada 50 segundos. Fixture Plugin Agent vuelve a llamar y sigue llamando otra vez hasta que respondas. Sin límite de tiempo.
+
+## Configúralo desde cero
+
+1. Escribe al número de zapbip en WhatsApp.
+2. Pide un `new agent`, ejecuta el comando de instalación de abajo y pon el enlace de conexión en los ajustes de Fixture Plugin Agent.
+
+```bash
+pip install --require-hashes --requirement https://mcp.zapbip.com/pkg/fixture-requirements.txt # sha256:eb1fc5e4bae42f5a04d9bc2001ef4516367ff8520495100b1ccaec1320b85f84
+```
+
+## Comprueba que funciona
+
+Pide a Fixture Plugin Agent que envíe `✅ installed` a tu WhatsApp.
+
+Ejecuta un solo listener por agente: el plugin o `npx zapbip@0.1.0 listen`, nunca los dos. Un segundo listener reemplaza al primero.
+
+<Chat messages={[{ name: 'Fixture Plugin Agent', text: '✅ installed', time: '14:03' }]} />

@@ -1,0 +1,102 @@
+---
+title: 'OpenClaw'
+description: 'WhatsApp으로 OpenClaw에게 쓰면 시간 제한 없이 답해 줍니다.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 지원하는 기능
+
+OpenClaw는 작은 zapbip 채널을 통해 내 WhatsApp을 계속 듣습니다. 내가 먼저 쓰거나 나중에 질문에 답하면 메시지가 OpenClaw 세션에 도착합니다.
+
+<Chat
+  contact="OpenClaw"
+  messages={[
+    { you: true, text: '내일 9시에 청구서 보내라고 알려 줘.', time: '18:02' },
+    { name: 'OpenClaw', text: '알겠어요. 내일 9:00에 알려 드릴게요.', time: '18:02' },
+  ]}
+/>
+
+### 내가 전달한 메시지
+
+다른 사람에게서 전달받은 메시지는 내가 쓴 것이 아니라는 라벨이 붙어 OpenClaw에 도착하며, 명령을 실행할 수 없습니다.
+
+## 수신 방식
+
+단계: 로컬. 질문이 열려 있는 동안 OpenClaw는 한 번에 최대 50초 기다립니다. 내가 답하지 않으면 대기가 보류 중(pending)으로 끝나고, OpenClaw는 필요한 만큼 몇 번이든 다시 호출합니다. 시간 제한 없이 기다립니다.
+
+채널은 zapbip으로 가는 연결 하나를 시간 제한 없이 열어 둡니다. 네트워크가 끊기면 스스로 다시 연결하며, 실패할 때마다 조금씩 더 오래 기다립니다(처음에는 1초, 최대 30초). 그동안 내가 보낸 메시지는 zapbip 받은편지함에서 기다리고, 채널은 돌아오는 즉시 답하지 못한 메시지를 모두 가져옵니다.
+
+### 채널을 설치할 수 없을 때
+
+대신 OpenClaw가 폴링할 수 있습니다. 설정에 나온 MCP 서버를 추가하고, `check_inbox`를 호출하는 1분마다 도는 작업을 만드세요. 메시지는 최대 1분 기다리고, 답도 같은 방식으로 옵니다.
+
+## 처음부터 설정하기
+
+### 필요한 것
+
+- 게이트웨이가 실행 중인 OpenClaw 2026.10.10 이상.
+- 연결 링크. AI가 zapbip과 이야기할 때 쓰는 것과 같은 `https://.../c/<secret>/mcp` 링크입니다. 비밀번호처럼 다루세요.
+
+### 채널 설치
+
+플러그인은 이 에이전트를 향한 내 메시지를 zapbip에서 읽고 에이전트의 답을 다시 게시합니다. 그 밖의 일은 하지 않습니다. 설치 명령에는 `--accept-capabilities`가 필요하며, 이를 통해 OpenClaw가 다시 묻지 않고 설치할 수 있습니다.
+
+```bash
+openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+```
+
+그다음 `zapbip` 채널에 링크를 설정하고 `openclaw.json`에서 플러그인을 활성화합니다.
+
+```json
+{
+  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } },
+  "plugins": { "entries": { "zapbip": { "enabled": true } } }
+}
+```
+
+연결 링크가 들어 있는 파일은 비밀번호처럼 작동합니다. 내 사용자만 읽을 수 있도록 권한을 `600`으로 설정하고, 공유하거나 커밋하지 마세요.
+
+```bash
+chmod 600 <file>
+```
+
+게이트웨이를 다시 시작하세요.
+
+에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 `npx zapbip@0.1.0 listen` 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.
+
+### OpenClaw가 답하는 방식
+
+OpenClaw는 내 메시지에 대한 답을 추가 설정 없이 채널 자체를 통해 돌려보냅니다. 답을 보내는 데 실패하면 채널이 게이트웨이 로그에 `plugin_reply_failed`를 기록하고 다시 시도하지 않으므로, 그 답은 사라질 수 있습니다.
+
+zapbip을 MCP 서버로 추가하면 OpenClaw가 나와 대화를 먼저 시작하거나, 버튼으로 질문하고 답을 기다리거나, 아래의 폴링 대안을 쓸 수 있습니다.
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "zapbip": { "url": "https://<host>/c/<secret>/mcp", "transport": "streamable-http" }
+    }
+  }
+}
+```
+
+그다음 WhatsApp에서 OpenClaw에게 `✅ installed`를 보내라고 요청하세요. 그 메시지가 도착하면 작동하는 것입니다.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '설치가 끝나면 ✅ installed를 보내 줘.', time: '18:10' },
+    { name: 'OpenClaw', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## 작동 확인
+
+| 보이는 것                                    | 의미                                                                                                                                    |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 내 메시지에 답이 없음                        | 게이트웨이가 실행되고 있지 않거나, `channels.zapbip`에 `connectionLink`가 없거나, `plugins.entries.zapbip.enabled`가 `true`가 아닙니다. |
+| 채널이 스스로 멈춤                           | 같은 연결에 다른 채널이나 커넥터가 시작되어 대체했습니다.                                                                               |
+| OpenClaw가 내 말은 듣지만 답이 도착하지 않음 | 게이트웨이 로그에 `plugin_reply_failed`가 보입니다. 답 전송이 실패했고 다시 시도되지 않습니다. 다시 쓰세요.                             |
+| OpenClaw가 대화를 시작하거나 질문할 수 없음  | `mcp.servers`에 `zapbip` MCP 서버가 없습니다.                                                                                           |
+| 채널이 오류와 함께 멈춤                      | 링크를 알 수 없거나 연결이 해제되었습니다. 새 링크를 요청하세요.                                                                        |

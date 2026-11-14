@@ -1,22 +1,32 @@
-import { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
+import { DocsPageLanguage, WakeMode, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'AnyMcpClient',
   idIsOrdinaryWord: false,
   docs: {
     matrixName: {
-      [DocsLanguage.English]: 'Any app with MCP (Model Context Protocol)',
-      [DocsLanguage.PortugueseBrazil]: 'Qualquer app com MCP (Model Context Protocol)',
+      [DocsPageLanguage.English]: 'Any app with MCP (Model Context Protocol)',
+      [DocsPageLanguage.PortugueseBrazil]: 'Qualquer app com MCP (Model Context Protocol)',
+      [DocsPageLanguage.Spanish]: 'Cualquier app con MCP (Model Context Protocol)',
+      [DocsPageLanguage.German]: 'Jede App mit MCP (Model Context Protocol)',
+      [DocsPageLanguage.French]: 'Toute application avec MCP (Model Context Protocol)',
+      [DocsPageLanguage.Japanese]: 'MCP（Model Context Protocol）対応のあらゆるアプリ',
+      [DocsPageLanguage.Korean]: 'MCP(Model Context Protocol)를 지원하는 모든 앱',
+      [DocsPageLanguage.Chinese]: '任何支持 MCP（Model Context Protocol）的应用',
     },
     linkName: {
-      [DocsLanguage.English]: 'Any MCP app',
-      [DocsLanguage.PortugueseBrazil]: 'Qualquer app MCP',
+      [DocsPageLanguage.English]: 'Any MCP app',
+      [DocsPageLanguage.PortugueseBrazil]: 'Qualquer app MCP',
+      [DocsPageLanguage.Spanish]: 'Cualquier app MCP',
+      [DocsPageLanguage.German]: 'Jede MCP-App',
+      [DocsPageLanguage.French]: 'Toute application MCP',
+      [DocsPageLanguage.Japanese]: '任意の MCP アプリ',
+      [DocsPageLanguage.Korean]: '모든 MCP 앱',
+      [DocsPageLanguage.Chinese]: '任何 MCP 应用',
     },
-    pageFacts: {
-      [DocsLanguage.English]: ['check_inbox', '/developers/any-mcp-client'],
-      [DocsLanguage.PortugueseBrazil]: ['check_inbox', '/developers/any-mcp-client'],
-    },
+    pageFacts: perLanguage({ valueOf: () => ['check_inbox', '/developers/any-mcp-client'] }),
     speakerNames: [],
   },
   listen: {

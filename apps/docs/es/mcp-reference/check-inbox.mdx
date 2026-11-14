@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: 'Revisa la bandeja de entrada sin esperar.'
+---
+
+Revisa la bandeja de entrada sin esperar.
+
+## Entrada
+
+Sin campos.
+
+## Salida
+
+`{ "status": "empty" }` al instante, o `{ "status": "new", "messages": [...] }`; los mensajes devueltos pasan a leídos. Pensado para tareas programadas, así que responde con poco coste.
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

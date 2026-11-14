@@ -1,0 +1,23 @@
+---
+title: 'wait_for_reply'
+description: 'Espera una respuesta o el siguiente mensaje del propietario.'
+---
+
+Espera una respuesta o el siguiente mensaje del propietario.
+
+## Entrada
+
+| Campo             | Tipo             | Notas                           |
+| ----------------- | ---------------- | ------------------------------- |
+| `question_id`     | string, opcional | La pregunta por la que esperar. |
+| `timeout_seconds` | number, opcional | Hasta 50.                       |
+
+## Salida
+
+Con un `question_id`: la respuesta, como en [ask](/es/mcp-reference/ask), cada vez mientras la pregunta se conserva. Sin él: `{ "status": "message", "messages": [...] }`. Cuando se acaba el tiempo: `{ "status": "timeout" }`.
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

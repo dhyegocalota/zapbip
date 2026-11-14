@@ -1,0 +1,14 @@
+---
+title: 'list_agents'
+description: 'Liste les agents connectés à ce compte.'
+---
+
+Liste les agents connectés à ce compte, pour qu’un agent voie qui d’autre est connecté avant de changer quoi que ce soit. Lecture seule : aucune approbation n’est nécessaire et aucune limite n’est comptée. Voir [Laissez votre IA gérer zapbip](/fr/features/let-your-ai-manage-zapbip).
+
+## Entrée
+
+Aucune.
+
+## Sortie
+
+`{ "agents": [{ "name": string, "client": string | null, "created_at": string, "last_active_at": string | null }] }`. Les horodatages sont en ISO 8601. `client` est l’application depuis laquelle l’agent s’est connecté, une fois connecté. Une clé, une empreinte ou un lien ne fait jamais partie de la liste.

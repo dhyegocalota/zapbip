@@ -1,0 +1,18 @@
+---
+title: 'sign_in_link'
+description: 'WhatsAppで、Webアプリへのログインリンクをオーナーに送ります。'
+---
+
+[Webアプリ](/ja/features/web-app)にログインするための、1回限りのリンクをオーナーに送ります。オーナーに代わって実行される`login`コマンドです。リンクはオーナーに届き、エージェントには戻らないため、承認は不要です。[AIにzapbipを任せる](/ja/features/let-your-ai-manage-zapbip)をご覧ください。
+
+アカウントの削除はツールではありません。これまでどおり、WhatsAppコマンドです。
+
+## 入力
+
+なし。
+
+## 出力
+
+`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`。`refused`で`reason`が`window_closed`の場合、24時間ウィンドウが閉じています。リンクは期限切れになってしまうため、待機させません。`send_failed`は、オーナーに連絡できなかったことを意味します。リンクが結果に含まれることはありません。
+
+[connect_agent](/ja/mcp-reference/connect-agent)と同じ制限が適用されます。操作を行う呼び出しは、1接続につき1分間に3回までです。

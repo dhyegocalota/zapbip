@@ -9,7 +9,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import { DocsLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS, WEB_LOCALE_OF_OWNER_LOCALE } from '@zapbip/types';
+import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS, WEB_LOCALE_OF_OWNER_LOCALE } from '@zapbip/types';
 import { chromium } from '@playwright/test';
 import { z } from 'zod';
 import { SCRIPTS } from './landing-demo/demo-copy';
@@ -32,7 +32,7 @@ const OWNER_PHONES: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: '5511999990001',
 };
 const [LEADING_AGENT] = Object.values(AGENT_DEFINITIONS);
-const AGENT_DISPLAY_NAME = LEADING_AGENT!.docs.matrixName[DocsLanguage.English];
+const AGENT_DISPLAY_NAME = LEADING_AGENT!.docs.matrixName[DocsPageLanguage.English];
 const AGENT_NAME = AGENT_DISPLAY_NAME.toLowerCase().replaceAll(' ', '-');
 const TAGLINE_PREFIX = 'zapbip.com · ';
 

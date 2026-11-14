@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: '向所有者发送位置定位点。'
+---
+
+向所有者发送位置定位点。
+
+## 输入
+
+| 字段        | 类型         | 说明                |
+| ----------- | ------------ | ------------------- |
+| `latitude`  | number       |                     |
+| `longitude` | number       |                     |
+| `name`      | string，可选 |                     |
+| `address`   | string，可选 |                     |
+| `reply_to`  | string，可选 | 要引用的消息的 id。 |
+
+## 输出
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` 表示 [24 小时窗口](/zh/concepts/24-hour-window)已关闭。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

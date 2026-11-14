@@ -1,0 +1,51 @@
+---
+title: Toute application compatible MCP
+description: Connectez toute application compatible MCP à votre WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/fr/install-prompt.mdx';
+
+## Ce qui fonctionne
+
+| Vous pouvez                                                     | Toute application MCP                           |
+| --------------------------------------------------------------- | ----------------------------------------------- |
+| Envoyer texte, photos, vidéo, audio et documents                | Oui                                             |
+| Recevoir positions, contacts et réactions                       | Oui                                             |
+| Qu'elle vous interroge avec des boutons ou une liste et attende | Oui                                             |
+| Lancer une conversation quand vous écrivez en premier           | Votre message attend dans la boîte de réception |
+
+## Comment elle écoute
+
+Barreau : Boîte de réception. Rien ne peut réveiller l'application de l'extérieur, donc un message que vous envoyez attend dans la boîte de réception jusqu'à ce que l'application regarde. L'application demande à zapbip avec `check_inbox` si quelque chose de nouveau attend, et le lit.
+
+Pour écouter, l'application vous interroge avec `ask` ou `wait_for_reply`. Chaque appel renvoie « en attente » après 50 secondes au plus si vous n'avez pas répondu, et l'application rappelle à nouveau jusqu'à ce que vous le fassiez, sans limite de temps.
+
+## Configurer de zéro
+
+1. **Écrivez au numéro de zapbip sur WhatsApp.** Envoyez `new agent my-app`. [Comment démarrer](/fr/get-started/how-to-start) montre chaque message. Les commandes et les réponses de zapbip sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent my-app', time: '09:00' },
+       { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Collez la ligne dans l'IA de votre application.** zapbip répond par une ligne faite pour vous :
+
+   <InstallPrompt />
+
+3. **Ajoutez le serveur.** Dans les réglages MCP de l'application, l'IA ajoute l'adresse de zapbip comme serveur HTTP en streaming. L'adresse contient un secret, gardez-la donc privée. Si l'application demande plutôt un en-tête, elle envoie le secret sous la forme `Authorization: Bearer <secret>`.
+
+4. **Consultez la boîte de réception de temps en temps.** L'application appelle `check_inbox` quand elle le peut, par exemple au début de chaque tâche.
+
+## Vérifier que ça marche
+
+Demandez à l'IA d'envoyer `✅ installed` sur WhatsApp. Quand il arrive, la connexion fonctionne.
+
+<Chat messages={[{ name: 'Mon application', text: '✅ installed', time: '09:03' }]} />
+
+Écrivez ensuite quelque chose sur WhatsApp et demandez à l'application de consulter la boîte de réception : elle lit votre message.
+
+Pour l'adresse, l'en-tête et les outils, voyez [Connecter n'importe quel client MCP](/fr/developers/any-mcp-client).

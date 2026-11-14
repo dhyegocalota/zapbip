@@ -1,22 +1,14 @@
-import { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
+import { WakeMode, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'ChatGpt',
   idIsOrdinaryWord: false,
   docs: {
-    matrixName: {
-      [DocsLanguage.English]: 'ChatGPT',
-      [DocsLanguage.PortugueseBrazil]: 'ChatGPT',
-    },
-    linkName: {
-      [DocsLanguage.English]: 'ChatGPT',
-      [DocsLanguage.PortugueseBrazil]: 'ChatGPT',
-    },
-    pageFacts: {
-      [DocsLanguage.English]: [],
-      [DocsLanguage.PortugueseBrazil]: [],
-    },
+    matrixName: perLanguage({ valueOf: () => 'ChatGPT' }),
+    linkName: perLanguage({ valueOf: () => 'ChatGPT' }),
+    pageFacts: perLanguage({ valueOf: () => [] }),
     speakerNames: ['ChatGPT'],
   },
   listen: {

@@ -1,0 +1,23 @@
+---
+title: 'send_contact'
+description: 'Envoie des cartes de contact au propriétaire.'
+---
+
+Envoie des cartes de contact au propriétaire.
+
+## Entrée
+
+| Champ      | Type                | Notes                                                                    |
+| ---------- | ------------------- | ------------------------------------------------------------------------ |
+| `contacts` | tableau, jusqu'à 10 | Chacune avec `name`, `phones` et, en option, `emails` et `organization`. |
+| `reply_to` | string, facultatif  | Identifiant du message à citer.                                          |
+
+## Sortie
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` signifie que la [fenêtre de 24 heures](/fr/concepts/24-hour-window) est fermée.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

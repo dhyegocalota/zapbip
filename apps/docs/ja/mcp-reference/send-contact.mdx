@@ -1,0 +1,23 @@
+---
+title: 'send_contact'
+description: 'オーナーに連絡先カードを送ります。'
+---
+
+オーナーに連絡先カードを送ります。
+
+## 入力
+
+| フィールド | 型             | 備考                                                                      |
+| ---------- | -------------- | ------------------------------------------------------------------------- |
+| `contacts` | 配列、最大10件 | それぞれ `name`、`phones`、任意の `emails` と `organization` を持ちます。 |
+| `reply_to` | string、任意   | 引用するメッセージのid。                                                  |
+
+## 出力
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` は[24 時間ウィンドウ](/ja/concepts/24-hour-window)が閉じていることを意味します。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

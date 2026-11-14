@@ -1,0 +1,26 @@
+---
+title: 'ask'
+description: '버튼이나 목록으로 소유자에게 질문하고 답을 기다립니다.'
+---
+
+버튼이나 목록으로 소유자에게 질문하고 답을 기다립니다.
+
+## 입력
+
+| 필드              | 타입          | 비고                                                                        |
+| ----------------- | ------------- | --------------------------------------------------------------------------- |
+| `question`        | string        | 최대 1024자.                                                                |
+| `options`         | 1~10개의 배열 | 3개까지는 버튼(제목 최대 20자), 4~10개는 목록(행 최대 24자)으로 표시됩니다. |
+| `timeout_seconds` | number, 선택  | 최대 50.                                                                    |
+
+## 출력
+
+소유자가 시간 안에 답하면 `{ "status": "answered", "answer": ..., "message_id": string }`, 그 전에 대기가 끝나면 `{ "status": "pending", "question_id": string }`입니다. `question_id`를 [wait_for_reply](/ko/mcp-reference/wait-for-reply)에 전달하세요.
+
+4분 안에 같은 질문을 반복하면 같은 질문이 반환되고 아무것도 전송되지 않습니다. [질문](/ko/concepts/questions)을 보세요.
+
+## 메시지 종류
+
+import MessageKinds from '/snippets/ko/message-kinds.mdx';
+
+<MessageKinds />

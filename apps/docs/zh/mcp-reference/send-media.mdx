@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: '发送图片、视频、音频、语音消息、文档或贴纸。'
+---
+
+发送图片、视频、音频、语音消息、文档或贴纸。
+
+## 输入
+
+| 字段        | 类型                                               | 说明                                                                    |
+| ----------- | -------------------------------------------------- | ----------------------------------------------------------------------- |
+| `kind`      | `image`、`video`、`audio`、`document` 或 `sticker` | 限制：5 MB、16 MB、16 MB、100 MB 和 100 KB。                            |
+| `url`       | string                                             | 一个 https 链接。提供它或 `upload_id`。                                 |
+| `upload_id` | string                                             | 来自 [create_upload](/zh/mcp-reference/create-upload)。提供它或 `url`。 |
+| `caption`   | string，可选                                       | 最多 1024 个字符。                                                      |
+| `filename`  | string，可选                                       | 最多 240 个字符。                                                       |
+| `voice`     | boolean，可选                                      | 把音频作为语音消息发送。                                                |
+| `reply_to`  | string，可选                                       | 要引用的消息的 id。                                                     |
+
+## 输出
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` 表示 [24 小时窗口](/zh/concepts/24-hour-window)已关闭。
+
+贴纸必须是 `image/webp`。大小和类型会在发送之前检查。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

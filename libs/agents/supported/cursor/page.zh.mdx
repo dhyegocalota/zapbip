@@ -1,0 +1,73 @@
+---
+title: Cursor
+description: 把 Cursor 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/zh/start-link.mdx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你想要               | Cursor                                               |
+| -------------------- | ---------------------------------------------------- |
+| 收到它的消息         | 文本、照片、视频、音频、文档、位置、联系人、表情回应 |
+| 点按作答             | 按钮和列表；它会等你点按                             |
+| 从 WhatsApp 先发消息 | 可以，Cursor 在它的聊天打开时能听到你                |
+| 让问题保持几个小时   | 可以，没有时间限制                                   |
+
+<Chat
+  messages={[
+    { name: 'Cursor', text: '测试通过了。要提交这些更改吗？', options: ['提交', '先不提交'], time: '14:10' },
+    { you: true, text: '提交', time: '14:11' },
+  ]}
+/>
+
+## 监听方式
+
+唤醒方式：**本地**。Cursor 在后台终端中运行 `npx zapbip@0.1.0 listen` 并保持运行。你在 WhatsApp 上发消息时，那个终端里会出现新的一行，并唤醒聊天。
+
+- Cursor 没有定时选项，所以请保持那个终端运行。
+
+你的 AI 向你提问时，zapbip 会保留这个问题，并最多每 50 秒回答一次“待处理”。Cursor 随后再次调用，并一直调用下去，直到你回答。没有时间限制。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 随便发一段文字，例如 `hi`。
+
+   <StartLink />
+
+2. **申请一个新智能体。** 智能体就是你连接的一个 AI。目前命令需要用英语或葡萄牙语的词来输入。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent cursor', time: '14:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent cursor created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate cursor".',
+         time: '14:00',
+       },
+     ]}
+   />
+
+3. **把这一行粘贴到 Cursor 的聊天里。**
+
+   <InstallPrompt />
+
+   Cursor 会阅读说明并按顺序执行。在更改设置之前，它会告诉你要改哪一项，并等你说“好”。链接是机密的，请不要放进你会分享的聊天里。
+
+4. **说“好”。** 之后 Cursor 会按这个顺序完成其余的事。
+
+5. **把 zapbip 添加到 Cursor。** 它会先询问你，并等你说“好”。然后在 Cursor 的 MCP 设置中添加一个名为 `zapbip` 的 MCP 服务器，通过 HTTP 指向 `<connectionLink>`。
+
+6. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
+
+7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。然后重启 Cursor 聊天，以使用 zapbip 的工具。
+
+## 检查是否正常工作
+
+让 Cursor 向你的 WhatsApp 发送 `✅ installed`。它应在几秒内到达。
+
+<Chat messages={[{ name: 'Cursor', text: '✅ installed', time: '14:03' }]} />
+
+如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

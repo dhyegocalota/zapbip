@@ -1,0 +1,14 @@
+---
+title: 'list_agents'
+description: '이 계정에 연결된 에이전트를 나열합니다.'
+---
+
+이 계정에 연결된 에이전트를 나열하여, 에이전트가 무언가를 바꾸기 전에 다른 누가 연결되어 있는지 볼 수 있게 합니다. 읽기 전용이라 승인이 필요 없고 어떤 한도에도 포함되지 않습니다. [AI에게 zapbip을 맡기세요](/ko/features/let-your-ai-manage-zapbip)를 참고하세요.
+
+## 입력
+
+없음.
+
+## 출력
+
+`{ "agents": [{ "name": string, "client": string | null, "created_at": string, "last_active_at": string | null }] }`. 타임스탬프는 ISO 8601입니다. `client`는 에이전트가 연결한 뒤의 접속 앱입니다. 키, 다이제스트, 링크는 목록에 포함되지 않습니다.

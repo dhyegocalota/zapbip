@@ -1,0 +1,48 @@
+---
+title: WhatsApp のコマンド
+description: zapbipの番号に入力できること。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+AIの管理は、zapbipの番号に書き込んで行います。コマンドは、ポルトガル語または英語の短い言葉です。今のところ日本語のコマンドはなく、書いた言語が返信の言語になります。表の各行に両方の言い方を示します。
+
+| やりたいこと            | 英語で入力                                            | ポルトガル語で入力                                    | 何が起こるか                                                          |
+| ----------------------- | ----------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------- |
+| 新しいAIを接続する      | `new agent claude`                                    | `novo agente claude`                                  | zapbipが、そのAIに貼り付けるプロンプトを返信します                    |
+| AIの一覧を見る          | `agents`                                              | `agentes`                                             | 各AIの名前と日付の一覧                                                |
+| AIを切断する            | `revoke claude`                                       | `revogar claude`                                      | そのAIが即座に使えなくなります                                        |
+| 新しいプロンプトを得る  | `rotate claude`                                       | `girar claude`                                        | 古い接続が止まり、新しいプロンプトが届きます                          |
+| Webアプリにログインする | `login`                                               | `entrar`                                              | 10 分間、1回だけ使えるリンク。[Webアプリ](/ja/features/web-app)を参照 |
+| メニューを開く          | `help` または `menu`                                  | `ajuda` または `menu`                                 | コマンドがテキストとタップできるリストで表示されます                  |
+| アカウントを削除する    | `delete account`、続けて `delete account permanently` | `apagar conta`、続けて `apagar conta definitivamente` | [アカウントを削除する](/ja/help/delete-your-account)を参照            |
+
+言葉だけを書いてください。末尾に `?` や `!` が付くと、AI宛ての通常のメッセージとして扱われます。
+
+## 例
+
+<Chat
+  messages={[
+    { you: true, text: 'agents', time: '09:20' },
+    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revoke claude', time: '09:21' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+  ]}
+/>
+
+## コマンド語をAIに伝えるには
+
+メッセージがコマンド語だけのときは、常にコマンドとして扱われます。同じ言葉をAIに送るには、AIの名前から始めます。`@claude help` は、メニューを開かずにClaudeに届きます。
+
+## 名前
+
+`new`、`agents`、`revoke`、`rotate`、`help`、`menu`、`login`、`delete` と、そのポルトガル語版は予約語です。AIの名前には使えません。
+
+## 転送されたメッセージ
+
+転送されたメッセージは、本文がコマンド語であってもコマンドになりません。ほかのメッセージと同じようにAIに届きます。
+
+## 次のステップ
+
+- [AIを管理する](/ja/features/manage-your-agents)
+- [複数のAIを1つの番号で](/ja/features/many-agents-on-one-number)

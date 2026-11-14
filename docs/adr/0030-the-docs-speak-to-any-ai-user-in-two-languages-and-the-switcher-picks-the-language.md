@@ -1,6 +1,6 @@
 # 0030. The docs speak to any AI user in two languages, and the switcher picks the language
 
-- Status: Accepted (owner delegated 2026-11-06)
+- Status: Accepted (owner delegated 2026-11-06); extended to eight languages by [ADR 0048](0048-the-docs-speak-eight-languages-one-folder-per-language-and-the-page-language-is-a-type-of-its-own.md)
 - Date: 2026-11-06
 - Deciders: Dhyego Calota (owner, delegated); Claude (advisor)
 - Inspired by: [ADR 0010](0010-public-docs-on-mintlify.md), `docs/features/docs-experience/spec.md`, the G8 spike recorded in `docs/features/docs-experience/tester-briefing.md`

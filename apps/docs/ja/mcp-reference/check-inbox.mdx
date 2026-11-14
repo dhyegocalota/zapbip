@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: '待たずに受信トレイを確認します。'
+---
+
+待たずに受信トレイを確認します。
+
+## 入力
+
+フィールドはありません。
+
+## 出力
+
+すぐに `{ "status": "empty" }` が返るか、`{ "status": "new", "messages": [...] }` が返ります。返されたメッセージは既読になります。スケジュールタスク向けで、低コストで応答します。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

@@ -1,0 +1,23 @@
+---
+title: 'send_message'
+description: 'オーナーにテキストメッセージを送ります。'
+---
+
+オーナーにテキストメッセージを送ります。
+
+## 入力
+
+| フィールド | 型           | 備考                                                 |
+| ---------- | ------------ | ---------------------------------------------------- |
+| `text`     | string       | 最大4096文字。WhatsAppの書式と絵文字は保持されます。 |
+| `reply_to` | string、任意 | 引用するメッセージのid。                             |
+
+## 出力
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` は[24 時間ウィンドウ](/ja/concepts/24-hour-window)が閉じていることを意味します。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

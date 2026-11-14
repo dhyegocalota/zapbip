@@ -1,0 +1,18 @@
+---
+title: 'sign_in_link'
+description: 'Envoie au propriétaire, sur WhatsApp, le lien de connexion à l’application web.'
+---
+
+Envoie au propriétaire le lien à usage unique qui connecte à l’[application web](/fr/features/web-app). C’est la commande `login`, exécutée pour le propriétaire. Elle ne demande aucune approbation, car le lien va au propriétaire et ne revient jamais à l’agent. Voir [Laissez votre IA gérer zapbip](/fr/features/let-your-ai-manage-zapbip).
+
+La suppression du compte n’est pas un outil. Elle reste une commande WhatsApp.
+
+## Entrée
+
+Aucune.
+
+## Sortie
+
+`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`. `refused` avec `reason` `window_closed` signifie que la fenêtre de 24 heures est fermée : le lien n’est pas mis en file, car il expirerait. `send_failed` signifie que le propriétaire n’a pas pu être joint. Le lien ne fait jamais partie du résultat.
+
+La même limite que pour [connect_agent](/fr/mcp-reference/connect-agent) s’applique : 3 appels qui agissent par minute et par connexion.

@@ -1,0 +1,52 @@
+---
+title: Plusieurs IA, un seul numéro
+description: Comment votre réponse retrouve l'IA à laquelle elle s'adresse.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Toutes vos IA écrivent depuis le même numéro WhatsApp. zapbip décide où va votre message, dans cet ordre :
+
+| Vous faites                                       | Il va à                            |
+| ------------------------------------------------- | ---------------------------------- |
+| Toucher un bouton ou une option de liste          | L'IA qui a posé la question        |
+| Répondre à un message, ou y réagir                | L'IA qui a envoyé ce message       |
+| Écrire `@grok regarde l'actualité`                | Grok, sans le `@grok `             |
+| Répondre pendant qu'une IA a une question ouverte | Cette IA                           |
+| Écrire quand seul Claude a parlé                  | Claude, la dernière IA qui a écrit |
+| Écrire quand rien ne correspond                   | Une liste d'IA récentes à choisir  |
+
+## Exemple
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Les tests sont passés.', time: '10:02' },
+    { name: 'Grok', text: 'Puis-je rebaser main ?', options: ['Oui', 'Non'], time: '10:03' },
+    { you: true, text: '@claude merci', time: '10:04' },
+    { you: true, text: 'Oui', time: '10:04' },
+  ]}
+/>
+
+`@claude merci` va à Claude et le toucher sur Oui va à Grok.
+
+<Chat
+  messages={[
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+Un simple `ok` reçoit une liste d'IA récentes à choisir. La question de zapbip est en anglais, la langue du produit aujourd'hui.
+
+Répondez à un message pour parler à l'IA qui l'a envoyé :
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Les tests sont passés.', time: '10:02' },
+    { name: 'Grok', text: 'J’ai trouvé 3 sources.', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: 'J’ai trouvé 3 sources.' }, text: 'Lesquelles ?', time: '10:04' },
+    { name: 'Grok', text: 'Deux articles et un rapport. J’envoie les liens.', time: '10:04' },
+  ]}
+/>
+
+Les noms comptent jusqu'à 20 caractères : lettres minuscules, chiffres et tirets.

@@ -1,12 +1,12 @@
 import { INBOX_COPY, WAKE_COPY } from '@zapbip/core';
-import { InboxCopyKey, OwnerLocale, WakeCopyKey } from '@zapbip/types';
+import { DOCS_OWNER_LOCALES, InboxCopyKey, OwnerLocale, WakeCopyKey } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { languageOfPage } from './docs-experience';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
 const NOTICE_BUBBLE_PATTERN = /notice: true,\s*text: '((?:[^'\\]|\\.)*)'/g;
 const ESCAPED_COPY_TOKEN_PATTERN = /\\\{\w+\\\}/g;
 const TOKEN_MATCHER = '.+';
-const PORTUGUESE_PAGE_PREFIX = 'pt-br/';
 const NOTICE_COPY_KEYS: InboxCopyKey[] = [InboxCopyKey.NoticeBody, InboxCopyKey.QuestionNoticeBody, InboxCopyKey.AgentNotListening];
 const WAKE_NOTICE_COPY_KEYS: WakeCopyKey[] = [WakeCopyKey.ExpectedDelayNote, WakeCopyKey.StaleNotice];
 const REGEX_SPECIAL_PATTERN = /[.*+?^${}()|[\]\\]/g;
@@ -14,7 +14,7 @@ const REGEX_SPECIAL_PATTERN = /[.*+?^${}()|[\]\\]/g;
 type NoticeBubble = { page: string; locale: OwnerLocale; text: string };
 
 function localeOf(page: string): OwnerLocale {
-  return page.startsWith(PORTUGUESE_PAGE_PREFIX) ? OwnerLocale.PortugueseBrazil : OwnerLocale.EnglishUs;
+  return DOCS_OWNER_LOCALES[languageOfPage({ path: page })];
 }
 
 function templateMatcher(template: string): RegExp {

@@ -1,15 +1,17 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DocsLanguage, PAGE_LANGUAGE_FOLDER, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
+import { DOCS_START_LINK_LANGUAGES, DocsPageLanguage, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import { AgentId } from '../../../libs/agents/src/definitions';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf, isAllowedNoise, requestFailedNoiseOf } from './support/docs-experience';
+import { languageOfPage, twinPathOf } from '../../../libs/agents/src/docs';
 
 const FIRST_ERROR_STATUS = 400;
 const OVERVIEW_PATH = 'index';
 const GET_STARTED_PATH = 'get-started/how-to-start';
 const MATRIX_PATH = 'agents/supported-agents';
 const ZERO_WIDTH_SPACE = /​/g;
-const NOT_FOUND_PATTERN = /Page Not Found|Página não encontrada/i;
+const NOT_FOUND_PATTERN =
+  /Page Not Found|Página não encontrada|Página no encontrada|Seite nicht gefunden|Page introuvable|ページが見つかりません|페이지를 찾을 수 없음|页面未找到/i;
 const ASSET_EXTENSION_PATTERN = /\.[a-z0-9]+$/i;
 const VISIBLE_LINK_LOCATOR = '#content-area a:not([aria-hidden])';
 const WALK_TIMEOUT_MS = 300_000;
@@ -20,17 +22,16 @@ const PHONE_NUMBER_PATTERN = /\+\d[\d\s().-]{8,}\d|\b\d{10,15}\b|\(\d{2}\)\s?\d{
 const MATRIX_CLIENTS: AgentId[] = Object.values(AgentId);
 const STEP_COUNT = 5;
 
-function urlOf(input: { path: string; language: DocsLanguage }): string {
-  if (input.language === DocsLanguage.English) return `/${input.path}`;
-  return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
+function urlOf(input: { path: string; language: DocsPageLanguage }): string {
+  return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
 function pathOf(input: { href: string }): string {
   return new URL(input.href, 'http://docs.local').pathname;
 }
 
-function isInLanguageFolder(input: { path: string }): boolean {
-  return input.path === `/${PAGE_LANGUAGE_FOLDER}` || input.path.startsWith(`/${PAGE_LANGUAGE_FOLDER}/`);
+function isInLanguage(input: { path: string; language: DocsPageLanguage }): boolean {
+  return languageOfPage({ path: input.path.slice(1) }) === input.language;
 }
 
 async function expectNoOverflow(input: { page: Page }): Promise<void> {
@@ -46,7 +47,7 @@ async function internalLinksOf(input: { page: Page }): Promise<string[]> {
   return paths.filter((path) => !ASSET_EXTENSION_PATTERN.test(path));
 }
 
-for (const language of Object.values(DocsLanguage)) {
+for (const language of Object.values(DocsPageLanguage)) {
   for (const viewport of Object.values(DocsViewport)) {
     test.describe(`from zero in ${language} at ${viewport}`, () => {
       test.use(docsOptionsOf({ language, viewport }));
@@ -82,7 +83,9 @@ for (const language of Object.values(DocsLanguage)) {
         const steps = page.locator('#content-area ol > li');
         await expect(steps).toHaveCount(STEP_COUNT);
         for (let position = 0; position < STEP_COUNT; position += 1) await expect(steps.nth(position)).toBeVisible();
-        await expect(steps.first().locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`)).toBeVisible();
+        await expect(
+          steps.first().locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_START_LINK_LANGUAGES[language]}"]`),
+        ).toBeVisible();
         await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
         await expect(page.locator('#content-area')).not.toContainText(PHONE_NUMBER_PATTERN);
         await expectNoOverflow({ page });
@@ -117,7 +120,7 @@ for (const language of Object.values(DocsLanguage)) {
           expect(response?.status(), linkedPath).toBeLessThan(FIRST_ERROR_STATUS);
           await expect(page.locator('#content-area h1').first(), linkedPath).toBeVisible();
           await expect(page.locator('#content-area'), linkedPath).not.toContainText(NOT_FOUND_PATTERN);
-          if (language === DocsLanguage.PortugueseBrazil) expect(isInLanguageFolder({ path: linkedPath }), linkedPath).toBe(true);
+          expect(isInLanguage({ path: linkedPath, language }), linkedPath).toBe(true);
           await expectNoOverflow({ page });
         }
 

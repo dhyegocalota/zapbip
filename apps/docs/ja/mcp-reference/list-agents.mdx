@@ -1,0 +1,14 @@
+---
+title: 'list_agents'
+description: 'このアカウントに接続されているエージェントを一覧表示します。'
+---
+
+このアカウントに接続されているエージェントを一覧表示します。エージェントが何かを変更する前に、ほかに誰が接続されているかを確認できます。読み取り専用で、承認は不要、どの制限にもカウントされません。[AIにzapbipを任せる](/ja/features/let-your-ai-manage-zapbip)をご覧ください。
+
+## 入力
+
+なし。
+
+## 出力
+
+`{ "agents": [{ "name": string, "client": string | null, "created_at": string, "last_active_at": string | null }] }`。タイムスタンプはISO 8601です。`client`は、エージェントが接続したあとの接続元アプリです。キー、ダイジェスト、リンクが一覧に含まれることはありません。

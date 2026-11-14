@@ -1,0 +1,46 @@
+---
+title: Supprimer votre compte
+description: Comment supprimer tout ce que zapbip conserve sur vous.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Vous pouvez supprimer votre compte à tout moment, depuis WhatsApp. Il faut deux messages, pour qu'un message égaré ne supprime rien. Les commandes et les réponses de zapbip sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+
+<Steps>
+  <Step title="Demander">Écrivez `delete account`. zapbip vous dit ce qui sera supprimé et quelle phrase le confirme.</Step>
+  <Step title="Confirmer">
+    Dans les 10 minutes, écrivez `delete account permanently`. Passé ce délai, rien n'est supprimé ; écrivez de nouveau `delete account`
+    pour recommencer.
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## Ce qui est supprimé
+
+- Chaque message, chaque question et chaque réponse en attente.
+- Chaque IA connectée. Leurs prompts et leurs liens cessent de fonctionner aussitôt.
+- Les fichiers stockés pour vous.
+- Votre numéro de téléphone et votre compte.
+
+## Ce que Meta et Cloudflare conservent
+
+- WhatsApp conserve l'historique de la conversation de son côté. Supprimez la conversation dans WhatsApp si vous voulez la retirer de votre téléphone.
+- Cloudflare conserve des copies de sauvegarde pendant sa propre durée de conservation.
+
+## Repartir de zéro
+
+Un message envoyé depuis le même téléphone après la suppression crée un nouveau compte vide. Il rejoint la liste d'attente comme tout nouveau compte ; voir la [FAQ](/fr/help/faq).
+
+Pour ne déconnecter qu'une IA, voir [gérer vos IA](/fr/features/manage-your-agents).

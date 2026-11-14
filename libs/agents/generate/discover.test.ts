@@ -2,8 +2,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { DocsPageLanguage } from '@zapbip/types';
 import { afterEach, describe, expect, test } from 'vitest';
-import { AgentFacet } from '../src/contract';
+import { AgentFacet, PAGE_FACETS } from '../src/contract';
 import { discoverAgents } from './discover';
 import { REAL_AGENT_IDS } from './test-agents';
 
@@ -26,7 +27,11 @@ describe('discoverAgents', () => {
     const [installAgent, connectorAgent, pluginAgent] = discoverAgents({
       roots: ['fixture-agent', 'fixture-connector-agent', 'fixture-plugin-agent'].map((id) => `${FIXTURE_ROOT}/${id}`),
     });
-    const commonFacets = [AgentFacet.Definition, AgentFacet.EnglishPage, AgentFacet.PortuguesePage, AgentFacet.Install];
+    const commonFacets = [
+      AgentFacet.Definition,
+      ...Object.values(DocsPageLanguage).map((language) => PAGE_FACETS[language]),
+      AgentFacet.Install,
+    ];
     expect(installAgent?.facets).toEqual(commonFacets);
     expect(connectorAgent?.facets).toEqual([...commonFacets, AgentFacet.Connector]);
     expect(pluginAgent?.facets).toEqual([...commonFacets, AgentFacet.Plugin]);

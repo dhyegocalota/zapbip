@@ -1,0 +1,22 @@
+---
+title: 'revoke_agent'
+description: '在所有者于 WhatsApp 上允许之后，撤销此账户的一个智能体。'
+---
+
+按名称撤销此账户的一个智能体。系统会以调用方智能体的身份在 WhatsApp 上询问所有者，调用会等待回答。它运行与 `revoke` 命令相同的用例：该智能体的所有连接方式都会立即停止。参见[让你的 AI 管理 zapbip](/zh/features/let-your-ai-manage-zapbip)。
+
+## 输入
+
+| 字段   | 类型   | 说明                       |
+| ------ | ------ | -------------------------- |
+| `name` | string | 此账户中某个智能体的名称。 |
+
+## 提问
+
+两个按钮：**Allow** 和 **Deny**。调用最多等待 50 秒。只有点按钮才算数：输入的文字会被当作 Deny。Deny 和没有回应都不会改变任何内容，此后同一个请求会被拒绝（`cooling_down`）10 分钟。
+
+## 输出
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": null }`。`refused` 且 `reason` 为 `not_found`，表示此账户中没有叫这个名字的有效智能体；不会询问所有者。其他账户的智能体永远无法触及。
+
+适用与 [connect_agent](/zh/mcp-reference/connect-agent) 相同的限制：每个连接每分钟最多 3 次执行操作的调用。

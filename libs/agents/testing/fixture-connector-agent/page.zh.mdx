@@ -1,0 +1,26 @@
+---
+title: Fixture Connector Agent
+description: 把 Fixture Connector Agent 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 支持的功能
+
+Fixture Connector Agent 会听你说话，并通过 WhatsApp 回复。
+
+## 监听方式
+
+唤醒方式：**本地**。Fixture Connector Agent 在你的电脑上运行 listener。zapbip 有问题要问你时，最多每 50 秒回复一次“待处理”。Fixture Connector Agent 会再次调用，并一直再次调用，直到你回答。没有时间限制。
+
+## 从零开始设置
+
+1. 在 WhatsApp 上给 zapbip 的号码发一条消息。
+2. 请求一个 `new agent`，然后把 `<connectionLink>` 粘贴到 Fixture Connector Agent。
+3. 让 Fixture Connector Agent 用文本 `✅ installed` 调用 `send_message`。
+
+## 检查是否正常工作
+
+让 Fixture Connector Agent 把 `✅ installed` 发送到你的 WhatsApp。
+
+<Chat messages={[{ name: 'Fixture Connector Agent', text: '✅ installed', time: '14:03' }]} />

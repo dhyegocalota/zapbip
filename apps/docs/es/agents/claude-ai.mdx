@@ -1,0 +1,79 @@
+---
+title: claude.ai
+description: Conecta claude.ai a tu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/es/start-link.mdx';
+import InstallPrompt from '/snippets/es/install-prompt.mdx';
+
+## Qué funciona
+
+| Quieres                                  | claude.ai                                                                   |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| Recibir mensajes suyos                   | Texto, fotos, vídeos, audio, documentos, ubicaciones, contactos, reacciones |
+| Responderle con un toque                 | Botones y listas; espera tu toque                                           |
+| Escribir primero desde WhatsApp          | Sí, una tarea lo despierta en unos 16 segundos                              |
+| Dejar una pregunta abierta durante horas | Sí, no hay límite de tiempo                                                 |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'El informe está listo. ¿Lo envío al equipo?', options: ['Sí', 'Todavía no'], time: '08:15' },
+    { you: true, text: 'Sí', time: '08:16' },
+  ]}
+/>
+
+## Cómo escucha
+
+Tipo de activación: **Webhook**. Cuando escribes en WhatsApp, zapbip dispara el enlace de activación de una tarea de claude.ai, y la tarea se ejecuta en la nube con tus conectores. Responde unos 16 segundos después de que escribes, sin ningún aviso de aprobación.
+
+- Las tareas de claude.ai se ejecutan según un horario como mucho una vez por hora. Por eso creas también una tarea cada hora que revisa tus mensajes: es solo una red de seguridad, para que nada espere más de una hora si se pierde una activación.
+
+Cuando tu IA te pregunta algo, zapbip guarda la pregunta y responde "pendiente" como máximo cada 50 segundos. claude.ai vuelve entonces a llamar, y sigue llamando otra vez hasta que respondas, sin límite de tiempo.
+
+claude.ai espera unos 4 minutos una sola respuesta y reintenta por sí mismo, así que no hay límite en total.
+
+## Configúralo desde cero
+
+1. **Escribe al número de zapbip en WhatsApp.** Envía cualquier texto, por ejemplo `hi`.
+
+   <StartLink />
+
+2. **Pide un agente nuevo.** Un agente es una IA que conectas.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
+         time: '08:00',
+       },
+     ]}
+   />
+
+   Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+
+3. **Pega la línea en claude.ai.**
+
+   <InstallPrompt />
+
+   claude.ai lee las instrucciones y las sigue en orden. El enlace es secreto, así que no lo dejes en chats que compartes.
+
+4. **Pega el conector.** claude.ai te pide pegar `<connectionLink>` como conector personalizado en Ajustes. Esto lo haces tú mismo, porque claude.ai solo te deja añadirlo a ti.
+
+5. **Crea la tarea de activación.** Te pide crear una tarea con un disparador de API en claude.ai/code/routines, y luego pegar en el chat su URL de disparo y su token. El segundo pegado también es tuyo, porque claude.ai muestra el token solo a ti.
+
+6. **Dile a zapbip cómo activarlo.** Si te detienes antes de que exista la tarea, llama a `set_wake({mode: "none"})` y te dice que el chat solo ve mensajes nuevos cuando lo abres. Si no, llama a `set_wake({mode: "webhook", url, token})`.
+
+7. **Crea la red de seguridad cada hora.** Te pide crear una tarea cada hora que llama a `check_inbox`, para que nada espere más de una hora si se pierde una activación.
+
+8. **Pruébalo.** En el chat llama a `send_message` con ✅ installed.
+
+## Comprueba que funciona
+
+claude.ai envía `✅ installed` a tu WhatsApp en cuanto está conectado.
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+
+Si no llega nada, mira [Solución de problemas](/es/help/troubleshooting).

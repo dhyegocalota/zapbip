@@ -1,0 +1,76 @@
+---
+title: ChatGPT
+description: ChatGPTをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ja/start-link.mdx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| やりたいこと                    | ChatGPT                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| ChatGPTからメッセージを受け取る | テキスト、写真、動画、音声、ドキュメント、位置情報、連絡先、リアクション |
+| タップで答える                  | ボタンとリスト。タップを待ちます                                         |
+| WhatsAppから先に書く            | はい。1 時間以内にメッセージを読みます                                   |
+| 質問を何時間も開いたままにする  | はい。時間制限はありません                                               |
+
+<Chat
+  messages={[
+    { name: 'ChatGPT', text: '要約ができました。チャンネルに投稿しますか？', options: ['はい', 'まだ'], time: '17:00' },
+    { you: true, text: 'はい', time: '17:02' },
+  ]}
+/>
+
+## 聞き取りの仕組み
+
+起動方式: **スケジュール**。ChatGPTは、WhatsAppのメッセージを1 時間に1回読みます。これはアプリが許す最短の間隔なので、メッセージは最大1 時間待つことがあります。
+
+- 1 時間ごとのタスクがあなたのコンピュータで動き、専用の1つのチャットに投稿します。実行のたびに、前回以降にあなたが書いたものを読みます。
+- タスクが実行できるように、そのチャットとコンピュータをつけたままにしてください。
+
+AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最大でも50 秒ごとに「保留中」と答えます。ChatGPTはそのたびにもう一度呼び出し、あなたが答えるまで呼び出しを続けます。時間制限なしで待ち続けます。
+
+ChatGPTは1回の答えを約5 分待ち、その後にまた尋ねるので、全体としての制限はありません。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** 任意のテキスト、たとえば `hi` を送ってください。
+
+   <StartLink />
+
+2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。コマンドは今のところ英語かポルトガル語の言葉で入力します。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
+         time: '16:00',
+       },
+     ]}
+   />
+
+3. **その1行をChatGPTに貼り付けます。**
+
+   <InstallPrompt />
+
+   ChatGPTは指示を読み、順番に従います。リンクはシークレットなので、共有するチャットには出さないでください。
+
+4. **アプリを追加します。** ChatGPTが、デベロッパーモードをオンにして、`<connectionLink>` のURLでアプリを追加するよう求め、「認証なし」を選ぶよう案内します。これはあなた自身で行います。
+
+5. **1 時間ごとのタスクを作成します。** 専用の1つのチャットで、`check_inbox` を呼ぶ1 時間ごとの「このコンピュータで実行」タスクを作成し、各ツールについて一度「常に許可」を選ぶよう案内されます。
+
+6. **ポーリングすることをzapbipに伝えます。** `set_wake({mode: "scheduled", interval_minutes: 60})` を呼びます。
+
+7. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+
+## 動作の確認
+
+接続が済むと、ChatGPTはあなたのWhatsAppに `✅ installed` を送ります。
+
+<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+
+何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

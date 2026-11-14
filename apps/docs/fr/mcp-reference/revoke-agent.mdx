@@ -1,0 +1,22 @@
+---
+title: 'revoke_agent'
+description: 'Révoque un agent de ce compte après l’accord du propriétaire sur WhatsApp.'
+---
+
+Révoque un agent de ce compte, par son nom. Le propriétaire est interrogé sur WhatsApp, au nom de l’agent appelant, et l’appel attend la réponse. Il exécute le même cas d’usage que la commande `revoke` : toutes les connexions de cet agent s’arrêtent aussitôt. Voir [Laissez votre IA gérer zapbip](/fr/features/let-your-ai-manage-zapbip).
+
+## Entrée
+
+| Champ  | Type   | Remarques                       |
+| ------ | ------ | ------------------------------- |
+| `name` | string | Le nom d’un agent de ce compte. |
+
+## La question
+
+Deux boutons : **Allow** et **Deny**. L’appel attend jusqu’à 50 secondes. Seul un appui sur un bouton compte : le texte saisi est lu comme un Deny. Deny et le silence ne changent rien, et la même demande est alors refusée (`cooling_down`) pendant 10 minutes.
+
+## Sortie
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": null }`. `refused` avec `reason` `not_found` signifie qu’aucun agent actif de ce compte ne porte ce nom ; le propriétaire n’est pas interrogé. Un agent d’un autre compte n’est jamais accessible.
+
+La même limite que pour [connect_agent](/fr/mcp-reference/connect-agent) s’applique : 3 appels qui agissent par minute et par connexion.

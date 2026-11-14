@@ -1,22 +1,14 @@
-import { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
+import { WakeMode, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'Hermes',
   idIsOrdinaryWord: false,
   docs: {
-    matrixName: {
-      [DocsLanguage.English]: 'Hermes',
-      [DocsLanguage.PortugueseBrazil]: 'Hermes',
-    },
-    linkName: {
-      [DocsLanguage.English]: 'Hermes',
-      [DocsLanguage.PortugueseBrazil]: 'Hermes',
-    },
-    pageFacts: {
-      [DocsLanguage.English]: ['chmod 600', 'check_inbox', 'ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'],
-      [DocsLanguage.PortugueseBrazil]: ['chmod 600', 'check_inbox', 'ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'],
-    },
+    matrixName: perLanguage({ valueOf: () => 'Hermes' }),
+    linkName: perLanguage({ valueOf: () => 'Hermes' }),
+    pageFacts: perLanguage({ valueOf: () => ['chmod 600', 'check_inbox', 'ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'] }),
     speakerNames: ['Hermes'],
   },
   listen: {

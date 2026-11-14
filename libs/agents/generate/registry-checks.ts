@@ -1,4 +1,4 @@
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { connectorViolationsOf } from '../src/checks/connectors';
 import { guideParityViolationsOf } from '../src/checks/guide-parity';
 import { installSectionViolationsOf } from '../src/checks/install-sections';
@@ -7,7 +7,7 @@ import { pluginViolationsOf, type PluginCheckSources } from '../src/checks/plugi
 import { treeBoundaryViolationsOf, treeLeakViolationsOf } from './leak-scan';
 import type { LoadedAgent } from './load';
 
-export type CheckedAgent = LoadedAgent & { guides: Record<DocsLanguage, string> };
+export type CheckedAgent = LoadedAgent & { guides: Record<DocsPageLanguage, string> };
 
 export function registryCheckViolationsOf(input: { agents: CheckedAgent[]; files: LeakFile[]; sources: PluginCheckSources }): string[] {
   const withDefinition = input.agents.flatMap((agent) => (agent.definition === null ? [] : [{ ...agent, definition: agent.definition }]));

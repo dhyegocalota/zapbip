@@ -1,0 +1,56 @@
+---
+title: 'Webhookウェイク'
+description: 'あなたが書いたとき、聞いていないAIをzapbipに起動させます。'
+---
+
+Webhookウェイクは、[ウェイクラダー](/ja/concepts/wake-ladder)の2段目です。オーナーがWhatsAppで書き込み、エージェントが聞いていないとき、zapbipはエージェントを起動するリンクを呼び出します。対応しているクライアントでは、インストールの流れがこれを設定します。このページでは、zapbipが何を送るかと、手動で設定する方法を説明します。
+
+その後、エージェントは [check_inbox](/ja/mcp-reference/check-inbox) または [get_messages](/ja/mcp-reference/get-messages) でメッセージを読み、答えます。リンクは [set_wake](/ja/mcp-reference/set-wake) で保存します。
+
+この呼び出しにあなたのテキストは含まれません。本文は常に `{"event":"inbox_has_messages"}` です。続けて届いたメッセージは、最初の1通の数秒後に送られる1回のウェイクを共有します。
+
+## Grok Botのルーティン
+
+Webhookトリガー付きのルーティンを作成し、保存します。
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+zapbipは `Authorization: Bearer <token>` を送ります。
+
+## claude.aiのスケジュールタスク
+
+APIトリガー付きのスケジュールタスクを作成し、保存します。
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+zapbipは `Authorization: Bearer <token>` とルーティンのヘッダーを送ります。
+
+## 自前のサービス
+
+公開されている `https` のホストならどれでも使えます。トークンは署名キーで、32文字以上が必要であり、送信されることはありません。各リクエストには `X-Zapbip-Timestamp`（Unix秒）と `X-Zapbip-Signature` が付きます。後者は `sha256=` に続けて、`<timestamp>.<body>` のHMAC-SHA256の16進文字列です。300 秒より古いタイムスタンプは拒否してください。
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## ウェイクが失敗したとき
+
+- `408`、`425`、`429`、`5xx`、タイムアウト、ネットワークエラーは最大5回まで再試行します。待ち時間は5 秒、10 秒、20 秒、40 秒で、`429` と `503` では `Retry-After` を尊重し、最長60 秒です。
+- リダイレクトやその他の `4xx` の応答は、ただちに拒否され、再試行されません。
+- ウェイクが拒否された、またはあきらめた場合、メッセージが受信トレイで待っているという通知がWhatsAppに1つ届き、接続は `failing` と記録されます。もう一度 [set_wake](/ja/mcp-reference/set-wake) を呼んで宛先を直してください。次に配信されたウェイクで `active` に戻ります。
+- ウェイクが発火する前にエージェントがメッセージを読んだ場合、リクエストは送られません。

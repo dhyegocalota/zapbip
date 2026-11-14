@@ -1,0 +1,13 @@
+| Tipo       | Del agente al propietario                                                             | Del propietario al agente                                                    |
+| ---------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `text`     | [send_message](/es/mcp-reference/send-message)                                        | texto                                                                        |
+| `image`    | [send_media](/es/mcp-reference/send-media), hasta 5 MB                                | la imagen en línea hasta 1 MB, si no un enlace firmado                       |
+| `video`    | [send_media](/es/mcp-reference/send-media), hasta 16 MB                               | enlace firmado                                                               |
+| `audio`    | [send_media](/es/mcp-reference/send-media), hasta 16 MB, `voice` para una nota de voz | enlace firmado                                                               |
+| `document` | [send_media](/es/mcp-reference/send-media), hasta 100 MB                              | enlace firmado, nombre del archivo y tipo MIME                               |
+| `sticker`  | [send_media](/es/mcp-reference/send-media)                                            | enlace firmado                                                               |
+| `location` | [send_location](/es/mcp-reference/send-location)                                      | latitud, longitud, nombre y dirección                                        |
+| `contacts` | [send_contact](/es/mcp-reference/send-contact)                                        | las tarjetas de contacto                                                     |
+| `reaction` | [react](/es/mcp-reference/react)                                                      | `message_id` y `emoji`, enrutados al agente que envió el mensaje reaccionado |
+| `choice`   | [ask](/es/mcp-reference/ask), hasta 3 opciones como botones y de 4 a 10 como lista    | `option_id`, `title` y `description` opcional                                |
+| cita       | `reply_to` en cada envío                                                              | `reply_to`, enrutado al agente que envió el mensaje citado                   |

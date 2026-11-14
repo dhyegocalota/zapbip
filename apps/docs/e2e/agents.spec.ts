@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { DocsLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT } from '@zapbip/types';
 import { ConnectorClient } from '../../../libs/agents/src/connector';
 import { AGENT_DEFINITIONS, AgentId } from '../../../libs/agents/src/definitions';
 import { AGENT_INSTALLS } from '../../../libs/agents/src/install';
@@ -11,6 +11,7 @@ import {
   WAKE_RUNG_LABELS,
 } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
+import { twinPathOf } from '../../../libs/agents/src/docs';
 
 const OK_STATUS = 200;
 const ONE_HOUR_SECONDS = 3600;
@@ -22,30 +23,38 @@ const MATRIX_ROW_SELECTOR = `${CONTENT_SELECTOR} table tbody tr`;
 const BACKGROUND_RUNNING_PATH = 'developers/background-running';
 const PENDING_SECONDS_TOKEN = '50';
 const LINK_FACT_PREFIX = '/';
-const SECONDS_WORD: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'seconds',
-  [DocsLanguage.PortugueseBrazil]: 'segundos',
+const SECONDS_WORD: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'seconds',
+  [DocsPageLanguage.PortugueseBrazil]: 'segundos',
+  [DocsPageLanguage.Spanish]: 'segundos',
+  [DocsPageLanguage.German]: 'Sekunden',
+  [DocsPageLanguage.French]: 'secondes',
+  [DocsPageLanguage.Japanese]: '秒',
+  [DocsPageLanguage.Korean]: '초',
+  [DocsPageLanguage.Chinese]: '秒',
 };
-const HOURLY_TOKEN: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'hour',
-  [DocsLanguage.PortugueseBrazil]: 'hora',
-};
-const OWNER_LOCALE_OF: Record<DocsLanguage, OwnerLocale> = {
-  [DocsLanguage.English]: OwnerLocale.EnglishUs,
-  [DocsLanguage.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
+const HOURLY_TOKEN: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'hour',
+  [DocsPageLanguage.PortugueseBrazil]: 'hora',
+  [DocsPageLanguage.Spanish]: 'hora',
+  [DocsPageLanguage.German]: 'Stunde',
+  [DocsPageLanguage.French]: 'heure',
+  [DocsPageLanguage.Japanese]: '時間',
+  [DocsPageLanguage.Korean]: '시간',
+  [DocsPageLanguage.Chinese]: '小时',
 };
 
 const agentIds: AgentId[] = Object.values(AgentId);
 const connectorIds: string[] = Object.values(ConnectorClient);
 
-function urlOf(input: { path: string; language: DocsLanguage }): string {
-  if (input.language === DocsLanguage.English) return `/${input.path}`;
-  return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
+function urlOf(input: { path: string; language: DocsPageLanguage }): string {
+  return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
-function delayTokenOf(input: { expectedDelaySeconds: number; language: DocsLanguage }): string {
+function delayTokenOf(input: { expectedDelaySeconds: number; language: DocsPageLanguage }): string {
   if (input.expectedDelaySeconds === ONE_HOUR_SECONDS) return HOURLY_TOKEN[input.language];
-  return `${input.expectedDelaySeconds} ${SECONDS_WORD[input.language]}`;
+  const separator = input.language === DocsPageLanguage.Korean ? '' : ' ';
+  return `${input.expectedDelaySeconds}${separator}${SECONDS_WORD[input.language]}`;
 }
 
 async function expectFactVisible(input: { content: Locator; fact: string }): Promise<void> {
@@ -53,7 +62,7 @@ async function expectFactVisible(input: { content: Locator; fact: string }): Pro
   return expect(input.content).toContainText(input.fact, { ignoreCase: true });
 }
 
-for (const language of Object.values(DocsLanguage)) {
+for (const language of Object.values(DocsPageLanguage)) {
   test.describe(`agents in ${language}`, () => {
     test.use(docsOptionsOf({ language, viewport: DocsViewport.Desktop }));
     test.beforeEach(({}, testInfo) => {
@@ -96,7 +105,7 @@ for (const language of Object.values(DocsLanguage)) {
         if (id in AGENT_INSTALLS)
           test('asks the agent to send the self-test text', async ({ page }) => {
             await page.goto(urlOf({ path: `agents/${id}`, language }));
-            await expect(page.locator(CONTENT_SELECTOR)).toContainText(INSTALL_SELF_TEST_TEXT[OWNER_LOCALE_OF[language]]);
+            await expect(page.locator(CONTENT_SELECTOR)).toContainText(INSTALL_SELF_TEST_TEXT[DOCS_OWNER_LOCALES[language]]);
           });
 
         if (plugin)

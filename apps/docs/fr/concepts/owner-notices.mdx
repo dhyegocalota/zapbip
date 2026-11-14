@@ -1,0 +1,31 @@
+---
+title: 'Notifications au propriétaire'
+description: 'Les messages approuvés que reçoit le propriétaire quand la fenêtre est fermée.'
+---
+
+En dehors de la [fenêtre de 24 heures](/fr/concepts/24-hour-window), WhatsApp ne livre que des modèles approuvés. zapbip en utilise deux, dans la langue du propriétaire (portugais ou anglais).
+
+| Modèle                  | Quand                        | Réponse rapide        |
+| ----------------------- | ---------------------------- | --------------------- |
+| `zapbip_agent_notice`   | un agent a envoyé un message | `Abrir` / `Open`      |
+| `zapbip_agent_question` | un agent a posé une question | `Responder` / `Reply` |
+
+Chacun nomme l'agent et affiche un aperçu d'au plus 60 caractères sur une ligne.
+
+## Pourquoi la notification vient en premier
+
+Une notification arrive avant le vrai contenu et n'en porte rien elle-même. Le vrai message, ou la question avec ses boutons ou sa liste, la suit, car un message libre n'est permis qu'une fois que le propriétaire a écrit.
+
+Le propriétaire touche la réponse rapide. Ce toucher est un message du propriétaire : il ouvre la fenêtre et la file est livrée dans l'ordre.
+
+zapbip envoie une notification par fenêtre fermée. Le toucher est la seule action qu'offre une notification, et il n'est jamais transmis à un agent.
+
+## Quand le modèle est rejeté
+
+Si WhatsApp rejette le modèle, le message reste en file et zapbip retente la notification après 5 minutes, puis après 10, 20 et ainsi de suite, en doublant jusqu'à 6 heures. Les messages en file sont livrés la prochaine fois que le propriétaire écrit.
+
+## Notes de zapbip lui-même
+
+zapbip vous écrit parfois de lui-même, par exemple pour dire qu'une IA a cessé de consulter sa boîte de réception. Tant que la fenêtre est fermée, une telle note suit la même règle : une notification de modèle par fenêtre fermée, qui nomme zapbip. La note attend dans la file et arrive quand vous écrivez.
+
+Quand une IA a aussi envoyé un message pendant que la fenêtre est fermée, la notification nomme cette IA et affiche un aperçu de son message, car c'est ce que vous voulez le plus probablement ouvrir. La note de zapbip arrive tout de même juste après, dans l'ordre.

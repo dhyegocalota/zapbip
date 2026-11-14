@@ -1,0 +1,57 @@
+---
+title: 网页版 Grok
+description: 把网页版 Grok 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你可以                           | 网页版 Grok             |
+| -------------------------------- | ----------------------- |
+| 接收文本、照片、视频、音频和文档 | 是                      |
+| 接收位置、联系人和表情回应       | 是                      |
+| 用按钮或列表向你提问并等待       | 是，在它的聊天打开期间  |
+| 在你先发消息时开启一段对话       | 仅通过你的某个 Grok Bot |
+
+## 监听方式
+
+级别：待命。网页版 Grok 无法从外部唤醒，而且它的每次调用都被限制在 60 秒内。所以当你先发消息时，由你的一个 Grok Bot 代为回复，并让对话继续下去。没有 Grok Bot 时，你的消息会等到你打开 Grok 聊天，zapbip 会在 WhatsApp 上告诉你 Grok 目前没有在监听。
+
+有问题未决时，Grok 每次最多等待 50 秒。如果你还没有回答，这次等待会以待处理（pending）结束，Grok 会再次调用，需要多少次就调用多少次，没有时间限制。
+
+请保持 Grok 聊天开着。如果你有连接到 zapbip 的 Grok Bot，就不需要再做别的事。
+
+Grok 对单个答案等待 1 分钟，然后再次询问，所以整体没有限制。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `new agent grok-web`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **把这一行粘贴到网页版 Grok 里。** zapbip 会回复一行专为你生成的文字：
+
+   <InstallPrompt />
+
+3. **粘贴连接器。** Grok 会请你在它的设置里把 `<connectionLink>` 作为连接器粘贴进去。这一步由你自己完成。
+
+4. **选择你先发消息时由谁来回答。** 如果你有连接到 zapbip 的 Grok Bot，Grok 会用那个机器人调用 `set_wake({mode: "standby", standby_agent: "<name>"})`。如果没有，它调用 `set_wake({mode: "none"})`。
+
+5. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+
+## 检查是否正常工作
+
+让 Grok 在 WhatsApp 上发送 `✅ installed`。消息到达，就说明连接正常。
+
+<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+
+如果已连接 Grok Bot，请在 Grok 聊天关闭时在 WhatsApp 上写点什么：Grok Bot 会回答。
+
+对于需要手动设置的应用，参见[连接任意 MCP 客户端](/zh/developers/any-mcp-client)。

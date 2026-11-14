@@ -3,11 +3,11 @@ import { describe, expect, test } from 'vitest';
 import { AgentId } from '@zapbip/agents/definitions';
 import { ConnectorClient } from '@zapbip/agents/connector';
 import {
-  DocsLanguage,
+  DOCS_START_LINK_LANGUAGES,
+  DocsPageLanguage,
   DocsRetentionKind,
   McpToolName,
   MessageKind,
-  PAGE_LANGUAGE_FOLDER,
   START_LINK,
   START_LINK_LANGUAGE_PARAMETER,
 } from '@zapbip/types';
@@ -29,7 +29,9 @@ import {
   messageCountOf,
   missingListenTokens,
   navigationPagesOf,
+  languageOfPage,
   sectionOf,
+  snippetPathOf,
   twinPathOf,
 } from './docs-experience';
 import { DOCS_ROOT, PAGE_EXTENSION, capturedNames, documentFiles, readRepositoryFile, repositoryPath } from './repository-files';
@@ -41,11 +43,12 @@ const MATRIX_SNIPPET = 'agents/matrix';
 const INSTALL_PROMPT_SNIPPET = 'install-prompt';
 const START_LINK_SNIPPET = 'start-link';
 const AGENT_PAGE_SOURCES_DIRECTORY = 'libs/agents/supported';
+const LANGUAGE_LITERAL_PATTERN = new RegExp(`['"](${Object.values(DocsPageLanguage).join('|')})['"]`);
 const NAVIGATION_TEST_FILE = 'tools/repository-shape/src/docs-navigation.test.ts';
 const SOURCE_EXTENSIONS = ['.mdx', '.md', '.json', '.jsx'];
 const IGNORED_DIRECTORY = 'node_modules';
 const LINE_SEPARATOR = '\n';
-const COMING_SOON_PATTERN = /coming soon|em breve|\bbeta\b/gi;
+const COMING_SOON_PATTERN = /coming soon|em breve|próximamente|demnächst|bientôt|近日公開|곧 출시|即将推出|\bbeta\b/gi;
 const TEST_DOUBLE_PATTERN = /\b(fake|simulator|simulador)\b/gi;
 const INSTALL_CODE_PATTERN = /zb_inst_[A-Za-z0-9]{8,}/g;
 const INSTALL_LINK_ORIGIN = 'https://mcp.zapbip.com';
@@ -54,7 +57,7 @@ const LINK_PATH_PATTERN = /\/[ci]\/([^\s)`'"]+)/g;
 const PLACEHOLDER_MARK = '<';
 const PHONE_NUMBER_LINK_PATTERN =
   /wa\.me|OFFICIAL_(WHATSAPP_)?NUMBER|official-number|\+\d[\d\s().-]{8,}\d|\b\d{10,15}\b|\(\d{2}\)\s?\d{4,5}-\d{4}/g;
-const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z0-9-]+)\)/g;
+const MATRIX_LINK_PATTERN = /\]\(\/(?:[a-z-]+\/)?agents\/([a-z0-9-]+)\)/g;
 const TABLE_ROW_PATTERN = /^\|/;
 const TABLE_HEADER_ROW_COUNT = 2;
 const NEW_CLIENT_PAGE = 'agents/x';
@@ -67,7 +70,18 @@ const PAGE_NAME_SEPARATOR = '-';
 const EXTRA_TOOL_PAGE = 'mcp-reference/not-a-tool';
 const FIRST_CELL_PATTERN = /^\|\s*`([a-z]+)`/g;
 
-const LANGUAGES = Object.values(DocsLanguage);
+const DAYS_WORDS: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'days',
+  [DocsPageLanguage.PortugueseBrazil]: 'dias',
+  [DocsPageLanguage.Spanish]: 'días',
+  [DocsPageLanguage.German]: 'Tage',
+  [DocsPageLanguage.French]: 'jours',
+  [DocsPageLanguage.Japanese]: '日',
+  [DocsPageLanguage.Korean]: '일',
+  [DocsPageLanguage.Chinese]: '天',
+};
+const LANGUAGES = Object.values(DocsPageLanguage);
+const TRANSLATED_LANGUAGES = LANGUAGES.filter((language) => language !== DocsPageLanguage.English);
 const CLIENTS: AgentId[] = Object.values(AgentId);
 const CONNECTOR_CLIENTS: string[] = Object.values(ConnectorClient);
 const BACKGROUND_RUNNING_PATH = 'developers/background-running';
@@ -76,12 +90,8 @@ const withoutExtension = (path: string): string => path.slice(0, -PAGE_EXTENSION
 const pageEntries = documentFiles('')
   .filter((path) => !path.startsWith(`${SNIPPETS_DIRECTORY}/`))
   .map(withoutExtension);
-const languageOf = (page: string): DocsLanguage =>
-  page.startsWith(`${PAGE_LANGUAGE_FOLDER}/`) ? DocsLanguage.PortugueseBrazil : DocsLanguage.English;
-const snippetPathOf = ({ name, language }: { name: string; language: DocsLanguage }): string =>
-  language === DocsLanguage.English
-    ? `${DOCS_ROOT}/${SNIPPETS_DIRECTORY}/${name}${PAGE_EXTENSION}`
-    : `${DOCS_ROOT}/${SNIPPETS_DIRECTORY}/${PAGE_LANGUAGE_FOLDER}/${name}${PAGE_EXTENSION}`;
+const snippetFileOf = ({ name, language }: { name: string; language: DocsPageLanguage }): string =>
+  `${DOCS_ROOT}/${snippetPathOf({ name, language })}${PAGE_EXTENSION}`;
 
 function docsSourceFiles(): Record<string, string> {
   const paths = readdirSync(repositoryPath(DOCS_ROOT), { recursive: true, encoding: 'utf8' })
@@ -95,11 +105,9 @@ function duplicatedPaths({ paths }: { paths: string[] }): string[] {
 }
 
 function missingTwins({ paths }: { paths: string[] }): string[] {
-  return paths
-    .map((path) =>
-      twinPathOf({ path, language: languageOf(path) === DocsLanguage.English ? DocsLanguage.PortugueseBrazil : DocsLanguage.English }),
-    )
-    .filter((twin) => !paths.includes(twin));
+  return [...new Set(paths.flatMap((path) => LANGUAGES.map((language) => twinPathOf({ path, language }))))].filter(
+    (twin) => !paths.includes(twin),
+  );
 }
 
 function missingAgentPages({ clients, pageExists }: { clients: AgentId[]; pageExists: (page: string) => boolean }): string[] {
@@ -119,29 +127,29 @@ function unmatrixedAgentPages({ matrixClients, pages }: { matrixClients: string[
   return pages.filter((page) => !matrixClients.includes(page));
 }
 
-function agentHeadingViolations({ page, markdown, language }: { page: string; markdown: string; language: DocsLanguage }): string[] {
+function agentHeadingViolations({ page, markdown, language }: { page: string; markdown: string; language: DocsPageLanguage }): string[] {
   const expected = AGENT_PAGE_SECTIONS.map((section) => AGENT_PAGE_HEADINGS[language][section]);
   const actual = headingsOf({ markdown }).filter((heading) => expected.includes(heading));
   const isInOrder = actual.join(LINE_SEPARATOR) === expected.join(LINE_SEPARATOR);
   return isInOrder ? [] : [`${page}: expected ${expected.join(' | ')} but found ${actual.join(' | ')}`];
 }
 
-function listenTokenViolations({ page, markdown, language }: { page: string; markdown: string; language: DocsLanguage }): string[] {
+function listenTokenViolations({ page, markdown, language }: { page: string; markdown: string; language: DocsPageLanguage }): string[] {
   const section = sectionOf({ markdown, heading: AGENT_PAGE_HEADINGS[language][AgentPageSection.HowItListens] });
   return missingListenTokens({ section, language }).map((token) => `${page}: missing ${token}`);
 }
 
-function mcpReferencePagesOf({ language }: { language: DocsLanguage }): string[] {
-  const prefix = language === DocsLanguage.English ? `${MCP_REFERENCE_FOLDER}/` : `${PAGE_LANGUAGE_FOLDER}/${MCP_REFERENCE_FOLDER}/`;
+function mcpReferencePagesOf({ language }: { language: DocsPageLanguage }): string[] {
+  const prefix = `${twinPathOf({ path: MCP_REFERENCE_FOLDER, language })}/`;
   return pageEntries.filter((page) => page.startsWith(prefix));
 }
 
-function toolPageOf({ tool, language }: { tool: McpToolName; language: DocsLanguage }): string {
+function toolPageOf({ tool, language }: { tool: McpToolName; language: DocsPageLanguage }): string {
   const page = `${MCP_REFERENCE_FOLDER}/${tool.replaceAll(TOOL_NAME_SEPARATOR, PAGE_NAME_SEPARATOR)}`;
-  return language === DocsLanguage.English ? page : `${PAGE_LANGUAGE_FOLDER}/${page}`;
+  return twinPathOf({ path: page, language });
 }
 
-function toolPageViolations({ tools, pages, language }: { tools: McpToolName[]; pages: string[]; language: DocsLanguage }): string[] {
+function toolPageViolations({ tools, pages, language }: { tools: McpToolName[]; pages: string[]; language: DocsPageLanguage }): string[] {
   const expected = tools.map((tool) => toolPageOf({ tool, language }));
   const missing = expected.filter((page) => !pages.includes(page)).map((page) => `missing ${page}`);
   const extra = pages.filter((page) => !expected.includes(page)).map((page) => `extra ${page}`);
@@ -175,8 +183,8 @@ function identicalViolations({ english, translated }: { english: string; transla
   return english === translated ? ['the translated snippet equals the English one'] : [];
 }
 
-function startLinkViolations({ snippet, language }: { snippet: string; language: DocsLanguage }): string[] {
-  const expectedLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}`;
+function startLinkViolations({ snippet, language }: { snippet: string; language: DocsPageLanguage }): string[] {
+  const expectedLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_START_LINK_LANGUAGES[language]}`;
   return snippet.includes(expectedLink) ? [] : [`missing ${expectedLink}`];
 }
 
@@ -189,8 +197,16 @@ function agentPageSourceFiles(): Record<string, string> {
   );
 }
 
-function retentionFigureViolations({ markdown, kind }: { markdown: string; kind: DocsRetentionKind }): string[] {
-  const figure = new RegExp(`\\b${RETENTION_DAYS[kind]}\\s+(days|dias)\\b`);
+function retentionFigureViolations({
+  markdown,
+  kind,
+  language,
+}: {
+  markdown: string;
+  kind: DocsRetentionKind;
+  language: DocsPageLanguage;
+}): string[] {
+  const figure = new RegExp(`\\b${RETENTION_DAYS[kind]}\\s*${DAYS_WORDS[language]}(?!\\p{L})`, 'u');
   return figure.test(markdown) ? [] : [`${kind}: expected ${RETENTION_DAYS[kind]} days`];
 }
 
@@ -209,9 +225,9 @@ const fiveMessageChat = [
 ].join(LINE_SEPARATOR);
 
 describe('docs experience: navigation', () => {
-  test('pt-BR group names are in the same order', () => {
-    const groups = docsNavigationOf({ language: DocsLanguage.PortugueseBrazil }).groups.map((entry) => entry.group);
-    expect(groups).toEqual(DOCS_GROUPS[DocsLanguage.PortugueseBrazil]);
+  test.each(LANGUAGES)('%s group names are in the same order', (language) => {
+    const groups = docsNavigationOf({ language }).groups.map((entry) => entry.group);
+    expect(groups).toEqual(DOCS_GROUPS[language]);
   });
 
   test('every .mdx under apps/docs is listed in docs.json exactly once', () => {
@@ -224,17 +240,32 @@ describe('docs experience: navigation', () => {
     expect(duplicatedPaths({ paths: ['features/a', 'features/b', 'features/a'] })).toEqual(['features/a']);
   });
 
-  test('a pt-br file with no English file fails naming the English path', () => {
-    expect(missingTwins({ paths: ['pt-br/features/x'] })).toEqual(['features/x']);
+  test('a page that is not in every language fails naming the missing twins', () => {
+    expect(missingTwins({ paths: ['pt-br/features/x'] })).toEqual(
+      LANGUAGES.filter((language) => language !== DocsPageLanguage.PortugueseBrazil).map((language) =>
+        twinPathOf({ path: 'features/x', language }),
+      ),
+    );
   });
 
-  test('docs-navigation.test.ts uses DocsLanguage values and no language string literal', () => {
-    expect(readRepositoryFile(NAVIGATION_TEST_FILE)).not.toMatch(/['"](en|pt-BR)['"]/);
+  test.each(LANGUAGES.filter((language) => language !== DocsPageLanguage.English))(
+    'a %s file with no English file fails naming the English path',
+    (language) => {
+      expect(missingTwins({ paths: [twinPathOf({ path: 'features/x', language })] })).toContain('features/x');
+    },
+  );
+
+  test('every page exists in every language', () => {
+    expect(missingTwins({ paths: pageEntries })).toEqual([]);
+  });
+
+  test('docs-navigation.test.ts uses DocsPageLanguage values and no language string literal', () => {
+    expect(readRepositoryFile(NAVIGATION_TEST_FILE)).not.toMatch(LANGUAGE_LITERAL_PATTERN);
   });
 });
 
 describe('docs experience: agent pages', () => {
-  test('every client has an agent page in both languages', () => {
+  test('every client has an agent page in every language', () => {
     const missing = missingAgentPages({ clients: CLIENTS, pageExists: (page) => existsSync(repositoryPath(pageFileOf(page))) });
     expect(missing).toEqual([]);
   });
@@ -247,7 +278,7 @@ describe('docs experience: agent pages', () => {
   });
 
   test.each(LANGUAGES)('the matrix has exactly one row per client in %s', (language) => {
-    const markdown = readRepositoryFile(snippetPathOf({ name: MATRIX_SNIPPET, language }));
+    const markdown = readRepositoryFile(snippetFileOf({ name: MATRIX_SNIPPET, language }));
     const rows = markdown.split(LINE_SEPARATOR).filter((line) => TABLE_ROW_PATTERN.test(line)).length - TABLE_HEADER_ROW_COUNT;
     expect(rows).toBe(CLIENTS.length);
     expect(matrixClientsOf({ markdown }).sort()).toEqual([...CLIENTS].sort());
@@ -267,7 +298,7 @@ describe('docs experience: agent pages', () => {
   test('every agent page has no page without a matrix row', () => {
     const pages = documentFiles(AGENTS_DIRECTORY).map((path) => withoutExtension(path).replace(`${AGENTS_DIRECTORY}/`, ''));
     const matrixClients = matrixClientsOf({
-      markdown: readRepositoryFile(snippetPathOf({ name: MATRIX_SNIPPET, language: DocsLanguage.English })),
+      markdown: readRepositoryFile(snippetFileOf({ name: MATRIX_SNIPPET, language: DocsPageLanguage.English })),
     });
     const clientPages = pages.filter((page) => `${AGENTS_DIRECTORY}/${page}` !== MATRIX_PAGE);
     expect(unmatrixedAgentPages({ matrixClients, pages: clientPages })).toEqual([]);
@@ -282,7 +313,7 @@ describe('docs experience: agent pages', () => {
   });
 
   test('headings out of order fail with the page and the order', () => {
-    const headings = AGENT_PAGE_HEADINGS[DocsLanguage.English];
+    const headings = AGENT_PAGE_HEADINGS[DocsPageLanguage.English];
     const markdown = [
       AgentPageSection.WhatWorks,
       AgentPageSection.SetupFromZero,
@@ -291,21 +322,24 @@ describe('docs experience: agent pages', () => {
     ]
       .map((section) => `## ${headings[section]}\n\ntext`)
       .join('\n\n');
-    const violations = agentHeadingViolations({ page: 'agents/x', markdown, language: DocsLanguage.English });
+    const violations = agentHeadingViolations({ page: 'agents/x', markdown, language: DocsPageLanguage.English });
     expect(violations).toEqual([
       'agents/x: expected What works | How it listens | Set up from zero | Check it works but found What works | Set up from zero | How it listens | Check it works',
     ]);
   });
 
-  test('a pt-br agent page with English headings fails', () => {
-    const markdown = '## What works\n\ntext';
-    expect(agentHeadingViolations({ page: 'pt-br/agents/x', markdown, language: DocsLanguage.PortugueseBrazil })).toHaveLength(1);
-  });
+  test.each(LANGUAGES.filter((language) => language !== DocsPageLanguage.English))(
+    'a %s agent page with English headings fails',
+    (language) => {
+      const markdown = '## What works\n\ntext';
+      expect(agentHeadingViolations({ page: twinPathOf({ path: 'agents/x', language }), markdown, language })).toHaveLength(1);
+    },
+  );
 
   test('a How-it-listens section with only the rung fails naming the page and the tokens', () => {
-    const headings = AGENT_PAGE_HEADINGS[DocsLanguage.English];
+    const headings = AGENT_PAGE_HEADINGS[DocsPageLanguage.English];
     const markdown = `## ${headings[AgentPageSection.HowItListens]}\n\nIt is Local.\n\n## ${headings[AgentPageSection.SetupFromZero]}\n\nSteps.`;
-    expect(listenTokenViolations({ page: 'agents/x', markdown, language: DocsLanguage.English })).toEqual([
+    expect(listenTokenViolations({ page: 'agents/x', markdown, language: DocsPageLanguage.English })).toEqual([
       'agents/x: missing pending',
       'agents/x: missing again',
       'agents/x: missing no time limit',
@@ -342,11 +376,14 @@ describe('docs experience: developer boundary', () => {
     expect(allowedClients.sort()).toEqual([...CONNECTOR_CLIENTS].sort());
   });
 
-  test('a pt-br feature page linking the MCP reference fails', () => {
-    expect(developerLinkViolations({ page: 'pt-br/features/x', links: ['/pt-br/mcp-reference/send-message'] })).toEqual([
-      'pt-br/features/x -> /pt-br/mcp-reference/send-message',
-    ]);
-  });
+  test.each(LANGUAGES.filter((language) => language !== DocsPageLanguage.English))(
+    'a %s feature page linking the MCP reference fails',
+    (language) => {
+      const page = twinPathOf({ path: 'features/x', language });
+      const link = `/${twinPathOf({ path: 'mcp-reference/send-message', language })}`;
+      expect(developerLinkViolations({ page, links: [link] })).toEqual([`${page} -> ${link}`]);
+    },
+  );
 });
 
 describe('docs experience: copy', () => {
@@ -391,14 +428,14 @@ describe('docs experience: copy', () => {
   });
 
   test.each(LANGUAGES)('the install prompt snippet is at most the maximum number of lines in %s', (language) => {
-    const text = readRepositoryFile(snippetPathOf({ name: INSTALL_PROMPT_SNIPPET, language }));
+    const text = readRepositoryFile(snippetFileOf({ name: INSTALL_PROMPT_SNIPPET, language }));
     expect(linesOf({ text }).length).toBeGreaterThan(0);
     expect(linesOf({ text }).length).toBeLessThanOrEqual(INSTALL_PROMPT_MAX_LINES);
   });
 
-  test('the pt-BR install prompt differs from the English one', () => {
-    const english = readRepositoryFile(snippetPathOf({ name: INSTALL_PROMPT_SNIPPET, language: DocsLanguage.English }));
-    const translated = readRepositoryFile(snippetPathOf({ name: INSTALL_PROMPT_SNIPPET, language: DocsLanguage.PortugueseBrazil }));
+  test.each(TRANSLATED_LANGUAGES)('the %s install prompt differs from the English one', (language) => {
+    const english = readRepositoryFile(snippetFileOf({ name: INSTALL_PROMPT_SNIPPET, language: DocsPageLanguage.English }));
+    const translated = readRepositoryFile(snippetFileOf({ name: INSTALL_PROMPT_SNIPPET, language }));
     expect(identicalViolations({ english, translated })).toEqual([]);
   });
 
@@ -407,14 +444,14 @@ describe('docs experience: copy', () => {
   });
 
   test.each(LANGUAGES)('the start link snippet in %s links the start link in that language', (language) => {
-    const snippet = readRepositoryFile(snippetPathOf({ name: START_LINK_SNIPPET, language }));
+    const snippet = readRepositoryFile(snippetFileOf({ name: START_LINK_SNIPPET, language }));
     expect(startLinkViolations({ snippet, language })).toEqual([]);
   });
 
   test('a snippet that links the other language fails', () => {
-    const snippet = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DocsLanguage.English}`;
-    expect(startLinkViolations({ snippet, language: DocsLanguage.PortugueseBrazil })).toEqual([
-      `missing ${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DocsLanguage.PortugueseBrazil}`,
+    const snippet = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DocsPageLanguage.English}`;
+    expect(startLinkViolations({ snippet, language: DocsPageLanguage.PortugueseBrazil })).toEqual([
+      `missing ${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DocsPageLanguage.PortugueseBrazil}`,
     ]);
   });
 
@@ -452,15 +489,17 @@ describe('docs experience: copy', () => {
 
   test('a typed media figure of 14 days fails naming 30', () => {
     const markdown = `Media is kept ${WRONG_MEDIA_DAYS} days.`;
-    expect(retentionFigureViolations({ markdown, kind: DocsRetentionKind.Media })).toEqual(['media: expected 30 days']);
+    expect(retentionFigureViolations({ markdown, kind: DocsRetentionKind.Media, language: DocsPageLanguage.English })).toEqual([
+      'media: expected 30 days',
+    ]);
   });
 });
 
 describe('docs experience: help', () => {
   test.each(LANGUAGES)('the %s privacy page states every retention figure', (language) => {
-    const page = language === DocsLanguage.English ? PRIVACY_PAGE : `${PAGE_LANGUAGE_FOLDER}/${PRIVACY_PAGE}`;
+    const page = twinPathOf({ path: PRIVACY_PAGE, language });
     const markdown = readRepositoryFile(pageFileOf(page));
-    const violations = Object.values(DocsRetentionKind).flatMap((kind) => retentionFigureViolations({ markdown, kind }));
+    const violations = Object.values(DocsRetentionKind).flatMap((kind) => retentionFigureViolations({ markdown, kind, language }));
     expect(violations).toEqual([]);
   });
 });
@@ -471,21 +510,21 @@ describe('docs experience: mcp reference', () => {
   });
 
   test('a tool without a page fails', () => {
-    const pages = mcpReferencePagesOf({ language: DocsLanguage.English });
-    expect(toolPageViolations({ tools: Object.values(McpToolName), pages: pages.slice(1), language: DocsLanguage.English })).toEqual([
+    const pages = mcpReferencePagesOf({ language: DocsPageLanguage.English });
+    expect(toolPageViolations({ tools: Object.values(McpToolName), pages: pages.slice(1), language: DocsPageLanguage.English })).toEqual([
       `missing ${pages[0]}`,
     ]);
   });
 
   test('a page without a tool fails', () => {
-    const pages = [...mcpReferencePagesOf({ language: DocsLanguage.English }), EXTRA_TOOL_PAGE];
-    expect(toolPageViolations({ tools: Object.values(McpToolName), pages, language: DocsLanguage.English })).toEqual([
+    const pages = [...mcpReferencePagesOf({ language: DocsPageLanguage.English }), EXTRA_TOOL_PAGE];
+    expect(toolPageViolations({ tools: Object.values(McpToolName), pages, language: DocsPageLanguage.English })).toEqual([
       `extra ${EXTRA_TOOL_PAGE}`,
     ]);
   });
 
   test.each(LANGUAGES)('the %s message kinds table lists every MessageKind', (language) => {
-    const snippet = readRepositoryFile(snippetPathOf({ name: MESSAGE_KINDS_SNIPPET, language }));
+    const snippet = readRepositoryFile(snippetFileOf({ name: MESSAGE_KINDS_SNIPPET, language }));
     expect(messageKindViolations({ snippet, kinds: Object.values(MessageKind) })).toEqual([]);
   });
 
@@ -501,7 +540,9 @@ const IMAGE_TAG_PATTERN = /<(?:img|Image)\b[^>]*>/g;
 const SNIPPET_COMPONENT_EXTENSION = '.jsx';
 const IMAGE_SIZE_PATTERN = /\bwidth=(\{?["'`]?\d+)[\s\S]*\bheight=(\{?["'`]?\d+)|\bheight=(\{?["'`]?\d+)[\s\S]*\bwidth=(\{?["'`]?\d+)/;
 const PORTUGUESE_ENGLISH_TERM_PATTERN = /\b(job|jobs|merge|merges)\b/gi;
-const NOT_FOUND_LINK_PATTERNS = [/\]\(\/\)/, new RegExp(`\\]\\(/${PAGE_LANGUAGE_FOLDER}\\)`)];
+const NOT_FOUND_LINK_PATTERNS = Object.values(DocsPageLanguage).map(
+  (language) => new RegExp(`\\]\\(/${twinPathOf({ path: '', language }).replace(/\/$/, '')}\\)`),
+);
 
 type DocsSiteConfig = { favicon?: string; errors?: { 404?: { redirect?: boolean; title?: string; description?: string } } };
 
@@ -545,7 +586,7 @@ describe('docs experience: site polish', () => {
   test('the pt-br pages use no English job or merge', () => {
     const files = Object.fromEntries(
       pageEntries
-        .filter((page) => languageOf(page) === DocsLanguage.PortugueseBrazil)
+        .filter((page) => languageOfPage({ path: page }) === DocsPageLanguage.PortugueseBrazil)
         .map((page) => [page, readRepositoryFile(pageFileOf(page))]),
     );
     expect(forbiddenViolations({ files, pattern: PORTUGUESE_ENGLISH_TERM_PATTERN })).toEqual([]);

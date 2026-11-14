@@ -1,7 +1,8 @@
 import { GenerationMode, applyValidPlan, pendingDeletionsOf, staleWritesOf, writePlan } from './write';
 import { existsSync, readFileSync } from 'node:fs';
-import { DocsLanguage } from '@zapbip/types';
-import { AgentFacet, type AgentDefinition } from '../src/contract';
+import type { DocsPageLanguage } from '@zapbip/types';
+import { PAGE_FACETS, type AgentDefinition, type AgentFacet } from '../src/contract';
+import { perLanguage } from '../src/docs';
 import { discoverAgents } from './discover';
 import { loadAgent } from './load';
 import { registryCheckViolationsOf } from './registry-checks';
@@ -32,16 +33,20 @@ async function planFromDisk(): Promise<GenerationPlan> {
   return planGeneratedFiles({ agents: discoverAgents({ roots: [SUPPORTED_FOLDER] }), readSource, listSource });
 }
 
+function guidesOf(input: { agent: { folder: string; facets: AgentFacet[] } }): Record<DocsPageLanguage, string> {
+  return perLanguage({
+    valueOf: (language) => {
+      const facet = PAGE_FACETS[language];
+      return input.agent.facets.includes(facet) ? readSource(`${input.agent.folder}/${facet}`) : '';
+    },
+  });
+}
+
 async function registryCheckViolations(): Promise<string[]> {
   const loaded = await Promise.all(discoverAgents({ roots: [SUPPORTED_FOLDER] }).map((agent) => loadAgent({ agent })));
   const agents = loaded.map((agent) => ({
     ...agent,
-    guides: {
-      [DocsLanguage.English]: agent.facets.includes(AgentFacet.EnglishPage) ? readSource(`${agent.folder}/${AgentFacet.EnglishPage}`) : '',
-      [DocsLanguage.PortugueseBrazil]: agent.facets.includes(AgentFacet.PortuguesePage)
-        ? readSource(`${agent.folder}/${AgentFacet.PortuguesePage}`)
-        : '',
-    },
+    guides: guidesOf({ agent }),
   }));
   const hostedFilenames = agents.flatMap((agent) =>
     agent.plugin === null ? [] : agent.plugin.hostedArtifacts.map((artifact) => artifact.filename),

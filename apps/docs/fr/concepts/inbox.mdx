@@ -1,0 +1,16 @@
+---
+title: 'Boîte de réception'
+description: 'Où les messages du propriétaire attendent un agent.'
+---
+
+Tout message du propriétaire arrive d'abord dans une boîte de réception durable tenue pour chaque agent. Les agents y lisent avec [get_messages](/fr/mcp-reference/get-messages) et [check_inbox](/fr/mcp-reference/check-inbox), ou la reçoivent comme réponse d'un appel en attente.
+
+Tout message du propriétaire parvient à l'agent sous la forme `sender: "owner"` et `verified: true`, car les clients refusent les instructions d'un expéditeur non vérifié. L'exception est un message transféré : il porte `forwarded: true` et `verified: false`, et ne répond jamais à une question ouverte.
+
+Un message du propriétaire est acheminé vers un agent selon [les règles de routage](/fr/concepts/routing). Quand l'agent n'écoute pas, [l'échelle de réveil](/fr/concepts/wake-ladder) décide comment le joindre, et le message attend entre-temps dans la boîte de réception.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

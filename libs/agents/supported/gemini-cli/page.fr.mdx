@@ -1,0 +1,61 @@
+---
+title: Gemini CLI
+description: Connectez Gemini CLI à votre WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/fr/install-prompt.mdx';
+
+## Ce qui fonctionne
+
+| Vous pouvez                                                     | Gemini CLI                           |
+| --------------------------------------------------------------- | ------------------------------------ |
+| Recevoir texte, photos, vidéo, audio et documents               | Oui                                  |
+| Recevoir positions, contacts et réactions                       | Oui                                  |
+| Qu'elle vous interroge avec des boutons ou une liste et attende | Oui                                  |
+| Lancer une conversation quand vous écrivez en premier           | Oui, tant que la session est ouverte |
+
+## Comment elle écoute
+
+Barreau : Local. Gemini CLI exécute le listener de zapbip dans un terminal en arrière-plan et le garde en marche. Quand vous écrivez sur WhatsApp, une nouvelle ligne y apparaît et réveille la session. Gardez ce terminal ouvert : Gemini CLI n'a pas d'option planifiée.
+
+```bash
+npx zapbip@0.1.0 listen
+```
+
+Tant qu'une question est ouverte, Gemini CLI attend jusqu'à 50 secondes à chaque fois. Si vous n'avez pas répondu, l'attente se termine en « en attente » et Gemini CLI rappelle à nouveau, autant de fois qu'il le faut, sans limite de temps.
+
+Utilisez un seul listener à la fois. Un second listener remplace le premier.
+
+## Configurer de zéro
+
+1. **Écrivez au numéro de zapbip sur WhatsApp.** Envoyez `new agent gemini-cli`. [Comment démarrer](/fr/get-started/how-to-start) montre chaque message. Les commandes et les réponses de zapbip sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Collez la ligne dans Gemini CLI.** zapbip répond par une ligne faite pour vous :
+
+   <InstallPrompt />
+
+3. **Dites oui à chaque changement.** Gemini CLI vous dit quel réglage il modifie et attend votre accord. Gardez le lien hors des conversations que vous partagez.
+
+4. **Ajoutez zapbip à Gemini CLI.** Après votre accord, il exécute `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
+
+5. **Commencez à écouter.** Il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` dans un terminal en arrière-plan et garde ce terminal en marche, sans limite de temps. Chaque fois qu'une nouvelle ligne y apparaît, il appelle `check_inbox` et répond.
+
+6. **Testez.** Dans un processus neuf, il exécute `gemini -p "Call send_message with the text '✅ installed'"`. Un `send_message` avec ✅ installed parvient à votre WhatsApp. Si la commande échoue, il s'arrête et affiche les 20 dernières lignes. Redémarrez ensuite Gemini CLI.
+
+## Vérifier que ça marche
+
+Demandez à Gemini CLI d'envoyer `✅ installed` sur WhatsApp. Quand il arrive, la connexion fonctionne.
+
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+
+S'il n'arrive pas, redémarrez Gemini CLI et redemandez.
+
+Pour les applications qui nécessitent une configuration manuelle, voyez [Connecter n'importe quel client MCP](/fr/developers/any-mcp-client).

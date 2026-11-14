@@ -1,0 +1,59 @@
+---
+title: Grok Bot
+description: Verbinde Grok Bot mit deinem WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/de/install-prompt.mdx';
+
+## Was funktioniert
+
+| Du kannst                                            | Grok Bot |
+| ---------------------------------------------------- | -------- |
+| Text, Fotos, Video, Audio und Dokumente empfangen    | Ja       |
+| Standorte, Kontakte und Reaktionen empfangen         | Ja       |
+| Dich mit Buttons oder einer Liste fragen und warten  | Ja       |
+| Eine Unterhaltung beginnen, wenn du zuerst schreibst | Ja       |
+
+## So hört sie zu
+
+Sprosse: Webhook. Schreibst du in WhatsApp, ruft zapbip den Webhook einer Grok-Bot-Routine auf, und Grok Bot startet etwa 9 Sekunden später mit deiner Nachricht. Schlägt der Aufruf fehl, sagt zapbip es dir in WhatsApp.
+
+Solange eine Frage offen ist, wartet Grok Bot jeweils bis zu 50 Sekunden. Hast du nicht geantwortet, endet das Warten als ausstehend und Grok Bot ruft erneut auf, so oft es nötig ist, ohne Zeitlimit. Jedes einzelne Warten dauert bei Grok Bot mindestens 2 Minuten.
+
+Du musst nichts tun, damit es läuft.
+
+## Von Grund auf einrichten
+
+1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende `new agent grok-bot`. [So startest du](/de/get-started/how-to-start) zeigt jede Nachricht. Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent grok-bot', time: '09:00' },
+       { name: 'zapbip', text: 'Agent grok-bot created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Füge die Zeile in Grok Bot ein.** zapbip antwortet mit einer Zeile, die für dich gemacht ist:
+
+   <InstallPrompt />
+
+3. **Sag zu jeder Änderung Ja.** Grok Bot liest die Anleitung und sagt dir, bevor es eine Einstellung ändert, welche, und wartet auf dein Ja. Halte den Link aus Chats heraus, die du teilst.
+
+4. **Füge zapbip zu Grok Bot hinzu.** Es bittet den Bot, einen MCP-Server namens `zapbip` unter `<connectionLink>` hinzuzufügen. Du bestätigst.
+
+5. **Lege die Routine an.** Es legt eine Routine mit einem Webhook-Trigger an, die eine URL und einen Schlüssel liefert.
+
+6. **Sag zapbip, wie es geweckt wird.** Es ruft `set_wake({mode: "webhook", url, token})` mit der URL und dem Schlüssel der Routine auf. Bei einem Fehler hält es an und meldet ihn.
+
+7. **Teste es.** Im Chat ruft es `send_message` mit ✅ installed auf.
+
+## Prüfen, ob es funktioniert
+
+Bitte Grok Bot, `✅ installed` über WhatsApp zu senden. Wenn es ankommt, funktioniert die Verbindung.
+
+<Chat messages={[{ name: 'Grok Bot', text: '✅ installed', time: '09:03' }]} />
+
+Schreib dann etwas in WhatsApp. Grok Bot antwortet innerhalb von etwa 9 Sekunden.
+
+Für Apps, die eine manuelle Einrichtung brauchen, siehe [Jeden MCP-Client verbinden](/de/developers/any-mcp-client).

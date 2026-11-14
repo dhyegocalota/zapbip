@@ -1,0 +1,46 @@
+---
+title: Eliminar tu cuenta
+description: Cómo eliminar todo lo que zapbip guarda sobre ti.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Puedes eliminar tu cuenta en cualquier momento, desde WhatsApp. Lleva dos mensajes, así que un mensaje perdido no puede borrar nada. Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+
+<Steps>
+  <Step title="Pedir">Escribe `delete account`. zapbip te dice qué se eliminará y qué frase lo confirma.</Step>
+  <Step title="Confirmar">
+    En menos de 10 minutos, escribe `delete account permanently`. Pasado ese tiempo no se borra nada; escribe `delete account` de nuevo para
+    empezar otra vez.
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## Qué se elimina
+
+- Cada mensaje, pregunta y respuesta pendiente.
+- Cada IA conectada. Sus prompts y enlaces dejan de funcionar al instante.
+- Los archivos guardados para ti.
+- Tu número de teléfono y tu cuenta.
+
+## Qué conservan Meta y Cloudflare
+
+- WhatsApp guarda el historial del chat en su lado. Borra el chat en WhatsApp si quieres quitarlo de tu teléfono.
+- Cloudflare conserva copias de respaldo durante su propio plazo de retención.
+
+## Empezar de nuevo
+
+Un mensaje desde el mismo teléfono después de la eliminación crea una cuenta nueva y vacía. Entra en la lista de espera como cualquier cuenta nueva; mira las [preguntas frecuentes](/es/help/faq).
+
+Para desconectar solo una IA, mira [gestiona tus IAs](/es/features/manage-your-agents).

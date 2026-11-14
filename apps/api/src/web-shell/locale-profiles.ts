@@ -32,7 +32,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     turnstileLanguage: 'es',
     shortName: 'ES',
     nativeName: 'Español',
-    docsPath: '',
+    docsPath: '/es',
   },
   [WebLocale.German]: {
     languageTag: WebLanguageTag.German,
@@ -40,7 +40,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     turnstileLanguage: 'de',
     shortName: 'DE',
     nativeName: 'Deutsch',
-    docsPath: '',
+    docsPath: '/de',
   },
   [WebLocale.French]: {
     languageTag: WebLanguageTag.French,
@@ -48,7 +48,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     turnstileLanguage: 'fr',
     shortName: 'FR',
     nativeName: 'Français',
-    docsPath: '',
+    docsPath: '/fr',
   },
   [WebLocale.Japanese]: {
     languageTag: WebLanguageTag.Japanese,
@@ -56,7 +56,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     turnstileLanguage: 'ja',
     shortName: 'JA',
     nativeName: '日本語',
-    docsPath: '',
+    docsPath: '/ja',
   },
   [WebLocale.Korean]: {
     languageTag: WebLanguageTag.Korean,
@@ -64,7 +64,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     turnstileLanguage: 'ko',
     shortName: 'KO',
     nativeName: '한국어',
-    docsPath: '',
+    docsPath: '/ko',
   },
   [WebLocale.ChineseSimplified]: {
     languageTag: WebLanguageTag.ChineseSimplified,
@@ -72,7 +72,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     turnstileLanguage: 'zh-cn',
     shortName: 'ZH',
     nativeName: '简体中文',
-    docsPath: '',
+    docsPath: '/zh',
   },
 };
 

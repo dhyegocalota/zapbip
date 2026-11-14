@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, PAGE_LANGUAGE_FOLDER, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
+import { DOCS_START_LINK_LANGUAGES, DocsPageLanguage, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import { CHAT_MAX_MESSAGES } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
+import { twinPathOf } from '../../../libs/agents/src/docs';
 
 const OK_STATUS = 200;
 const OVERVIEW_PAGE = 'index';
@@ -15,21 +16,32 @@ const OVERVIEW_EXAMPLE_COUNT = { minimum: 3, maximum: 5 };
 const OVERVIEW_HEADING_COUNT = 3;
 const ZERO_WIDTH_SPACE = /​/g;
 const MESSAGE_BUBBLES_LOCATOR = ':scope > div:nth-child(2) > div';
-const OVERVIEW_HEADINGS: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: ['Why zapbip exists', 'How it works', 'What it looks like'],
-  [DocsLanguage.PortugueseBrazil]: ['Por que o zapbip existe', 'Como funciona', 'Como fica'],
+const OVERVIEW_HEADINGS: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: ['Why zapbip exists', 'How it works', 'What it looks like'],
+  [DocsPageLanguage.PortugueseBrazil]: ['Por que o zapbip existe', 'Como funciona', 'Como fica'],
+  [DocsPageLanguage.Spanish]: ['Por qué existe zapbip', 'Cómo funciona', 'Cómo se ve'],
+  [DocsPageLanguage.German]: ['Warum es zapbip gibt', 'So funktioniert es', 'So sieht es aus'],
+  [DocsPageLanguage.French]: ['Pourquoi zapbip existe', 'Comment ça marche', 'À quoi ça ressemble'],
+  [DocsPageLanguage.Japanese]: ['zapbip が生まれた理由', '仕組み', '見た目'],
+  [DocsPageLanguage.Korean]: ['zapbip가 존재하는 이유', '작동 방식', '이런 모습입니다'],
+  [DocsPageLanguage.Chinese]: ['为什么有 zapbip', '工作原理', '实际效果'],
 };
-const PICTURE_ALT_TOKEN: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'Your AI connects to zapbip',
-  [DocsLanguage.PortugueseBrazil]: 'Sua IA se conecta ao zapbip',
+const PICTURE_ALT_TOKEN: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'Your AI connects to zapbip',
+  [DocsPageLanguage.PortugueseBrazil]: 'Sua IA se conecta ao zapbip',
+  [DocsPageLanguage.Spanish]: 'Tu IA se conecta a zapbip',
+  [DocsPageLanguage.German]: 'Deine KI verbindet sich mit zapbip',
+  [DocsPageLanguage.French]: 'Votre IA se connecte à zapbip',
+  [DocsPageLanguage.Japanese]: 'AI が zapbip につながる',
+  [DocsPageLanguage.Korean]: 'AI가 zapbip에 연결됩니다',
+  [DocsPageLanguage.Chinese]: 'AI 连接到 zapbip',
 };
 
-function urlOf(input: { path: string; language: DocsLanguage }): string {
-  if (input.language === DocsLanguage.English) return `/${input.path}`;
-  return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
+function urlOf(input: { path: string; language: DocsPageLanguage }): string {
+  return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
-for (const language of Object.values(DocsLanguage)) {
+for (const language of Object.values(DocsPageLanguage)) {
   test.describe(`get started in ${language}`, () => {
     test.use(docsOptionsOf({ language, viewport: DocsViewport.Desktop }));
     test.beforeEach(({}, testInfo) => {
@@ -73,7 +85,9 @@ for (const language of Object.values(DocsLanguage)) {
       await page.goto(urlOf({ path: GET_STARTED_PAGE, language }));
       const content = page.locator('#content-area');
       await expect(content.locator('ol')).toHaveCount(1);
-      await expect(content.locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`).first()).toBeVisible();
+      await expect(
+        content.locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_START_LINK_LANGUAGES[language]}"]`).first(),
+      ).toBeVisible();
       await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
       await expect(content).not.toContainText(PHONE_NUMBER_PATTERN);
       await expect(content.locator('code', { hasText: INSTALL_PROMPT_PLACEHOLDER }).first()).toBeVisible();

@@ -20,7 +20,7 @@
 7. **Currency.** Every language other than Portuguese prices in dollars (`PRICING_CURRENCY_BY_LOCALE`), formatted by `Intl` in the language of the page.
 8. **Fonts.** No web font. `shell.css` sets the CJK system stacks per `:lang()` and `word-break: keep-all` for Korean.
 9. **Copy files.** Each copy module keeps its keys in `*-copy-keys.ts` and each new language in `*-copy-<language>.ts` (`site`, `client-app`, `backoffice`, `legal`), so no file grows past what one person reads. Placeholders are the same in every language and a test pins it.
-10. **Documentation.** The language menu links the English documentation for the six new languages (`docsPath` empty) until phase B.
+10. **Documentation.** The documentation link of each language goes to its own folder (`docsPath`: `/pt-br`, `/es`, `/de`, `/fr`, `/ja`, `/ko`, `/zh`), the folders phase B ships ([ADR 0048](0048-the-docs-speak-eight-languages-one-folder-per-language-and-the-page-language-is-a-type-of-its-own.md)).
 
 ## Alternatives considered
 
@@ -45,5 +45,4 @@
 ## Revisit when
 
 - Phase C adds WhatsApp copy in a language: the matching row of `OWNER_LOCALE_OF_WEB_LOCALE` changes.
-- Phase B adds translated documentation: the `docsPath` of that language changes.
 - Open Graph images and demo videos are recorded for a language: its `ASSET_LOCALES` row changes.

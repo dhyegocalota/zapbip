@@ -1,15 +1,23 @@
-import { DocsLanguage, WakeRung } from '@zapbip/types';
+import { DocsPageLanguage, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'FixtureConnectorAgent',
   idIsOrdinaryWord: false,
   docs: {
-    matrixName: { [DocsLanguage.English]: 'Fixture Connector Agent', [DocsLanguage.PortugueseBrazil]: 'Agente conector de teste' },
-    linkName: { [DocsLanguage.English]: 'Fixture Connector Agent', [DocsLanguage.PortugueseBrazil]: 'Agente conector de teste' },
+    matrixName: {
+      ...perLanguage({ valueOf: () => 'Fixture Connector Agent' }),
+      [DocsPageLanguage.PortugueseBrazil]: 'Agente conector de teste',
+    },
+    linkName: {
+      ...perLanguage({ valueOf: () => 'Fixture Connector Agent' }),
+      [DocsPageLanguage.PortugueseBrazil]: 'Agente conector de teste',
+    },
     pageFacts: {
-      [DocsLanguage.English]: ['Fixture Connector Agent hears you'],
-      [DocsLanguage.PortugueseBrazil]: ['O Agente conector de teste ouve você'],
+      ...perLanguage({ valueOf: () => ['Fixture Connector Agent'] }),
+      [DocsPageLanguage.English]: ['Fixture Connector Agent hears you'],
+      [DocsPageLanguage.PortugueseBrazil]: ['O Agente conector de teste ouve você'],
     },
     speakerNames: ['Fixture Connector Agent'],
   },

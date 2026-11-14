@@ -1,0 +1,56 @@
+---
+title: 'Webhook-Wecken'
+description: 'Lass zapbip deine KI starten, wenn du schreibst und sie nicht zuhört.'
+---
+
+Das Webhook-Wecken ist die zweite Sprosse der [Weck-Leiter](/de/concepts/wake-ladder). Schreibt der Owner in WhatsApp und der Agent hört nicht zu, ruft zapbip einen Link auf, der ihn startet. Der Installationsablauf richtet das für die Clients ein, die es unterstützen; diese Seite zeigt, was zapbip sendet und wie du es von Hand einrichtest.
+
+Der Agent liest die Nachricht dann mit [check_inbox](/de/mcp-reference/check-inbox) oder [get_messages](/de/mcp-reference/get-messages) und antwortet. Der Link wird mit [set_wake](/de/mcp-reference/set-wake) gespeichert.
+
+Der Aufruf trägt nichts von deinem Text: Sein Body ist immer `{"event":"inbox_has_messages"}`. Nachrichten, die in einem Schwall eintreffen, teilen sich ein Wecken, das wenige Sekunden nach der ersten gesendet wird.
+
+## Grok-Bot-Routine
+
+Lege eine Routine mit einem Webhook-Trigger an und speichere sie dann:
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+zapbip sendet `Authorization: Bearer <token>`.
+
+## Geplante Aufgabe in claude.ai
+
+Lege eine geplante Aufgabe mit einem API-Trigger an und speichere sie dann:
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+zapbip sendet `Authorization: Bearer <token>` und die Routine-Header.
+
+## Dein eigener Dienst
+
+Jeder öffentliche `https`-Host funktioniert. Das Token ist dein Signierschlüssel, mindestens 32 Zeichen lang, und wird nie gesendet. Jede Anfrage trägt `X-Zapbip-Timestamp` (Unix-Sekunden) und `X-Zapbip-Signature`, `sha256=` gefolgt vom Hex-HMAC-SHA256 von `<timestamp>.<body>`. Lehne einen Zeitstempel ab, der älter als 300 Sekunden ist.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## Wenn ein Wecken fehlschlägt
+
+- `408`, `425`, `429`, `5xx`, ein Timeout oder ein Netzwerkfehler wird bis zu 5-mal wiederholt, mit Wartezeiten von 5, 10, 20 und 40 Sekunden und unter Beachtung von `Retry-After` bei `429` und `503`, bis zu 60 Sekunden.
+- Weiterleitungen und andere `4xx`-Antworten werden sofort abgelehnt und nicht wiederholt.
+- Wird ein Wecken abgelehnt oder gibt es auf, erhältst du einen Hinweis in WhatsApp, dass die Nachricht im Posteingang wartet, und die Verbindung wird als `failing` markiert. Rufe [set_wake](/de/mcp-reference/set-wake) erneut auf, um das Ziel zu korrigieren; das nächste zugestellte Wecken setzt sie auf `active` zurück.
+- Liest der Agent die Nachrichten, bevor das Wecken ausgelöst wird, wird keine Anfrage gesendet.

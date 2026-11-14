@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, MessageKind, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DocsPageLanguage, MessageKind } from '@zapbip/types';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
+import { twinPathOf } from '../../../libs/agents/src/docs';
 
 const OK_STATUS = 200;
 const CHAT_SELECTOR = '#content-area [role="group"][aria-label^="WhatsApp"]';
@@ -13,37 +14,80 @@ const FEATURE_PAGES = [
   'features/the-24-hour-window',
 ];
 const LISTEN_DELAY_SECONDS = ['7', '6', '9', '16'];
-const WAKE_RUNG_WORDS: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: ['connector', 'webhook', 'scheduled', 'inbox'],
-  [DocsLanguage.PortugueseBrazil]: ['conector', 'webhook', 'agendad', 'caixa de entrada'],
+const WAKE_RUNG_WORDS: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: ['connector', 'webhook', 'scheduled', 'inbox'],
+  [DocsPageLanguage.PortugueseBrazil]: ['conector', 'webhook', 'agendad', 'caixa de entrada'],
+  [DocsPageLanguage.Spanish]: ['conector', 'webhook', 'programad', 'bandeja de entrada'],
+  [DocsPageLanguage.German]: ['connector', 'webhook', 'geplant', 'posteingang'],
+  [DocsPageLanguage.French]: ['connecteur', 'webhook', 'planifi', 'boîte de réception'],
+  [DocsPageLanguage.Japanese]: ['コネクタ', 'webhook', 'スケジュール', '受信トレイ'],
+  [DocsPageLanguage.Korean]: ['커넥터', 'webhook', '예약', '받은편지함'],
+  [DocsPageLanguage.Chinese]: ['连接器', 'webhook', '定时', '收件箱'],
 };
-const NOT_LISTENING_TOKEN: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'is not listening right now',
-  [DocsLanguage.PortugueseBrazil]: 'não está ouvindo agora',
+const NOT_LISTENING_TOKEN: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'is not listening right now',
+  [DocsPageLanguage.PortugueseBrazil]: 'não está ouvindo agora',
+  [DocsPageLanguage.Spanish]: 'is not listening right now',
+  [DocsPageLanguage.German]: 'is not listening right now',
+  [DocsPageLanguage.French]: 'is not listening right now',
+  [DocsPageLanguage.Japanese]: 'is not listening right now',
+  [DocsPageLanguage.Korean]: 'is not listening right now',
+  [DocsPageLanguage.Chinese]: 'is not listening right now',
 };
-const COMMAND_WORDS: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
-  [DocsLanguage.PortugueseBrazil]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+const COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.PortugueseBrazil]: [
+    'novo agente',
+    'agentes',
+    'revogar',
+    'girar',
+    'ajuda',
+    'apagar conta',
+    'apagar conta definitivamente',
+  ],
+  [DocsPageLanguage.Spanish]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.German]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.French]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.Japanese]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.Korean]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.Chinese]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
 };
-const OTHER_LANGUAGE_COMMAND_WORDS: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: COMMAND_WORDS[DocsLanguage.PortugueseBrazil],
-  [DocsLanguage.PortugueseBrazil]: COMMAND_WORDS[DocsLanguage.English],
+const OTHER_LANGUAGE_COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: COMMAND_WORDS[DocsPageLanguage.PortugueseBrazil],
+  [DocsPageLanguage.PortugueseBrazil]: COMMAND_WORDS[DocsPageLanguage.English],
+  [DocsPageLanguage.Spanish]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.German]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.French]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Japanese]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Korean]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Chinese]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
 };
-const RESERVED_NAME_TOKEN: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'reserved',
-  [DocsLanguage.PortugueseBrazil]: 'reservad',
+const RESERVED_NAME_TOKEN: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'reserved',
+  [DocsPageLanguage.PortugueseBrazil]: 'reservad',
+  [DocsPageLanguage.Spanish]: 'reservad',
+  [DocsPageLanguage.German]: 'reserviert',
+  [DocsPageLanguage.French]: 'réservé',
+  [DocsPageLanguage.Japanese]: '予約',
+  [DocsPageLanguage.Korean]: '예약',
+  [DocsPageLanguage.Chinese]: '保留',
 };
-const FORWARDED_TOKEN: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'forwarded',
-  [DocsLanguage.PortugueseBrazil]: 'encaminhad',
+const FORWARDED_TOKEN: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'forwarded',
+  [DocsPageLanguage.PortugueseBrazil]: 'encaminhad',
+  [DocsPageLanguage.Spanish]: 'reenviad',
+  [DocsPageLanguage.German]: 'weitergeleitet',
+  [DocsPageLanguage.French]: 'transféré',
+  [DocsPageLanguage.Japanese]: '転送',
+  [DocsPageLanguage.Korean]: '전달',
+  [DocsPageLanguage.Chinese]: '转发',
 };
 
-function urlOf(input: { path: string; language: DocsLanguage }): string {
-  if (input.language === DocsLanguage.English) return `/${input.path}`;
-  return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
+function urlOf(input: { path: string; language: DocsPageLanguage }): string {
+  return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
-for (const language of Object.values(DocsLanguage)) {
+for (const language of Object.values(DocsPageLanguage)) {
   test.describe(`feature pages in ${language}`, () => {
     test.use(docsOptionsOf({ language, viewport: DocsViewport.Desktop }));
     test.beforeEach(({}, testInfo) => {

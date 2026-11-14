@@ -1,10 +1,15 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DOCS_LANGUAGE_FOLDERS, DocsPageLanguage } from '@zapbip/types';
 import { WAKE_RUNG_LABELS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
+import { twinPathOf } from '../../../libs/agents/src/docs';
 
 const OK_STATUS = 200;
-const CONCEPT_LINK_PATTERN = /^(\/pt-br)?\/(concepts|developers|mcp-reference)\//;
+const CONCEPT_LINK_PATTERN = new RegExp(
+  `^(/(${Object.values(DOCS_LANGUAGE_FOLDERS)
+    .filter((folder) => folder !== '')
+    .join('|')}))?/(concepts|developers|mcp-reference)/`,
+);
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const DEVELOPER_PAGES = [
   'developers/any-mcp-client',
@@ -27,25 +32,42 @@ const BACKGROUND_TOKENS = ['launchd', 'systemd', '600'];
 const WEBHOOK_BACKOFF_SECONDS = ['5', '10', '20', '40'];
 const MEASURED_WAKE_SECONDS = ['7', '6', '9', '16'];
 const TEMPLATE_NAMES = ['zapbip_agent_notice', 'zapbip_agent_question'];
-const NOTICE_RETRY_TOKENS: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: ['5 minutes', '6 hours'],
-  [DocsLanguage.PortugueseBrazil]: ['5 minutos', '6 horas'],
+const NOTICE_RETRY_TOKENS: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: ['5 minutes', '6 hours'],
+  [DocsPageLanguage.PortugueseBrazil]: ['5 minutos', '6 horas'],
+  [DocsPageLanguage.Spanish]: ['5 minutos', '6 horas'],
+  [DocsPageLanguage.German]: ['5 Minuten', '6 Stunden'],
+  [DocsPageLanguage.French]: ['5 minutes', '6 heures'],
+  [DocsPageLanguage.Japanese]: ['5 分', '6 時間'],
+  [DocsPageLanguage.Korean]: ['5분', '6시간'],
+  [DocsPageLanguage.Chinese]: ['5 分钟', '6 小时'],
 };
-const QUICK_REPLIES: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: ['Open', 'Reply'],
-  [DocsLanguage.PortugueseBrazil]: ['Abrir', 'Responder'],
+const QUICK_REPLIES: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: ['Open', 'Reply'],
+  [DocsPageLanguage.PortugueseBrazil]: ['Abrir', 'Responder'],
+  [DocsPageLanguage.Spanish]: ['Open', 'Reply'],
+  [DocsPageLanguage.German]: ['Open', 'Reply'],
+  [DocsPageLanguage.French]: ['Open', 'Reply'],
+  [DocsPageLanguage.Japanese]: ['Open', 'Reply'],
+  [DocsPageLanguage.Korean]: ['Open', 'Reply'],
+  [DocsPageLanguage.Chinese]: ['Open', 'Reply'],
 };
-const CHANNEL_HEADINGS: Record<DocsLanguage, string[]> = {
-  [DocsLanguage.English]: ['Inbound', 'Outbound', 'Delivery'],
-  [DocsLanguage.PortugueseBrazil]: ['Mensagens que chegam', 'Mensagens que saem', 'Entrega'],
+const CHANNEL_HEADINGS: Record<DocsPageLanguage, string[]> = {
+  [DocsPageLanguage.English]: ['Inbound', 'Outbound', 'Delivery'],
+  [DocsPageLanguage.PortugueseBrazil]: ['Mensagens que chegam', 'Mensagens que saem', 'Entrega'],
+  [DocsPageLanguage.Spanish]: ['Mensajes entrantes', 'Mensajes salientes', 'Entrega'],
+  [DocsPageLanguage.German]: ['Eingehende Nachrichten', 'Ausgehende Nachrichten', 'Zustellung'],
+  [DocsPageLanguage.French]: ['Messages entrants', 'Messages sortants', 'Remise'],
+  [DocsPageLanguage.Japanese]: ['受信メッセージ', '送信メッセージ', '配信'],
+  [DocsPageLanguage.Korean]: ['수신 메시지', '발신 메시지', '전달'],
+  [DocsPageLanguage.Chinese]: ['入站消息', '出站消息', '投递'],
 };
 
-function urlOf(input: { path: string; language: DocsLanguage }): string {
-  if (input.language === DocsLanguage.English) return `/${input.path}`;
-  return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
+function urlOf(input: { path: string; language: DocsPageLanguage }): string {
+  return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
-for (const language of Object.values(DocsLanguage)) {
+for (const language of Object.values(DocsPageLanguage)) {
   test.describe(`developers and concepts in ${language}`, () => {
     test.use(docsOptionsOf({ language, viewport: DocsViewport.Desktop }));
     test.beforeEach(({}, testInfo) => {

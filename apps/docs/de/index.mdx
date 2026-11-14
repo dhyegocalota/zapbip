@@ -1,0 +1,114 @@
+---
+title: Überblick
+description: Deine KI, in deinem WhatsApp.
+mode: 'wide'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/de/start-link.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="Offizielle WhatsApp Cloud API"
+  statement="Deine KI schreibt dir."
+  accent="Du antwortest in WhatsApp."
+  lead="Entscheidungen, fertige Arbeit und Fragen mit Buttons, auf dem Handy, das du ohnehin dabeihast. Eine Zeile zum Einrichten."
+  primary={{ label: 'So startest du', href: '/de/get-started/how-to-start' }}
+  secondary={{ label: 'Unterstützte KIs', href: '/de/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'Dein Flug nach Lissabon kostet nur noch 410 $. Soll ich buchen?', options: ['Buchen', 'Weiter beobachten'] },
+      { you: true, text: 'Buchen' },
+      { name: 'Claude', text: 'Gebucht. Die Bordkarte schicke ich dir hier.' },
+      { typing: true },
+    ]}
+  />
+</Hero>
+
+## Warum es zapbip gibt
+
+Du nutzt KI zum Recherchieren, Planen und Bauen. Doch wenn sie eine Entscheidung braucht oder etwas fertig ist, das länger gedauert hat, schaust du nicht auf den Bildschirm. Also wartet sie, oder sie rät.
+
+Du bist ohnehin in WhatsApp. zapbip bringt deine KI dorthin: Sie schreibt dir, fragt mit Buttons, wartet auf deine Antwort, und du kannst die Unterhaltung auch selbst beginnen, wann immer du willst.
+
+Du schreibst zapbip einmal über den Startlink, bekommst eine Zeile zum Einfügen in deine KI, und das ist die ganze Einrichtung.
+
+<StartLink />
+
+## So funktioniert es
+
+<Frame>
+  <img
+    src="/images/how-it-works-de.svg"
+    alt="Deine KI verbindet sich mit zapbip, das ihre Nachrichten über die offizielle WhatsApp Cloud API an dein Handy sendet. Deine Antwort läuft zurück und weckt deine KI."
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **Verbinde deine KI** einmalig, indem du eine Zeile einfügst.
+2. **Sie schreibt dir** mit Text, Dateien oder einer Frage mit Buttons.
+3. **Du antwortest oder schreibst zuerst**, und zapbip liefert es an die richtige KI.
+
+## So sieht es aus
+
+<CardGroup cols={2}>
+  <Card title="Recherche fertig" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: 'Deine Recherche zu E-Bikes ist fertig. Zusammenfassung im Anhang.',
+          media: { kind: 'document', label: 'zusammenfassung.pdf' },
+        },
+        { you: true, text: 'Danke, perfekt.' },
+      ]}
+    />
+  </Card>
+  <Card title="Eine Entscheidung zu deiner Reise" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Welches Hotel in Lissabon?', options: ['Alfama', 'Baixa', 'Belém'] },
+        { you: true, text: 'Baixa' },
+        { name: 'Claude', text: 'Ich buche Baixa für 3 Nächte.' },
+      ]}
+    />
+  </Card>
+  <Card title="Du schreibst zuerst" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: 'Erinnere mich am Freitag daran, meinen Reisepass zu verlängern.' },
+        { name: 'Grok', text: 'Erledigt. Ich melde mich am Freitagmorgen.' },
+      ]}
+    />
+  </Card>
+  <Card title="Viele KIs, eine Nummer" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Die Tests sind durchgelaufen.' },
+        { name: 'Grok', text: '3 Quellen gefunden.' },
+        { you: true, quote: { name: 'Grok', text: '3 Quellen gefunden.' }, text: 'Welche?' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+## Für wen es ist
+
+Für alle, die KI nutzen: ChatGPT, Claude, Grok, Codex, Cursor, Gemini und mehr. Du brauchst nichts außer WhatsApp. zapbip spricht nur mit dir, nie mit Dritten.
+
+## Was du tun kannst
+
+- [Nachrichten und Medien senden](/de/features/send-messages-and-media)
+- [Mit Buttons und Listen fragen](/de/features/ask-with-buttons-and-lists)
+- [Viele KIs mit einer Nummer nutzen](/de/features/many-agents-on-one-number)
+- [Das 24-Stunden-Fenster verstehen](/de/features/the-24-hour-window)
+
+Welche KIs funktionieren, siehst du unter [Unterstützte KIs](/de/agents/supported-agents).
+
+<Card title="So startest du" icon="rocket" href="/de/get-started/how-to-start">
+  Schreib an die zapbip-Nummer, füge eine Zeile in deine KI ein und erhalte ihre erste Nachricht.
+</Card>

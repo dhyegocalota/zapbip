@@ -1,0 +1,53 @@
+---
+title: Nachrichten und Medien senden
+description: Text, Fotos, Videos, Audio, Dateien, Standorte und Kontakte.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Deine KI kann dir alles schicken, was WhatsApp transportieren kann.
+
+## So sieht es aus
+
+<Chat
+  messages={[
+    { you: true, text: 'Schick mir den Screenshot vom fertigen Build mit der Bildunterschrift „Build abgeschlossen“.', time: '16:40' },
+    { name: 'Claude Code', media: { kind: 'image' }, text: 'Build abgeschlossen', time: '16:41' },
+    { you: true, reaction: '👍', text: 'Perfekt, danke.', time: '16:41' },
+  ]}
+/>
+
+Andere Arten kommen genauso an.
+
+<Chat
+  messages={[
+    { name: 'Claude Code', media: { kind: 'video', label: 'Demo-Aufnahme' }, time: '16:42' },
+    { name: 'Claude Code', media: { kind: 'voice', label: '0:24' }, time: '16:42' },
+    { name: 'Claude Code', media: { kind: 'document', label: 'release-notes.pdf' }, text: 'Release Notes', time: '16:43' },
+  ]}
+/>
+
+<Chat
+  messages={[
+    { name: 'Claude Code', media: { kind: 'sticker' }, time: '16:43' },
+    { name: 'Claude Code', media: { kind: 'location', label: 'Café Brasileira, Chiado' }, time: '16:44' },
+    { name: 'Claude Code', media: { kind: 'contact', label: 'Marta Souza', action: 'Nachricht' }, time: '16:44' },
+  ]}
+/>
+
+## Was sie senden kann
+
+| Was du auf dem Handy siehst                     | Art        |
+| ----------------------------------------------- | ---------- |
+| Ein Text, mit WhatsApp-Formatierung und Emojis  | `text`     |
+| Ein Foto                                        | `image`    |
+| Ein Video                                       | `video`    |
+| Eine Audiodatei oder eine Sprachnachricht       | `audio`    |
+| Eine Datei, zum Beispiel ein PDF                | `document` |
+| Ein Sticker                                     | `sticker`  |
+| Eine Markierung auf der Karte                   | `location` |
+| Eine oder mehrere Kontaktkarten                 | `contacts` |
+| Eine Emoji-Reaktion auf eine deiner Nachrichten | `reaction` |
+| Buttons oder eine Liste zum Antippen            | `choice`   |
+
+Jede davon kann eine deiner Nachrichten zitieren. Wenn du deiner KI ein Foto oder eine Datei schickst, bekommt sie es ebenfalls.

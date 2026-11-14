@@ -1,0 +1,56 @@
+---
+title: 'Activación por webhook'
+description: 'Deja que zapbip inicie tu IA cuando escribes y no está escuchando.'
+---
+
+La activación por webhook es el segundo peldaño de la [escalera de activación](/es/concepts/wake-ladder). Cuando el propietario escribe en WhatsApp y el agente no está escuchando, zapbip llama a un enlace que lo inicia. El flujo de instalación lo configura para los clientes que lo admiten; esta página muestra lo que envía zapbip y cómo configurarlo a mano.
+
+El agente lee entonces el mensaje con [check_inbox](/es/mcp-reference/check-inbox) o [get_messages](/es/mcp-reference/get-messages) y responde. El enlace se guarda con [set_wake](/es/mcp-reference/set-wake).
+
+La llamada no lleva nada de tu texto: su cuerpo es siempre `{"event":"inbox_has_messages"}`. Los mensajes que llegan en ráfaga comparten una activación, enviada unos segundos después del primero.
+
+## Rutina de Grok Bot
+
+Crea una rutina con un disparador webhook y luego guárdala:
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+zapbip envía `Authorization: Bearer <token>`.
+
+## Tarea programada de claude.ai
+
+Crea una tarea programada con un disparador de API y luego guárdala:
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+zapbip envía `Authorization: Bearer <token>` y las cabeceras de la rutina.
+
+## Tu propio servicio
+
+Sirve cualquier host `https` público. El token es tu clave de firma, de al menos 32 caracteres, y nunca se envía. Cada petición lleva `X-Zapbip-Timestamp` (segundos Unix) y `X-Zapbip-Signature`, `sha256=` seguido del HMAC-SHA256 en hexadecimal de `<timestamp>.<body>`. Rechaza una marca de tiempo de más de 300 segundos.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## Cuando una activación falla
+
+- `408`, `425`, `429`, `5xx`, un tiempo de espera agotado o un error de red se reintentan hasta 5 veces, esperando 5, 10, 20 y 40 segundos y respetando `Retry-After` en `429` y `503`, hasta 60 segundos.
+- Las redirecciones y las demás respuestas `4xx` se rechazan al instante y no se reintentan.
+- Cuando una activación se rechaza o se da por vencida, recibes un aviso en WhatsApp de que el mensaje espera en la bandeja de entrada, y la conexión se marca como `failing`. Llama de nuevo a [set_wake](/es/mcp-reference/set-wake) para corregir el destino; la siguiente activación entregada la devuelve a `active`.
+- Si el agente lee los mensajes antes de que se dispare la activación, no se envía ninguna petición.

@@ -1,0 +1,77 @@
+---
+title: claude.ai
+description: 把 claude.ai 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/zh/start-link.mdx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你想要               | claude.ai                                            |
+| -------------------- | ---------------------------------------------------- |
+| 收到它的消息         | 文本、照片、视频、音频、文档、位置、联系人、表情回应 |
+| 点按作答             | 按钮和列表；它会等你点按                             |
+| 从 WhatsApp 先发消息 | 可以，一个任务会在约 16 秒内唤醒它                   |
+| 让问题保持几个小时   | 可以，没有时间限制                                   |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: '报告完成了。要发给团队吗？', options: ['发', '先不发'], time: '08:15' },
+    { you: true, text: '发', time: '08:16' },
+  ]}
+/>
+
+## 监听方式
+
+唤醒方式：**Webhook**。你在 WhatsApp 上发消息时，zapbip 会触发一个 claude.ai 任务的触发器链接，任务带着你的连接器在云端运行。它在你发消息后约 16 秒回答，无需审批提示。
+
+- claude.ai 的任务最多每小时按计划运行一次。所以你还要创建一个每小时的任务来检查你的消息：它只是一张安全网，这样即使错过一次唤醒，也不会有消息等待超过一小时。
+
+你的 AI 向你提问时，zapbip 会保留这个问题，并最多每 50 秒回答一次“待处理”。claude.ai 随后再次调用，并一直调用下去，直到你回答。没有时间限制。
+
+claude.ai 对单个答案大约等待 4 分钟，并自行重试，所以整体没有限制。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 随便发一段文字，例如 `hi`。
+
+   <StartLink />
+
+2. **申请一个新智能体。** 智能体就是你连接的一个 AI。目前命令需要用英语或葡萄牙语的词来输入。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
+         time: '08:00',
+       },
+     ]}
+   />
+
+3. **把这一行粘贴到 claude.ai 里。**
+
+   <InstallPrompt />
+
+   claude.ai 会阅读说明并按顺序执行。链接是机密的，请不要放进你会分享的聊天里。
+
+4. **粘贴连接器。** claude.ai 会请你在设置中把 `<connectionLink>` 作为自定义连接器粘贴进去。这一步由你自己完成，因为 claude.ai 只允许由你来添加。
+
+5. **创建唤醒任务。** 它会请你在 claude.ai/code/routines 创建一个带 API 触发器的任务，然后把它的触发 URL 和令牌粘贴到聊天里。第二次粘贴同样由你完成，因为 claude.ai 只向你显示令牌。
+
+6. **告诉 zapbip 如何唤醒它。** 如果你在任务创建之前停下，它会调用 `set_wake({mode: "none"})`，并告诉你聊天只有在你打开它时才会看到新消息。否则，它调用 `set_wake({mode: "webhook", url, token})`。
+
+7. **创建每小时的安全网。** 它会请你创建一个每小时的任务来调用 `check_inbox`，这样即使错过一次唤醒，也不会有消息等待超过一小时。
+
+8. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+
+## 检查是否正常工作
+
+连接完成后，claude.ai 会向你的 WhatsApp 发送 `✅ installed`。
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+
+如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

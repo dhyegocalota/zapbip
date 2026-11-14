@@ -1,5 +1,5 @@
 import { createServer } from 'node:net';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 
 export enum DocsViewport {
   Desktop = 'desktop',
@@ -12,9 +12,15 @@ const PATTERN_SPECIAL_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
 export const DESKTOP_WIDTH_PX = 1280;
 export const NARROW_WIDTH_PX = 375;
 export const DOCS_VIEWPORT_HEIGHT_PX = 800;
-export const DOCS_LOCALE_OF: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'en-US',
-  [DocsLanguage.PortugueseBrazil]: 'pt-BR',
+export const DOCS_LOCALE_OF: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'en-US',
+  [DocsPageLanguage.PortugueseBrazil]: 'pt-BR',
+  [DocsPageLanguage.Spanish]: 'es-ES',
+  [DocsPageLanguage.German]: 'de-DE',
+  [DocsPageLanguage.French]: 'fr-FR',
+  [DocsPageLanguage.Japanese]: 'ja-JP',
+  [DocsPageLanguage.Korean]: 'ko-KR',
+  [DocsPageLanguage.Chinese]: 'zh-CN',
 };
 
 export const DOCS_WALK_NOISE_ALLOWLIST: { patternOf: (input: { origin: string }) => RegExp; reason: string }[] = [
@@ -70,7 +76,7 @@ export async function docsPortOf(): Promise<number> {
   return port;
 }
 
-export function docsOptionsOf(input: { language: DocsLanguage; viewport: DocsViewport }): {
+export function docsOptionsOf(input: { language: DocsPageLanguage; viewport: DocsViewport }): {
   locale: string;
   viewport: { width: number; height: number };
 } {

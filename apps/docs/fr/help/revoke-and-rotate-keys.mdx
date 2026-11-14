@@ -1,0 +1,44 @@
+---
+title: Révoquer et renouveler une connexion
+description: Coupez une IA ou remplacez son lien.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Chaque IA a sa propre connexion. Vous la coupez, ou vous remplacez son lien, en écrivant au numéro de zapbip. Les commandes sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+
+## Couper une IA
+
+Écrivez `revoke` et le nom de l'IA, par exemple `revoke claude`. Toutes les façons dont cette IA est connectée s'arrêtent aussitôt : son lien vers zapbip, un listener qui tourne sur votre ordinateur et tout réveil qui la démarrerait.
+
+<Chat
+  messages={[
+    { you: true, text: 'revoke claude', time: '16:02' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+  ]}
+/>
+
+Pour réutiliser cette IA, écrivez `new agent claude`.
+
+## Remplacer un lien
+
+Écrivez `rotate` et le nom, par exemple `rotate claude`. L'ancienne connexion cesse de fonctionner aussitôt, avec la même portée que `revoke`, et zapbip vous envoie un nouveau prompt à coller dans cette IA.
+
+<Chat
+  messages={[
+    { you: true, text: 'rotate claude', time: '16:05' },
+    {
+      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      time: '16:05',
+    },
+  ]}
+/>
+
+Un lien renouvelé n'est envoyé qu'une fois. zapbip ne l'affiche jamais de nouveau : `agents` liste vos IA sans aucun lien. Si le nouveau prompt n'arrive pas, zapbip conserve l'ancienne connexion, et vous pouvez écrire `rotate claude` de nouveau.
+
+## Lequel utiliser
+
+- Vous avez perdu une IA, vous ne l'utilisez plus ou vous avez partagé son lien par erreur : `revoke`.
+- Le lien a expiré, a déjà été utilisé ou a fuité, et vous voulez garder l'IA : `rotate`.
+
+Retrouvez chaque mot dans [commandes sur WhatsApp](/fr/features/whatsapp-commands).

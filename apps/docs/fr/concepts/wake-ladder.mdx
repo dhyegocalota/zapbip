@@ -1,0 +1,65 @@
+---
+title: 'Échelle de réveil'
+description: "Comment zapbip joint une IA qui n'écoute pas quand vous écrivez."
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Quand vous écrivez sur WhatsApp, votre IA peut être fermée, occupée ou simplement ne pas vous attendre. zapbip la joint alors par le barreau le plus haut que sa connexion permet, et passe au suivant quand un barreau n'est pas disponible :
+
+| Barreau                  | Ce qui se passe                                                                                                                                                      | Délai attendu                |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Local                    | zapbip pousse votre message vers le [connecteur](/fr/developers/local-connector) qui tourne sur votre ordinateur, et qui reprend votre session Claude Code ou Codex. | 7 s Claude Code, 6 s Codex   |
+| Webhook                  | zapbip appelle un lien qui démarre l'IA. Voir le [guide du réveil par webhook](/fr/developers/webhook-wake).                                                         | 9 s Grok Bot, 16 s claude.ai |
+| Planifié                 | L'IA consulte sa boîte de réception à intervalle régulier, elle peut donc écouter sans limite de temps.                                                              | jusqu'à l'intervalle         |
+| En veille                | Une autre de vos IA reçoit une copie de votre message et répond à la place.                                                                                          | non mesuré                   |
+| Boîte de réception seule | Le message attend et zapbip vous dit que l'IA n'écoute pas pour le moment.                                                                                           | jusqu'à ce qu'une IA le lise |
+
+À chaque barreau, votre message est conservé dans la [boîte de réception](/fr/concepts/inbox) jusqu'à ce qu'une IA le lise. Rien n'est perdu.
+
+## Local : votre propre ordinateur
+
+Le connecteur garde une ligne ouverte vers zapbip tant qu'il tourne. Quand vous écrivez, zapbip pousse le message le long de cette ligne et le connecteur reprend votre session sur votre ordinateur. Quand la dernière ligne se ferme, zapbip rétablit le réveil que vous aviez avant. Lancez-le avec `npx zapbip@0.1.0 connect`.
+
+## Planifié : écouter sans limite de temps
+
+Certaines IA n'ont aucun moyen d'être démarrées de l'extérieur, et chaque appel qu'elles font à zapbip se termine au bout de quelques minutes. Un réveil planifié règle cela : vous demandez à l'IA d'exécuter une petite tâche à intervalle régulier, toutes les quelques minutes ou toutes les heures, et chaque exécution lit ce que vous avez écrit et répond.
+
+Vous choisissez la fréquence, de toutes les 1 minute à toutes les 1440 minutes (un jour). ChatGPT et claude.ai n'exécutent les tâches planifiées que toutes les 60 minutes ou moins souvent, donc pour elles l'intervalle le plus court est de 60 minutes.
+
+Quand vous écrivez, zapbip vous dit à peu près quand attendre la réponse. Cette notification, comme toutes celles de zapbip, est en anglais, la langue du produit aujourd'hui :
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Peux-tu résumer le rapport ?' },
+    {
+      notice: true,
+      text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.',
+    },
+  ]}
+/>
+
+Si le minuteur cesse de tourner, zapbip le dit une fois, quand le double de l'intervalle s'est écoulé sans vérification, et vos messages continuent d'attendre :
+
+<Chat contact="zapbip" messages={[{ notice: true, text: "Claude hasn't checked in 2 h: your messages wait" }]} />
+
+La vérification suivante met fin à l'avertissement sans autre message.
+
+Quand la [fenêtre de 24 heures](/fr/concepts/24-hour-window) est fermée, cette note ne peut pas être envoyée telle quelle. zapbip envoie une [notification](/fr/concepts/owner-notices) de modèle par fenêtre fermée, et la note attend et arrive quand vous écrivez.
+
+## En veille : une autre IA répond
+
+Certaines IA, comme Grok sur le web, ne peuvent pas du tout être démarrées. Vous pouvez désigner une autre IA du même compte comme sa veille, par exemple Grok Bot. Quand vous écrivez à la première, zapbip donne une copie à la veille, la réveille, et elle répond en son nom propre, en disant qui elle est. La première IA voit le message comme traité par la veille.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok qu’y a-t-il dans mon agenda ?' },
+    { name: 'Grok Bot (standby for Grok)', text: 'Aujourd’hui, vous avez deux réunions : 10:00 et 15:30.' },
+  ]}
+/>
+
+Une connexion en veille ne transfère jamais vers une autre en veille : c'est un saut, pas plus. Si la veille est absente, a été retirée ou est elle-même une veille, rien n'est copié : le message attend chez la première IA et vous recevez la notification habituelle.
+
+L'IA configure cela pour vous pendant l'installation. Pour le changer à la main, utilisez [set_wake](/fr/mcp-reference/set-wake).

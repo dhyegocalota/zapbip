@@ -1,4 +1,4 @@
-import { DocsLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
+import { DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import type { AgentInstall } from '../contract';
 import { AGENT_PAGE_HEADINGS, AgentPageSection } from '../docs';
 import { violationIf } from './registry';
@@ -7,7 +7,7 @@ export type GuideParityEntry = {
   id: string;
   install: AgentInstall;
   isPluginPage: boolean;
-  guides: Record<DocsLanguage, string>;
+  guides: Record<DocsPageLanguage, string>;
 };
 
 const CONNECTION_LINK_PLACEHOLDER = '<connectionLink>';
@@ -21,13 +21,15 @@ const VERSION_PATTERN = /@\S+/;
 const SELF_TEST_COMMAND_PATTERN = /`((?:[a-z]+ -p "Call|[a-z]+ exec -c|[a-z]+ -p)[^`]*)`/;
 const SELF_TEST_ACTION = 'send_message';
 
-const LANGUAGE_LABEL: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'English',
-  [DocsLanguage.PortugueseBrazil]: 'Portuguese',
-};
-const LOCALE_OF_LANGUAGE: Record<DocsLanguage, OwnerLocale> = {
-  [DocsLanguage.English]: OwnerLocale.EnglishUs,
-  [DocsLanguage.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
+const LANGUAGE_LABEL: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: 'English',
+  [DocsPageLanguage.PortugueseBrazil]: 'Portuguese',
+  [DocsPageLanguage.Spanish]: 'Spanish',
+  [DocsPageLanguage.German]: 'German',
+  [DocsPageLanguage.French]: 'French',
+  [DocsPageLanguage.Japanese]: 'Japanese',
+  [DocsPageLanguage.Korean]: 'Korean',
+  [DocsPageLanguage.Chinese]: 'Chinese',
 };
 
 function uniqueInOrder(values: string[]): string[] {
@@ -46,7 +48,7 @@ function sectionTextOf(input: { install: AgentInstall; locale: OwnerLocale; stan
   return input.install.render({ connectionLink: CONNECTION_LINK_PLACEHOLDER, locale: input.locale, standbyAgent: input.standbyAgent });
 }
 
-function setUpOf(input: { guide: string; language: DocsLanguage }): string | null {
+function setUpOf(input: { guide: string; language: DocsPageLanguage }): string | null {
   const heading = `## ${AGENT_PAGE_HEADINGS[input.language][AgentPageSection.SetupFromZero]}`;
   const start = input.guide.indexOf(`\n${heading}\n`);
   if (start === -1) return null;
@@ -59,17 +61,17 @@ function lastStepOf(input: { setUp: string }): string {
   return input.setUp.slice(lastStart);
 }
 
-function languageViolationsOf(input: { entry: GuideParityEntry; language: DocsLanguage; englishSetUp: string }): string[] {
+function languageViolationsOf(input: { entry: GuideParityEntry; language: DocsPageLanguage; englishSetUp: string }): string[] {
   const { entry, language, englishSetUp } = input;
   const label = `${entry.id}: the ${LANGUAGE_LABEL[language]}`;
-  const locale = LOCALE_OF_LANGUAGE[language];
+  const locale = DOCS_OWNER_LOCALES[language];
   const guide = entry.guides[language];
   const setUp = setUpOf({ guide, language });
   if (setUp === null) {
     const heading = AGENT_PAGE_HEADINGS[language][AgentPageSection.SetupFromZero];
     return [`${label} guide has no "${heading}" section`];
   }
-  const isTwin = language !== DocsLanguage.English;
+  const isTwin = language !== DocsPageLanguage.English;
   const selfTestCommand = sectionTextOf({ install: entry.install, locale, standbyAgent: null }).match(SELF_TEST_COMMAND_PATTERN)?.[1];
   const otherSelfTests = Object.values(OwnerLocale)
     .filter((other) => other !== locale)
@@ -101,7 +103,7 @@ function languageViolationsOf(input: { entry: GuideParityEntry; language: DocsLa
 
 function englishSectionViolationsOf(input: { entry: GuideParityEntry; englishSetUp: string }): string[] {
   const { entry, englishSetUp } = input;
-  const label = `${entry.id}: the ${LANGUAGE_LABEL[DocsLanguage.English]} guide must`;
+  const label = `${entry.id}: the ${LANGUAGE_LABEL[DocsPageLanguage.English]} guide must`;
   const withStandby = sectionTextOf({ install: entry.install, locale: OwnerLocale.EnglishUs, standbyAgent: STANDBY_AGENT });
   const withoutStandby = sectionTextOf({ install: entry.install, locale: OwnerLocale.EnglishUs, standbyAgent: null });
   const expectedModes = uniqueInOrder([...wakeModesOf(withStandby), ...wakeModesOf(withoutStandby)]);
@@ -119,13 +121,13 @@ function englishSectionViolationsOf(input: { entry: GuideParityEntry; englishSet
 
 function entryViolationsOf(input: { entry: GuideParityEntry }): string[] {
   const { entry } = input;
-  const englishSetUp = setUpOf({ guide: entry.guides[DocsLanguage.English], language: DocsLanguage.English });
+  const englishSetUp = setUpOf({ guide: entry.guides[DocsPageLanguage.English], language: DocsPageLanguage.English });
   if (englishSetUp === null) {
-    const heading = AGENT_PAGE_HEADINGS[DocsLanguage.English][AgentPageSection.SetupFromZero];
-    return [`${entry.id}: the ${LANGUAGE_LABEL[DocsLanguage.English]} guide has no "${heading}" section`];
+    const heading = AGENT_PAGE_HEADINGS[DocsPageLanguage.English][AgentPageSection.SetupFromZero];
+    return [`${entry.id}: the ${LANGUAGE_LABEL[DocsPageLanguage.English]} guide has no "${heading}" section`];
   }
   const englishSectionViolations = entry.isPluginPage ? [] : englishSectionViolationsOf({ entry, englishSetUp });
-  const languageViolations = Object.values(DocsLanguage).flatMap((language) => languageViolationsOf({ entry, language, englishSetUp }));
+  const languageViolations = Object.values(DocsPageLanguage).flatMap((language) => languageViolationsOf({ entry, language, englishSetUp }));
   return [...englishSectionViolations, ...languageViolations];
 }
 

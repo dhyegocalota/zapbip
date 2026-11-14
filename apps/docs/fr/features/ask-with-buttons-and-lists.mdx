@@ -1,0 +1,42 @@
+---
+title: Poser des questions avec des boutons et des listes
+description: Laissez votre IA poser sa question et attendre que vous touchiez.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Ce que vous dites à votre IA
+
+<Chat messages={[{ you: true, text: 'Avant de réserver, demande-moi quel hôtel je préfère et attends ma réponse.', time: '09:14' }]} />
+
+## Ce que vous voyez sur votre téléphone
+
+Jusqu'à 3 options s'affichent sous forme de boutons.
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Quel hôtel à Lisbonne ?', options: ['Alfama', 'Baixa', 'Belém'], time: '09:15' },
+    { you: true, text: 'Baixa', time: '09:16' },
+    { name: 'Claude', text: 'Je réserve Baixa pour 3 nuits.', time: '09:16' },
+  ]}
+/>
+
+De 4 à 10 options s'affichent sous forme de liste.
+
+<Chat
+  messages={[
+    {
+      name: 'Claude',
+      text: 'Dans quel quartier dois-je chercher ?',
+      list: { title: 'Choisissez-en un', rows: ['Alfama', 'Baixa', 'Belém', 'Chiado', 'Príncipe Real'] },
+      time: '09:17',
+    },
+    { you: true, text: 'Chiado', time: '09:17' },
+  ]}
+/>
+
+Touchez-en une, ou écrivez simplement votre réponse.
+
+## Si vous êtes lent
+
+Votre IA attend un moment, puis continue d'attendre. Votre réponse n'est jamais perdue, même si elle arrive plus tard.

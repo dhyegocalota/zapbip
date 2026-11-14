@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'Réserve un envoi pour des octets que vous détenez en local.'
+---
+
+Réserve un envoi pour des octets que vous détenez en local.
+
+## Entrée
+
+| Champ        | Type   | Notes |
+| ------------ | ------ | ----- |
+| `filename`   | string |       |
+| `mime_type`  | string |       |
+| `size_bytes` | number |       |
+
+## Sortie
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. `upload_url` est un lien signé qui ne porte aucun secret de connexion. Envoyez les octets en `PUT` avec un `Content-Length` au plus égal à `size_bytes`, puis passez `upload_id` à [send_media](/fr/mcp-reference/send-media). L'envoi expire au bout de 15 minutes. Une longueur absente, un corps plus grand, un type erroné ou un envoi expiré sont rejetés avec 411, 413, 415 ou 410 et rien n'est stocké.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

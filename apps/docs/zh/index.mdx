@@ -1,0 +1,114 @@
+---
+title: 概览
+description: 你的 AI，在你的 WhatsApp 里。
+mode: 'wide'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/zh/start-link.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="官方 WhatsApp Cloud API"
+  statement="你的 AI 主动给你发消息。"
+  accent="你在 WhatsApp 上回复。"
+  lead="决定、完成的工作和带按钮的提问，都发到你随身携带的手机上。只需一行就能设置好。"
+  primary={{ label: '开始使用', href: '/zh/get-started/how-to-start' }}
+  secondary={{ label: '支持的智能体', href: '/zh/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: '飞往里斯本的机票降到 3000 元了。要订吗？', options: ['订票', '继续观察'] },
+      { you: true, text: '订票' },
+      { name: 'Claude', text: '已订好。登机牌我会发到这里。' },
+      { typing: true },
+    ]}
+  />
+</Hero>
+
+## 为什么有 zapbip
+
+你用 AI 来调研、规划和开发。但当它需要你做决定，或者完成了一件耗时很久的事，你并不在看屏幕。于是它只能等待，或者自己猜。
+
+你本来就生活在 WhatsApp 里。zapbip 把你的 AI 带到那里：它给你发消息，用按钮向你提问，等你回答，你也可以随时主动发起对话。
+
+你通过启动链接给 zapbip 发一次消息，它会给你一行文字，粘贴到你的 AI 里，设置就完成了。
+
+<StartLink />
+
+## 工作原理
+
+<Frame>
+  <img
+    src="/images/how-it-works-zh.svg"
+    alt="你的 AI 连接到 zapbip，zapbip 通过官方 WhatsApp Cloud API 把它的消息发到你的手机。你的回复沿原路返回，并唤醒你的 AI。"
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **连接你的 AI**，只需粘贴一行，一次即可。
+2. **它给你发消息**，可以是文本、文件，或带按钮的提问。
+3. **你回复，或者先开口**，zapbip 会把消息送到对应的 AI。
+
+## 实际效果
+
+<CardGroup cols={2}>
+  <Card title="调研完成" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: '电动自行车的调研完成了，摘要见附件。',
+          media: { kind: 'document', label: 'summary.pdf' },
+        },
+        { you: true, text: '谢谢，太棒了。' },
+      ]}
+    />
+  </Card>
+  <Card title="旅行中的决定" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: '里斯本住哪家酒店？', options: ['阿尔法玛', '下城', '贝伦'] },
+        { you: true, text: '下城' },
+        { name: 'Claude', text: '正在预订下城的酒店，住 3 晚。' },
+      ]}
+    />
+  </Card>
+  <Card title="你先开口" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: '周五提醒我续办护照。' },
+        { name: 'Grok', text: '好的，周五早上我会提醒你。' },
+      ]}
+    />
+  </Card>
+  <Card title="多个 AI，一个号码" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: '测试通过了。' },
+        { name: 'Grok', text: '找到了 3 个来源。' },
+        { you: true, quote: { name: 'Grok', text: '找到了 3 个来源。' }, text: '是哪几个？' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+## 适合谁
+
+任何使用 AI 的人：ChatGPT、Claude、Grok、Codex、Cursor、Gemini 等等。你只需要 WhatsApp。zapbip 只和你对话，从不与第三方交流。
+
+## 你可以做什么
+
+- [发送消息和媒体](/zh/features/send-messages-and-media)
+- [用按钮和列表提问](/zh/features/ask-with-buttons-and-lists)
+- [用一个号码使用多个 AI](/zh/features/many-agents-on-one-number)
+- [了解 24 小时窗口](/zh/features/the-24-hour-window)
+
+在[支持的智能体](/zh/agents/supported-agents)中查看哪些 AI 可用。
+
+<Card title="开始使用" icon="rocket" href="/zh/get-started/how-to-start">
+  给 zapbip 的号码发一条消息，把一行文字粘贴到你的 AI 里，就能收到它的第一条消息。
+</Card>

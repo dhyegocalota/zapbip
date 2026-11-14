@@ -1,0 +1,109 @@
+---
+title: 'Ejecuta el conector como servicio'
+description: 'Inicia el conector con launchd o systemd cuando arranca la máquina, sin una terminal.'
+---
+
+Si cierras la terminal, el [conector](/es/developers/local-connector) se detiene y tu IA deja de oírte. Para mantenerlo en marcha, deja que tu ordenador lo inicie por ti. Es opcional, y zapbip nunca lo instala por ti: creas el archivo tú mismo.
+
+Tras un reinicio o una conexión perdida, el conector se reconecta y recoge todos los mensajes que no se respondieron.
+
+El archivo contiene tu enlace de conexión, que funciona como una contraseña. Dale el permiso `600` para que solo tu usuario pueda leerlo, y nunca lo compartas ni lo subas al repositorio.
+
+Sustituye `<path to npx>` por el resultado de `which npx`, `<your folder>` por la carpeta en la que trabaja tu IA, y `<host>` y `<secret>` por las partes de tu enlace de conexión. Usa `codex` en lugar de `claude-code` si esa es tu IA.
+
+## macOS (launchd)
+
+Crea primero el archivo con el permiso correcto y luego rellénalo:
+
+```bash
+install -m 600 /dev/null ~/Library/LaunchAgents/com.zapbip.connector.plist
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.zapbip.connector</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string><path to npx></string>
+      <string>zapbip</string>
+      <string>connect</string>
+      <string>--client</string>
+      <string>claude-code</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string><your folder></string>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>ZAPBIP_CONNECTION_URL</key>
+      <string>https://<host>/c/<secret>/mcp</string>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+  </dict>
+</plist>
+```
+
+`PATH` debe incluir la carpeta donde está instalado `claude` o `codex`.
+
+Inícialo, y deténlo más tarde:
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.zapbip.connector.plist
+launchctl bootout gui/$(id -u)/com.zapbip.connector
+```
+
+## Linux (systemd)
+
+Guarda el enlace en su propio archivo con permiso `600`:
+
+```bash
+mkdir -p ~/.config/zapbip ~/.config/systemd/user
+install -m 600 /dev/null ~/.config/zapbip/connector.env
+```
+
+Pon una línea en `~/.config/zapbip/connector.env`:
+
+```text
+ZAPBIP_CONNECTION_URL=https://<host>/c/<secret>/mcp
+```
+
+Crea `~/.config/systemd/user/zapbip-connector.service`:
+
+```ini
+[Unit]
+Description=zapbip connector
+After=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/zapbip/connector.env
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=<your folder>
+ExecStart=<path to npx> zapbip connect --client claude-code
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+Inícialo y haz que se ejecute incluso cuando no hayas iniciado sesión:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now zapbip-connector
+loginctl enable-linger $USER
+```
+
+Lee sus líneas con `journalctl --user -u zapbip-connector`. No llevan texto de mensajes ni enlaces.
+
+## Enlace revocado
+
+Si el enlace se revoca, el conector termina con un error y el servicio lo reinicia una y otra vez. Detén el servicio, pon el enlace nuevo en el archivo e inícialo de nuevo.

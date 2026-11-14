@@ -1,0 +1,23 @@
+---
+title: 'react'
+description: 'Réagit à un message avec un emoji.'
+---
+
+Réagit à un message avec un emoji.
+
+## Entrée
+
+| Champ        | Type   | Notes                                         |
+| ------------ | ------ | --------------------------------------------- |
+| `message_id` | string | Le message auquel réagir.                     |
+| `emoji`      | string | Un emoji. Une chaîne vide retire la réaction. |
+
+## Sortie
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` signifie que la [fenêtre de 24 heures](/fr/concepts/24-hour-window) est fermée.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

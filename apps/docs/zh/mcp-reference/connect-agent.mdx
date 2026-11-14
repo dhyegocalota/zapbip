@@ -1,0 +1,26 @@
+---
+title: 'connect_agent'
+description: '在所有者于 WhatsApp 上允许之后，连接一个新的智能体。'
+---
+
+按名称把一个新的智能体连接到此账户。系统会以调用方智能体的身份在 WhatsApp 上询问所有者，调用会等待回答。它运行与 `new agent` 命令相同的用例，因此名称规则、8 个智能体的上限和安装链接都相同。参见[让你的 AI 管理 zapbip](/zh/features/let-your-ai-manage-zapbip)。
+
+## 输入
+
+| 字段   | 类型   | 说明                                                                   |
+| ------ | ------ | ---------------------------------------------------------------------- |
+| `name` | string | 与命令一样会被简化：小写、去掉重音、用连字符代替空格，最多 20 个字符。 |
+
+## 提问
+
+三个按钮：**Allow**、**Allow, send to agent** 和 **Deny**，问题末尾附有一个简短的编号。调用最多等待 50 秒。只有点按钮才算数：输入的文字会被当作 Deny。Deny 和没有回应都不会改变任何内容，等待结束后再点也不会有任何改变；此后同一个请求会被拒绝（`cooling_down`）10 分钟。
+
+## 输出
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": string | null }`。
+
+- `applied`：智能体已连接。选择 **Allow** 后，安装链接已通过 WhatsApp 发给所有者，`install_prompt` 为 `null`。选择 **Allow, send to agent** 后，`install_prompt` 携带要粘贴到新智能体中的两行内容。这是链接或密钥进入工具结果的唯一途径。
+- `denied` 和 `timed_out`：没有任何改变。
+- `refused`：`reason` 为 `invalid_name`、`reserved_name`、`name_taken`、`limit_reached`、`cooling_down`、`window_closed`、`send_failed`、`suspended` 或 `waitlisted`。无效或被保留的名称会在询问所有者之前被拒绝。链接无法发送时，新建的连接会被再次撤销。
+
+执行操作的调用（`connect_agent`、[revoke_agent](/zh/mcp-reference/revoke-agent) 和 [sign_in_link](/zh/mcp-reference/sign-in-link)）每个连接每分钟最多 3 次；下一次调用会返回以 `rate_limited` 开头的错误。

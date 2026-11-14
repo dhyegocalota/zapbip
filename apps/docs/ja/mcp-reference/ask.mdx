@@ -1,0 +1,26 @@
+---
+title: 'ask'
+description: 'ボタンまたはリストでオーナーに質問し、答えを待ちます。'
+---
+
+ボタンまたはリストでオーナーに質問し、答えを待ちます。
+
+## 入力
+
+| フィールド        | 型            | 備考                                                                                           |
+| ----------------- | ------------- | ---------------------------------------------------------------------------------------------- |
+| `question`        | string        | 最大1024文字。                                                                                 |
+| `options`         | 1〜10件の配列 | 3件まではボタン（タイトルは20文字まで）、4〜10件はリスト（行は24文字まで）として表示されます。 |
+| `timeout_seconds` | number、任意  | 最大50。                                                                                       |
+
+## 出力
+
+オーナーが時間内に答えると `{ "status": "answered", "answer": ..., "message_id": string }`、待機が先に終わると `{ "status": "pending", "question_id": string }` が返ります。`question_id` を [wait_for_reply](/ja/mcp-reference/wait-for-reply) に渡してください。
+
+4 分以内に同じ質問を繰り返すと、同じ質問が返り、何も送信されません。[質問](/ja/concepts/questions)をご覧ください。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />
