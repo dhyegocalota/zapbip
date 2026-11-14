@@ -1,6 +1,6 @@
 # Languages (docs)
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-13 (owner delegated; the request is his word: "translate everything to Spanish, Chinese, German, French, Japanese and Korean", phase B of three)
 **ADRs:** [0048](../../adr/0048-the-docs-speak-eight-languages-one-folder-per-language-and-the-page-language-is-a-type-of-its-own.md)
