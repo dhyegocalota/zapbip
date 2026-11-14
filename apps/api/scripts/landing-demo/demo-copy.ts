@@ -105,7 +105,7 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     deployCommand: 'v2.4 배포해 줘',
     optionsLabel: '선택지:',
     waitingLabel: '답변을 기다리는 중',
-    answeredLabel: '내가 답했어요:',
+    answeredLabel: '답변:',
   },
   [OwnerLocale.ChineseSimplified]: {
     command: '运行测试',

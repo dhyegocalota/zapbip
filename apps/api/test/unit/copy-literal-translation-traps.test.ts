@@ -63,7 +63,7 @@ const LANGUAGES: LanguageTraps[] = [
     pageSuffix: 'page.ko.mdx',
     sourceFile: (path) => path.endsWith('-korean.ts') && !/legal-copy|backoffice-copy/.test(path),
     traps:
-      /zapbip(는|를|가|와|로)|[가-힣]니다|[가-힣]니까|직접 설정하세요|직접 설정하기|스트리머블|주인이|자신의 사용자|내 탭|내가 탭|나는 탭|탭을 기다|탭으로 답|탭이 |탭 필요|그 뒤의 탭|한 번 탭|탭한 것|그 탭은/,
+      /당신|zapbip(는|를|가|와|로)|[가-힣]니다|[가-힣]니까|직접 설정하세요|직접 설정하기|스트리머블|주인이|자신의 사용자|내 탭|내가 탭|나는 탭|탭을 기다|탭으로 답|탭이 |탭 필요|그 뒤의 탭|한 번 탭|탭한 것|그 탭은/,
   },
   {
     name: 'zh',

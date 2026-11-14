@@ -55,7 +55,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.DemoDescription]:
     '터미널에서 동작하는 코딩 에이전트가 “v2.4를 프로덕션에 배포할까요?”라고 물어요. 질문은 ‘배포’와 ‘대기’ 두 개의 버튼과 함께 WhatsApp으로 도착해요. 내가 ‘배포’를 고르면 에이전트가 배포한 뒤 “완료했어요. v2.4가 라이브예요.”라고 답해요.',
   [SiteCopyKey.WhyEyebrow]: 'zapbip을 쓰는 이유',
-  [SiteCopyKey.WhyTitle]: '당신의 판단이 필요한 에이전트를 위해 만들었어요.',
+  [SiteCopyKey.WhyTitle]: '내 판단이 필요한 에이전트를 위해 만들었어요.',
   [SiteCopyKey.WhyOfficialTitle]: '공식 WhatsApp API만 사용해요',
   [SiteCopyKey.WhyOfficialBody]:
     '비공식 라이브러리를 쓰지 않아서 WhatsApp이 차단될 일이 없어요. 에이전트는 zapbip 번호로 메시지를 보내며, 내 번호를 연결할 필요는 없어요.',
@@ -153,11 +153,11 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
     'zapbip은 AI 에이전트를 위한 개인용 WhatsApp 채널이에요. 함께 일하는 사람의 WhatsApp으로 메시지를 보내고, 버튼이나 목록으로 질문하고, 답을 기다려요. 공식 WhatsApp Cloud API를 사용하며 그 사람하고만 대화해요.',
   [SiteCopyKey.SetupStepOneTitle]: '1단계: 함께 일하는 사람에게서 링크 받기',
   [SiteCopyKey.SetupStepOneBody]:
-    '그 사람에게 휴대폰에서 {startLink} 링크를 열어 달라고 요청하세요. WhatsApp에서 zapbip과의 대화가 열리면 당신의 이름을 넣은 `{command}` 를 보내 달라고 하세요. zapbip이 당신 전용 설치 링크가 담긴 메시지로 답해요. 그 메시지를 당신에게 전달해 달라고 요청하세요.',
-  [SiteCopyKey.SetupAgentName]: '당신의 이름',
+    '그 사람에게 휴대폰에서 {startLink} 링크를 열어 달라고 요청하세요. WhatsApp에서 zapbip과의 대화가 열리면 에이전트 이름을 넣은 `{command}` 를 보내 달라고 하세요. zapbip이 전용 설치 링크가 담긴 메시지로 답해요. 그 메시지를 전달해 달라고 요청하세요.',
+  [SiteCopyKey.SetupAgentName]: '이름',
   [SiteCopyKey.SetupStepTwoTitle]: '2단계: 사용 중인 앱에 MCP 서버 추가하기',
   [SiteCopyKey.SetupStepTwoBody]:
-    '그 메시지의 설치 링크를 읽고 따라 하세요. 연결 링크와 사용 중인 앱에 맞는 정확한 단계가 들어 있어요. 링크를 열지 않고 단계만 알고 싶다면 각 앱이 하는 일은 다음과 같으며, {placeholder} 은(는) 당신의 연결 링크를 뜻해요.',
+    '그 메시지의 설치 링크를 읽고 따라 하세요. 연결 링크와 사용 중인 앱에 맞는 정확한 단계가 들어 있어요. 링크를 열지 않고 단계만 알고 싶다면 각 앱이 하는 일은 다음과 같으며, {placeholder} 은(는) 연결 링크를 뜻해요.',
   [SiteCopyKey.SetupStepThreeTitle]: '3단계: 작동 확인하기',
   [SiteCopyKey.SetupStepThreeBody]:
     'zapbip MCP 서버의 send_message 도구를 "{selfTest}" 텍스트로 호출하세요. 함께 일하는 사람이 WhatsApp에서 확인해요. 아무것도 도착하지 않으면 말없이 다시 시도하지 말고 무엇이 실패했는지 그 사람에게 알려 주세요.',
@@ -187,7 +187,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqOwnNumberQuestion]: '내 WhatsApp 번호를 쓸 수 있나요?',
   [SiteCopyKey.FaqOwnNumberAnswer]: '아직은 안 돼요. 모든 에이전트가 zapbip 번호로 메시지를 보내므로 따로 등록할 것이 없어요.',
   [SiteCopyKey.PrivacyEyebrow]: '개인정보',
-  [SiteCopyKey.PrivacyTitle]: '공식 API. 오직 당신만을 위해.',
+  [SiteCopyKey.PrivacyTitle]: '공식 API. 오직 나만을 위해.',
   [SiteCopyKey.PrivacyOfficialTitle]: '공식 WhatsApp Cloud API',
   [SiteCopyKey.PrivacyOfficialBody]: '비공식 앱도, 편법도 없어요. 메시지는 Meta의 공식 플랫폼을 통해 전달돼요.',
   [SiteCopyKey.PrivacyOnlyYouTitle]: '오직 나하고만 대화해요',
@@ -219,7 +219,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDataQuestion]: '제 이메일은 어디에 쓰이나요?',
   [SiteCopyKey.FaqDataAnswer]:
     '이용할 수 있게 될 때 초대하는 용도로만 써요. IP 주소도, 추적 쿠키도 없어요. 삭제를 원하시면 {contactEmail}(으)로 문의해 주세요.',
-  [SiteCopyKey.FinalTitle]: '에이전트가 당신에게 닿게 하세요.',
+  [SiteCopyKey.FinalTitle]: '에이전트가 나에게 닿게 하세요.',
   [SiteCopyKey.FinalBody]: '이용은 순차적으로 열려요. 10초면 신청할 수 있어요.',
   [SiteCopyKey.FinalButton]: '이용 신청',
   [SiteCopyKey.FinalButtonInvite]: '친구 초대',
