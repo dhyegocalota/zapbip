@@ -7,7 +7,7 @@ import type { LegalDocument } from './legal-links';
 import type { PageModel } from './page-model';
 import { plainContactTextOf } from './plain-contact-text';
 import { pricingValuesOf } from './price-format';
-import { PRICING_FRAGMENT, REPOSITORY_URL } from './site-constants';
+import { PRICING_FRAGMENT } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import { canonicalUrlOf, pageUrlOf } from './site-links';
@@ -49,7 +49,6 @@ function organizationOf(input: { origin: string }): StructuredDataNode {
     name: COMPANY.tradeName,
     url: COMPANY.website,
     logo: `${input.origin}${APPLE_TOUCH_ICON_PATH}`,
-    sameAs: [REPOSITORY_URL],
   };
 }
 
