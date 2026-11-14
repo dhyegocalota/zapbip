@@ -25,7 +25,7 @@ The process is tool-agnostic. Claude Code, Codex and any agent that reads `AGENT
 3. Executing the test plan is the priority. A plan whose test plan is not run is not done. A behaviour-preserving refactor, a tooling change and the docs lane are the exceptions: the reviewer and `pnpm verify` prove them (sections 1 and 5).
 4. The agent that builds never runs the test plan. The tester is a different sub-agent with a fresh context.
 5. Every PR is reviewed by a reviewer sub-agent before it opens. There is always a reviewer.
-6. Every PR that touches UI carries screenshots and a playable video recorded through Playwright MCP, attached to the pull request itself through GitHub's `user-attachments` upload by `scripts/pr-media.sh` and embedded in the body. No media goes to a repository, a release or a deployment ([ADR 0054](../docs/adr/0054-pull-request-media-is-attached-to-the-pull-request-through-githubs-own-upload.md)).
+6. Every PR that touches UI carries screenshots and a playable video recorded through Playwright MCP, attached to the pull request itself through GitHub's `user-attachments` upload by `scripts/pr-media.sh` and embedded in the body. No media goes to a repository, a release or a deployment ([ADR 0059](../docs/adr/0059-pull-request-media-is-attached-with-the-github-cli.md)).
 7. Every decision with alternatives becomes an ADR before the code that depends on it.
 8. Everything in the repo is in English.
 9. Tests are mandatory. No `sleep`. No `?? default`. No comments other than `// NB ADR NNNN:` pointers. See `AGENTS.md` → Code conventions.
