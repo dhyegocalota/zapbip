@@ -61,7 +61,7 @@ const ROW_FOR_ONE_AGENT: Record<DocsPageLanguage, string[][]> = {
   [DocsPageLanguage.Arabic]: [
     ['Alpha Agent', 'محلي', '7 ثوانٍ', '[Alpha Agent](/ar/agents/alpha-agent)'],
     ['Beta Agent', 'محلي', 'لم يُقَس', '[Beta Agent](/ar/agents/beta-agent)'],
-    ['Gamma Agent', 'مجدول', 'ساعة واحدة', '[Gamma Agent](/ar/agents/gamma-agent)'],
+    ['Gamma Agent', 'مجدول', 'ساعة', '[Gamma Agent](/ar/agents/gamma-agent)'],
   ],
 };
 
