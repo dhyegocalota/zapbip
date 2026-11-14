@@ -17,6 +17,7 @@ const SECTION_HEADINGS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: 'AI가 깨어났을 때 할 수 있는 일',
   [DocsPageLanguage.Chinese]: '唤醒后 AI 能做什么',
   [DocsPageLanguage.Arabic]: 'ما الذي يستطيع الذكاء الاصطناعي فعله بعد الإيقاظ',
+  [DocsPageLanguage.Hindi]: 'जगाए जाने पर AI क्या कर सकता है',
 };
 const BASELINE_LANGUAGES = [DocsPageLanguage.English, DocsPageLanguage.PortugueseBrazil];
 const NEW_LANGUAGES = Object.values(DocsPageLanguage).filter((language) => !BASELINE_LANGUAGES.includes(language));

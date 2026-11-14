@@ -26,6 +26,7 @@ const OVERVIEW_HEADINGS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['zapbip이 존재하는 이유', '작동 방식', '이런 모습이에요'],
   [DocsPageLanguage.Chinese]: ['为什么有 zapbip', '工作原理', '实际效果'],
   [DocsPageLanguage.Arabic]: ['لماذا zapbip', 'كيف يعمل', 'كيف يبدو عمليًا'],
+  [DocsPageLanguage.Hindi]: ['zapbip क्यों बना', 'यह कैसे काम करता है', 'यह कैसा दिखता है'],
 };
 const PICTURE_ALT_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'Your AI connects to zapbip',
@@ -37,6 +38,7 @@ const PICTURE_ALT_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: 'AI가 zapbip에 연결돼요',
   [DocsPageLanguage.Chinese]: 'AI 连接到 zapbip',
   [DocsPageLanguage.Arabic]: 'يتصل الذكاء الاصطناعي لديك بـ zapbip',
+  [DocsPageLanguage.Hindi]: 'आपका AI zapbip से जुड़ता है',
 };
 
 function urlOf(input: { path: string; language: DocsPageLanguage }): string {

@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: 'इमेज, वीडियो, ऑडियो, वॉइस नोट, दस्तावेज़ या स्टिकर भेजें।'
+---
+
+इमेज, वीडियो, ऑडियो, वॉइस नोट, दस्तावेज़ या स्टिकर भेजें।
+
+## इनपुट
+
+| फ़ील्ड      | टाइप                                               | नोट                                                                   |
+| ----------- | -------------------------------------------------- | --------------------------------------------------------------------- |
+| `kind`      | `image`, `video`, `audio`, `document` या `sticker` | सीमाएँ: 5 MB, 16 MB, 16 MB, 100 MB और 100 KB।                         |
+| `url`       | string                                             | एक https लिंक। यह या `upload_id` दें।                                 |
+| `upload_id` | string                                             | [create_upload](/hi/mcp-reference/create-upload) से। यह या `url` दें। |
+| `caption`   | string, वैकल्पिक                                   | 1024 अक्षरों तक।                                                      |
+| `filename`  | string, वैकल्पिक                                   | 240 अक्षरों तक।                                                       |
+| `voice`     | boolean, वैकल्पिक                                  | ऑडियो को वॉइस नोट के रूप में भेजता है।                                |
+| `reply_to`  | string, वैकल्पिक                                   | कोट करने वाले संदेश की id।                                            |
+
+## आउटपुट
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`। `queued` का मतलब है कि [24 घंटे की विंडो](/hi/concepts/24-hour-window) बंद है।
+
+स्टिकर `image/webp` होना चाहिए। कुछ भी भेजने से पहले साइज़ और टाइप जाँचे जाते हैं।
+
+## संदेशों के प्रकार
+
+import MessageKinds from '/snippets/hi/message-kinds.mdx';
+
+<MessageKinds />

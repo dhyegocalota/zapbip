@@ -1,0 +1,114 @@
+---
+title: ओवरव्यू
+description: आपका AI, आपके WhatsApp में।
+mode: 'wide'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/hi/start-link.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="आधिकारिक WhatsApp Cloud API"
+  statement="आपका AI आपको लिखता है।"
+  accent="आप WhatsApp पर जवाब देते हैं।"
+  lead="फ़ैसले, पूरा हुआ काम और बटन वाले सवाल, उसी फ़ोन पर जो पहले से आपके पास है। सेटअप के लिए बस एक लाइन।"
+  primary={{ label: 'शुरुआत कैसे करें', href: '/hi/get-started/how-to-start' }}
+  secondary={{ label: 'सपोर्टेड एजेंट', href: '/hi/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'लिस्बन की आपकी फ़्लाइट ₹38,500 की हो गई है। बुक कर दूँ?', options: ['बुक करें', 'नज़र रखें'] },
+      { you: true, text: 'बुक करें' },
+      { name: 'Claude', text: 'बुक हो गई। बोर्डिंग पास यहीं भेज दिया जाएगा।' },
+      { typing: true },
+    ]}
+  />
+</Hero>
+
+## zapbip क्यों बना
+
+आप रिसर्च, प्लानिंग और काम बनाने के लिए AI इस्तेमाल करते हैं। लेकिन जब उसे किसी फ़ैसले की ज़रूरत होती है, या कोई लंबा काम पूरा होता है, तब आप स्क्रीन नहीं देख रहे होते। तो वह या तो इंतज़ार करता है, या अंदाज़ा लगाता है।
+
+आप पहले से WhatsApp पर रहते हैं। zapbip आपके AI को वहीं ले आता है: वह आपको लिखता है, बटन के साथ पूछता है, आपके जवाब का इंतज़ार करता है, और जब चाहें आप भी बातचीत शुरू कर सकते हैं।
+
+आप स्टार्ट लिंक से एक बार zapbip को लिखते हैं, वह आपको अपने AI में पेस्ट करने के लिए एक लाइन देता है, और बस, पूरा सेटअप हो गया।
+
+<StartLink />
+
+## यह कैसे काम करता है
+
+<Frame>
+  <img
+    src="/images/how-it-works-hi.svg"
+    alt="आपका AI zapbip से जुड़ता है, जो उसके संदेश आधिकारिक WhatsApp Cloud API के ज़रिए आपके फ़ोन तक भेजता है। आपका जवाब वापस जाता है और आपके AI को जगा देता है।"
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **अपना AI जोड़ें**, एक बार, एक लाइन पेस्ट करके।
+2. **वह आपको लिखता है**: टेक्स्ट, फ़ाइलें, या बटन वाला सवाल।
+3. **आप जवाब दें, या पहले लिखें**, और zapbip उसे सही AI तक पहुँचा देता है।
+
+## यह कैसा दिखता है
+
+<CardGroup cols={2}>
+  <Card title="रिसर्च पूरी हुई" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: 'ई-बाइक पर आपकी रिसर्च तैयार है। सारांश साथ में है।',
+          media: { kind: 'document', label: 'summary.pdf' },
+        },
+        { you: true, text: 'धन्यवाद, बढ़िया।' },
+      ]}
+    />
+  </Card>
+  <Card title="आपकी यात्रा पर एक फ़ैसला" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'लिस्बन के लिए कौन-सा होटल?', options: ['Alfama', 'Baixa', 'Belém'] },
+        { you: true, text: 'Baixa' },
+        { name: 'Claude', text: 'Baixa में 3 रातों की बुकिंग हो रही है।' },
+      ]}
+    />
+  </Card>
+  <Card title="पहले आप लिखते हैं" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: 'शुक्रवार को मुझे पासपोर्ट रिन्यू करने की याद दिलाना।' },
+        { name: 'Grok', text: 'हो गया। शुक्रवार सुबह याद दिलाया जाएगा।' },
+      ]}
+    />
+  </Card>
+  <Card title="कई AI, एक नंबर" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'टेस्ट पास हो गए।' },
+        { name: 'Grok', text: '3 सोर्स मिले।' },
+        { you: true, quote: { name: 'Grok', text: '3 सोर्स मिले।' }, text: 'कौन-से?' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+## यह किसके लिए है
+
+हर उस व्यक्ति के लिए जो AI इस्तेमाल करता है: ChatGPT, Claude, Grok, Codex, Cursor, Gemini और भी। आपको WhatsApp के सिवा कुछ नहीं चाहिए। zapbip सिर्फ़ आपसे बात करता है, किसी और से कभी नहीं।
+
+## आप क्या कर सकते हैं
+
+- [संदेश और मीडिया भेजें](/hi/features/send-messages-and-media)
+- [बटन और लिस्ट से पूछें](/hi/features/ask-with-buttons-and-lists)
+- [एक नंबर पर कई AI इस्तेमाल करें](/hi/features/many-agents-on-one-number)
+- [24 घंटे की विंडो समझें](/hi/features/the-24-hour-window)
+
+कौन-से AI काम करते हैं, यह [सपोर्टेड एजेंट](/hi/agents/supported-agents) में देखें।
+
+<Card title="शुरुआत कैसे करें" icon="rocket" href="/hi/get-started/how-to-start">
+  zapbip नंबर को लिखें, अपने AI में एक लाइन पेस्ट करें, और उसका पहला संदेश पाएँ।
+</Card>

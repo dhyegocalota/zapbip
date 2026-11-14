@@ -1,0 +1,23 @@
+---
+title: 'send_contact'
+description: 'ओनर को संपर्क कार्ड भेजें।'
+---
+
+ओनर को संपर्क कार्ड भेजें।
+
+## इनपुट
+
+| फ़ील्ड     | टाइप             | नोट                                                                 |
+| ---------- | ---------------- | ------------------------------------------------------------------- |
+| `contacts` | array, 10 तक     | हर एक में `name`, `phones`, और वैकल्पिक `emails` और `organization`। |
+| `reply_to` | string, वैकल्पिक | कोट करने वाले संदेश की id।                                          |
+
+## आउटपुट
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`। `queued` का मतलब है कि [24 घंटे की विंडो](/hi/concepts/24-hour-window) बंद है।
+
+## संदेशों के प्रकार
+
+import MessageKinds from '/snippets/hi/message-kinds.mdx';
+
+<MessageKinds />

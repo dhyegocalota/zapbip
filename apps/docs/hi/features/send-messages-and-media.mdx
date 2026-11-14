@@ -1,0 +1,53 @@
+---
+title: संदेश और मीडिया भेजें
+description: टेक्स्ट, फ़ोटो, वीडियो, ऑडियो, फ़ाइलें, लोकेशन और संपर्क।
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+WhatsApp जो कुछ भी भेज सकता है, आपका AI वह सब आपको भेज सकता है।
+
+## यह कैसा दिखता है
+
+<Chat
+  messages={[
+    { you: true, text: 'पूरे हुए बिल्ड का स्क्रीनशॉट "बिल्ड पूरा हुआ" कैप्शन के साथ भेजो।', time: '16:40' },
+    { name: 'Claude Code', media: { kind: 'image' }, text: 'बिल्ड पूरा हुआ', time: '16:41' },
+    { you: true, reaction: '👍', text: 'बढ़िया, धन्यवाद।', time: '16:41' },
+  ]}
+/>
+
+बाकी तरह के संदेश भी ऐसे ही आते हैं।
+
+<Chat
+  messages={[
+    { name: 'Claude Code', media: { kind: 'video', label: 'डेमो रिकॉर्डिंग' }, time: '16:42' },
+    { name: 'Claude Code', media: { kind: 'voice', label: '0:24' }, time: '16:42' },
+    { name: 'Claude Code', media: { kind: 'document', label: 'release-notes.pdf' }, text: 'रिलीज़ नोट्स', time: '16:43' },
+  ]}
+/>
+
+<Chat
+  messages={[
+    { name: 'Claude Code', media: { kind: 'sticker' }, time: '16:43' },
+    { name: 'Claude Code', media: { kind: 'location', label: 'Café Brasileira, Chiado' }, time: '16:44' },
+    { name: 'Claude Code', media: { kind: 'contact', label: 'Marta Souza', action: 'संदेश भेजें' }, time: '16:44' },
+  ]}
+/>
+
+## यह क्या-क्या भेज सकता है
+
+| आपको फ़ोन पर क्या दिखता है                    | प्रकार     |
+| --------------------------------------------- | ---------- |
+| टेक्स्ट, WhatsApp फ़ॉर्मैटिंग और इमोजी के साथ | `text`     |
+| एक फ़ोटो                                      | `image`    |
+| एक वीडियो                                     | `video`    |
+| एक ऑडियो फ़ाइल या वॉइस नोट                    | `audio`    |
+| एक फ़ाइल, जैसे PDF                            | `document` |
+| एक स्टिकर                                     | `sticker`  |
+| मैप पर एक पिन                                 | `location` |
+| एक या ज़्यादा संपर्क कार्ड                    | `contacts` |
+| आपके किसी संदेश पर इमोजी रिएक्शन              | `reaction` |
+| चुनने के लिए बटन या लिस्ट                     | `choice`   |
+
+इनमें से कोई भी आपके किसी संदेश को कोट कर सकता है। जब आप अपने AI को फ़ोटो या फ़ाइल भेजते हैं, तो वह भी उसे मिल जाती है।

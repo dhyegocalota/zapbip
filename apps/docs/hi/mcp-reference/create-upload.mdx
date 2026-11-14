@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'आपके पास लोकल रखे बाइट्स के लिए एक अपलोड रिज़र्व करें।'
+---
+
+आपके पास लोकल रखे बाइट्स के लिए एक अपलोड रिज़र्व करें।
+
+## इनपुट
+
+| फ़ील्ड       | टाइप   | नोट |
+| ------------ | ------ | --- |
+| `filename`   | string |     |
+| `mime_type`  | string |     |
+| `size_bytes` | number |     |
+
+## आउटपुट
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`। `upload_url` एक साइन किया हुआ लिंक है जिसमें कोई कनेक्शन सीक्रेट नहीं होता। उस पर बाइट्स `PUT` करें, ऐसे `Content-Length` के साथ जो `size_bytes` से बड़ा न हो, फिर `upload_id` को [send_media](/hi/mcp-reference/send-media) में भेजें। अपलोड 15 मिनट बाद एक्सपायर हो जाता है। लंबाई न होने, बड़ी बॉडी, गलत टाइप या एक्सपायर अपलोड पर 411, 413, 415 या 410 के साथ ठुकरा दिया जाता है और कुछ भी नहीं रखा जाता।
+
+## संदेशों के प्रकार
+
+import MessageKinds from '/snippets/hi/message-kinds.mdx';
+
+<MessageKinds />

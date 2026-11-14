@@ -22,6 +22,7 @@ export const DOCS_LOCALE_OF: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: 'ko-KR',
   [DocsPageLanguage.Chinese]: 'zh-CN',
   [DocsPageLanguage.Arabic]: 'ar-SA',
+  [DocsPageLanguage.Hindi]: 'hi-IN',
 };
 
 export const DOCS_WALK_NOISE_ALLOWLIST: { patternOf: (input: { origin: string }) => RegExp; reason: string }[] = [
