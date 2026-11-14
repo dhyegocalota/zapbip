@@ -16,6 +16,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'Gemini CLIはバックグラウンドのターミナルを通じて待ち受け、実行中は数秒で応答します。時間制限はありません。',
   [OwnerLocale.Korean]: 'Gemini CLI는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답합니다. 시간 제한은 없습니다.',
   [OwnerLocale.ChineseSimplified]: 'Gemini CLI 通过后台终端监听，运行期间几秒内就会回应，不限时。',
+  [OwnerLocale.Arabic]: 'يستمع Gemini CLI عبر الطرفية الخلفية ويرد خلال ثوانٍ ما دامت تعمل، دون حد زمني.',
 };
 const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Reinicie',
@@ -26,6 +27,7 @@ const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '再起動',
   [OwnerLocale.Korean]: '다시 시작',
   [OwnerLocale.ChineseSimplified]: '重新启动',
+  [OwnerLocale.Arabic]: 'أعد تشغيل',
 };
 
 describe('the Gemini CLI install section', () => {

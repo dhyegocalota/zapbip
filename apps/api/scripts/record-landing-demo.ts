@@ -36,6 +36,7 @@ const OWNER_PHONES: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '5511999990005',
   [OwnerLocale.Korean]: '5511999990006',
   [OwnerLocale.ChineseSimplified]: '5511999990007',
+  [OwnerLocale.Arabic]: '5511999990008',
 };
 const [LEADING_AGENT] = Object.values(AGENT_DEFINITIONS);
 const AGENT_DISPLAY_NAME = LEADING_AGENT!.docs.matrixName[DocsPageLanguage.English];

@@ -17,6 +17,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Japanese]: ['1 時間', 'セーフティネット'],
       [DocsPageLanguage.Korean]: ['1시간', '안전망'],
       [DocsPageLanguage.Chinese]: ['小时', '安全网'],
+      [DocsPageLanguage.Arabic]: ['ساعة', 'شبكة أمان'],
     },
     speakerNames: [],
   },

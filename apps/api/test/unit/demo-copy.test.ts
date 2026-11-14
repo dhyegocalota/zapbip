@@ -4,6 +4,7 @@ import { demoScriptOf, openGraphDataOf, type LocaleScript } from '../../scripts/
 import { SENDER_INDEXES, senderNameOf } from '../../src/site/site-agents';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { copyOf } from '../../src/site/site-copy-text';
+import { textDirectionOf } from '../../src/web-shell/locale-profiles';
 
 const LOCALES = Object.values(OwnerLocale);
 const TRANSLATED_FIELDS: (keyof LocaleScript)[] = [
@@ -40,6 +41,7 @@ describe.each(LOCALES)('the demo script in %s', (locale) => {
 
   it('draws the Open Graph card from the same words', () => {
     expect(openGraphDataOf({ locale })).toEqual({
+      direction: textDirectionOf({ locale }),
       titleLead: translate(SiteCopyKey.HeroTitleLead),
       titleAccent: translate(SiteCopyKey.HeroTitleAccent),
       tagline: `${TAGLINE_PREFIX}${translate(SiteCopyKey.FinalButton)}`,

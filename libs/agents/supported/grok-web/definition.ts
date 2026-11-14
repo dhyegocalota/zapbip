@@ -15,6 +15,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Japanese]: 'Web 版 Grok',
       [DocsPageLanguage.Korean]: '웹의 Grok',
       [DocsPageLanguage.Chinese]: '网页版 Grok',
+      [DocsPageLanguage.Arabic]: 'Grok على الويب',
     },
     linkName: {
       [DocsPageLanguage.English]: 'Grok on the web',
@@ -25,6 +26,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Japanese]: 'Web 版 Grok',
       [DocsPageLanguage.Korean]: '웹의 Grok',
       [DocsPageLanguage.Chinese]: '网页版 Grok',
+      [DocsPageLanguage.Arabic]: 'Grok على الويب',
     },
     pageFacts: {
       [DocsPageLanguage.English]: ['Grok Bot', 'stands in', '60'],
@@ -35,6 +37,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Japanese]: ['Grok Bot', '代わりに応答', '60'],
       [DocsPageLanguage.Korean]: ['Grok Bot', '대신 응답', '60'],
       [DocsPageLanguage.Chinese]: ['Grok Bot', '代为回复', '60'],
+      [DocsPageLanguage.Arabic]: ['Grok Bot', 'يرد نيابةً عنه', '60'],
     },
     speakerNames: [],
   },

@@ -93,6 +93,8 @@ zapbip has one Meta app, `714836811568009`, for staging and production ([ADR 003
     | `zapbip_agent_question` | `ko` | `질문이 도착했어요. {{1}}님의 질문: {{2}} — 답장을 눌러 선택지를 확인하세요.` | `테스트 에이전트`, `예시 질문` | `답장` |
     | `zapbip_agent_notice` | `zh_CN` | `来自 {{1}} 的消息：{{2}} — 点击“打开”查看。` | `测试智能体`, `示例消息` | `打开` |
     | `zapbip_agent_question` | `zh_CN` | `来自 {{1}} 的提问：{{2}} — 点击“回复”查看选项。` | `测试智能体`, `示例问题` | `回复` |
+    | `zapbip_agent_notice` | `ar` | `رسالة من {{1}}: {{2}} — اضغط «فتح» لقراءتها.` | `وكيل تجريبي`, `رسالة مثال` | `فتح` |
+    | `zapbip_agent_question` | `ar` | `سؤال من {{1}}: {{2}} — اضغط «رد» لعرض الخيارات.` | `وكيل تجريبي`, `سؤال مثال` | `رد` |
 
     Expect: each submitted template changes from In review to Approved with the category Utility.
 

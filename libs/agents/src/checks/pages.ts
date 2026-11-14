@@ -23,6 +23,7 @@ const ONE_LISTENER_SENTENCES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: `エージェントごとにリスナーは 1 つだけ実行してください。プラグインか ${LISTEN_COMMAND} のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。`,
   [DocsPageLanguage.Korean]: `에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 ${LISTEN_COMMAND} 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.`,
   [DocsPageLanguage.Chinese]: `每个智能体只运行一个 listener：插件或 ${LISTEN_COMMAND}，不要两者同时使用。第二个 listener 会替换第一个。`,
+  [DocsPageLanguage.Arabic]: `شغّل مستمعًا واحدًا فقط لكل وكيل: المكوّن الإضافي أو ${LISTEN_COMMAND}، وليس الاثنين معًا. المستمع الثاني يحل محل الأول.`,
 };
 
 function newAgentWordsOf(input: { language: DocsPageLanguage }): string {

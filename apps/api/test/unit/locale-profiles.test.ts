@@ -1,7 +1,7 @@
 import { DOCS_LANGUAGE_FOLDERS, DocsPageLanguage, WebLanguageTag, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { Flag } from '../../src/web-shell/flags';
-import { LOCALE_PROFILES, MENU_LOCALES, languageOf } from '../../src/web-shell/locale-profiles';
+import { LOCALE_PROFILES, MENU_LOCALES, TextDirection, formattingLocaleOf, languageOf } from '../../src/web-shell/locale-profiles';
 import { docsUrlOf } from '../../src/web-shell/shell-links';
 
 const LOCALES = Object.values(OwnerLocale);
@@ -9,9 +9,9 @@ const FLAG_PATTERN = /data-flag="([a-z]+)"/;
 const FLAG_COLOUR_PATTERN = /fill="#[0-9a-f]{6}"/g;
 
 describe('the locale profiles', () => {
-  it('list the eight languages in the order of the menu', () => {
+  it('list the nine languages in the order of the menu', () => {
     expect(MENU_LOCALES).toEqual(LOCALES);
-    expect(MENU_LOCALES).toHaveLength(8);
+    expect(MENU_LOCALES).toHaveLength(9);
   });
 
   it('give every language its own tag, short code, native name and Open Graph locale', () => {
@@ -49,6 +49,7 @@ describe('the locale profiles', () => {
     [OwnerLocale.Japanese, '/ja'],
     [OwnerLocale.Korean, '/ko'],
     [OwnerLocale.ChineseSimplified, '/zh'],
+    [OwnerLocale.Arabic, '/ar'],
   ])('sends the documentation link of %s to %s', (locale, folder) => {
     expect(docsUrlOf({ locale, path: '' })).toBe(`https://docs.zapbip.com${folder}`);
     expect(docsUrlOf({ locale, path: '/mcp' })).toBe(`https://docs.zapbip.com${folder}/mcp`);
@@ -64,8 +65,24 @@ describe('the flags', () => {
     expect(html.match(FLAG_COLOUR_PATTERN)!.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('draw eight different flags', () => {
+  it('draw nine different flags', () => {
     const names = LOCALES.map((locale) => FLAG_PATTERN.exec(String(Flag({ locale })))![1]);
     expect(new Set(names).size).toBe(LOCALES.length);
+  });
+});
+
+describe('the text direction', () => {
+  it('is right to left for Arabic and left to right for every other language', () => {
+    LOCALES.forEach((locale) =>
+      expect(LOCALE_PROFILES[locale].textDirection).toBe(
+        locale === OwnerLocale.Arabic ? TextDirection.RightToLeft : TextDirection.LeftToRight,
+      ),
+    );
+  });
+
+  it('keeps the digits of every language Latin when numbers are formatted', () => {
+    LOCALES.forEach((locale) =>
+      expect(new Intl.NumberFormat(formattingLocaleOf({ locale })).format(1234)).toMatch(/^1[,.\s\u00a0\u202f]?234$/),
+    );
   });
 });

@@ -11,6 +11,7 @@ const OPEN_GRAPH_LIMIT_BYTES = 300_000;
 const OPEN_GRAPH_COLORS = '192';
 
 export type OpenGraphData = {
+  direction: string;
   titleLead: string;
   titleAccent: string;
   tagline: string;
@@ -30,6 +31,7 @@ export async function renderOpenGraphImage(input: { data: OpenGraphData; languag
   await page.addInitScript(`window.DEMO = ${JSON.stringify(input.data)};`);
   await page.goto(`file://${OPEN_GRAPH_FILE}`);
   await page.evaluate(`document.documentElement.setAttribute('lang', ${JSON.stringify(input.language)})`);
+  await page.evaluate(`document.documentElement.setAttribute('dir', ${JSON.stringify(input.data.direction)})`);
   await page.screenshot({ path: input.target });
   await browser.close();
   await shrinkIfNeeded({ target: input.target });

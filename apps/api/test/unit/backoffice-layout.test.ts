@@ -40,13 +40,13 @@ describe('backoffice layout', () => {
   });
 
   it.each(Object.values(ShellTheme))('writes data-theme="%s" on the html element', (theme) => {
-    expect(render({ theme })).toContain(`<html lang="en" data-theme="${theme}">`);
+    expect(render({ theme })).toContain(`<html lang="en" dir="ltr" data-theme="${theme}">`);
   });
 
   it('writes only an enum member in data-theme for a hostile cookie value', () => {
     const hostileCookieValue = '"><script>alert(1)</script>';
     const html = render({ theme: resolveTheme({ cookieValue: hostileCookieValue }) });
-    expect(html).toContain('<html lang="en" data-theme="system">');
+    expect(html).toContain('<html lang="en" dir="ltr" data-theme="system">');
     expect(html).not.toContain('alert(1)');
   });
 

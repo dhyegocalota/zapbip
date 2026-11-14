@@ -17,6 +17,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Japanese]: ['npx zapbip@0.1.0 listen', 'バックグラウンドのターミナル'],
       [DocsPageLanguage.Korean]: ['npx zapbip@0.1.0 listen', '백그라운드 터미널'],
       [DocsPageLanguage.Chinese]: ['npx zapbip@0.1.0 listen', '后台终端'],
+      [DocsPageLanguage.Arabic]: ['npx zapbip@0.1.0 listen', 'الطرفية الخلفية'],
     },
     speakerNames: ['Gemini CLI', 'Gemini'],
   },

@@ -87,6 +87,29 @@
         font-size: 54px;
       }
 
+      html:lang(ar) h1 {
+        font-size: 52px;
+        line-height: 1.25;
+        letter-spacing: normal;
+      }
+
+      html[dir='rtl'] .card {
+        background-image:
+          radial-gradient(560px 380px at 300px 120px, rgb(37 211 102 / 0.28), transparent 70%),
+          radial-gradient(rgb(14 31 26 / 0.07) 1px, transparent 1.5px);
+      }
+
+      html[dir='rtl'] .brand,
+      html[dir='rtl'] h1,
+      html[dir='rtl'] .tagline {
+        left: auto;
+        right: 72px;
+      }
+
+      html[dir='rtl'] .phone {
+        left: 70px;
+      }
+
       .accent {
         position: relative;
         display: inline-block;
@@ -177,7 +200,8 @@
       .bubble {
         width: 88%;
         padding: 8px 10px;
-        border-radius: 3px 10px 10px 10px;
+        border-radius: 10px;
+        border-start-start-radius: 3px;
         background: #fff;
         box-shadow: 0 1px 1px rgb(11 20 26 / 0.13);
       }

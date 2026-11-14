@@ -12,6 +12,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'ルーティンのWebhookは約9秒でGrok Botを起動します。時間制限はありません。',
   [OwnerLocale.Korean]: '루틴 웹훅은 약 9초 만에 Grok Bot을 깨웁니다. 시간 제한은 없습니다.',
   [OwnerLocale.ChineseSimplified]: '例行任务的 Webhook 大约 9 秒就能唤醒 Grok Bot，不限时。',
+  [OwnerLocale.Arabic]: 'يوقظ webhook الروتين Grok Bot خلال نحو 9 ثوانٍ، دون حد زمني.',
 };
 
 describe('the Grok Bot install section', () => {

@@ -28,6 +28,7 @@ const LISTENER_TAILS: Partial<Record<DocsPageLanguage, string>> = {
   [DocsPageLanguage.Japanese]: ' のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。',
   [DocsPageLanguage.Korean]: ' 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.',
   [DocsPageLanguage.Chinese]: '，不要两者同时使用。第二个 listener 会替换第一个。',
+  [DocsPageLanguage.Arabic]: '، وليس الاثنين معًا. المستمع الثاني يحل محل الأول.',
 };
 const PLUGIN: AgentPlugin = {
   packageFolder: 'apps/demo-plugin',
@@ -152,6 +153,7 @@ describe('pageRuleViolationsOf', () => {
     [DocsPageLanguage.Japanese, 'エージェントごとにリスナーは 1 つだけ実行してください。プラグインか'],
     [DocsPageLanguage.Korean, '에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는'],
     [DocsPageLanguage.Chinese, '每个智能体只运行一个 listener：插件或'],
+    [DocsPageLanguage.Arabic, 'شغّل مستمعًا واحدًا فقط لكل وكيل: المكوّن الإضافي أو'],
   ])('accepts the one-listener sentence of a %s plugin page', (language, sentenceStart) => {
     const page = PLUGIN_PAGE.replace(
       INSTALL_SELF_TEST_TEXT[OwnerLocale.EnglishUs],

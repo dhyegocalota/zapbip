@@ -24,6 +24,7 @@ describe('sitemap.xml', () => {
     '/ja',
     '/ko',
     '/zh',
+    '/ar',
     '/terms',
     '/pt-br/termos',
     '/es/terms',
@@ -32,6 +33,7 @@ describe('sitemap.xml', () => {
     '/ja/terms',
     '/ko/terms',
     '/zh/terms',
+    '/ar/terms',
     '/privacy',
     '/pt-br/privacidade',
     '/es/privacy',
@@ -40,8 +42,9 @@ describe('sitemap.xml', () => {
     '/ja/privacy',
     '/ko/privacy',
     '/zh/privacy',
+    '/ar/privacy',
   ];
-  const HREFLANGS = ['en', 'pt-BR', 'es', 'de', 'fr', 'ja', 'ko', 'zh-CN'];
+  const HREFLANGS = ['en', 'pt-BR', 'es', 'de', 'fr', 'ja', 'ko', 'zh-CN', 'ar'];
 
   it('lists each language page and each legal page once', () => {
     expect(sitemapOf().match(/<loc>/g)).toHaveLength(PAGE_PATHS.length);
@@ -58,7 +61,7 @@ describe('sitemap.xml', () => {
 
   it('dates every page: the home pages by the site, the legal pages by the legal text', () => {
     expect(sitemapOf().match(/<lastmod>/g)).toHaveLength(PAGE_PATHS.length);
-    const [homeEntries, ...legalEntries] = [PAGE_PATHS.slice(0, 8), PAGE_PATHS.slice(8)];
+    const [homeEntries, ...legalEntries] = [PAGE_PATHS.slice(0, 9), PAGE_PATHS.slice(9)];
     [...homeEntries!].forEach((path) =>
       expect(sitemapOf()).toContain(`<loc>https://zapbip.com${path}</loc>\n    <lastmod>${SITE_UPDATED_ON}</lastmod>`),
     );

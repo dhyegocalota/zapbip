@@ -66,6 +66,12 @@ export const AGENT_PAGE_HEADINGS: Record<DocsPageLanguage, Record<AgentPageSecti
     [AgentPageSection.SetupFromZero]: '从零开始设置',
     [AgentPageSection.CheckItWorks]: '检查是否正常工作',
   },
+  [DocsPageLanguage.Arabic]: {
+    [AgentPageSection.WhatWorks]: 'ما الذي يعمل',
+    [AgentPageSection.HowItListens]: 'كيف يستمع',
+    [AgentPageSection.SetupFromZero]: 'الإعداد من الصفر',
+    [AgentPageSection.CheckItWorks]: 'تحقق من أنه يعمل',
+  },
 };
 
 export const WAKE_RUNG_LABELS: Record<DocsPageLanguage, Record<WakeRung, string>> = {
@@ -125,6 +131,13 @@ export const WAKE_RUNG_LABELS: Record<DocsPageLanguage, Record<WakeRung, string>
     [WakeRung.Scheduled]: '定时',
     [WakeRung.Standby]: '待命',
   },
+  [DocsPageLanguage.Arabic]: {
+    [WakeRung.Inbox]: 'صندوق الوارد',
+    [WakeRung.Local]: 'محلي',
+    [WakeRung.Webhook]: 'Webhook',
+    [WakeRung.Scheduled]: 'مجدول',
+    [WakeRung.Standby]: 'احتياطي',
+  },
 };
 
 export const LISTEN_STATEMENT_TOKENS: Record<DocsPageLanguage, { pending: string; recallsUntilAnswered: string; noTimeLimit: string }> = {
@@ -136,6 +149,7 @@ export const LISTEN_STATEMENT_TOKENS: Record<DocsPageLanguage, { pending: string
   [DocsPageLanguage.Japanese]: { pending: '保留中', recallsUntilAnswered: 'もう一度', noTimeLimit: '時間制限なし' },
   [DocsPageLanguage.Korean]: { pending: '보류 중', recallsUntilAnswered: '다시', noTimeLimit: '시간 제한 없이' },
   [DocsPageLanguage.Chinese]: { pending: '待处理', recallsUntilAnswered: '再次', noTimeLimit: '没有时间限制' },
+  [DocsPageLanguage.Arabic]: { pending: 'قيد الانتظار', recallsUntilAnswered: 'مرة أخرى', noTimeLimit: 'دون حد زمني' },
 };
 
 export const AGENTS_GROUP_INDEX = 1;
@@ -149,6 +163,7 @@ export const DOCS_GROUPS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Japanese]: ['はじめに', 'AI', '機能', 'ヘルプ', '開発者向け'],
   [DocsPageLanguage.Korean]: ['시작하기', 'AI', '기능', '도움말', '개발자용'],
   [DocsPageLanguage.Chinese]: ['快速开始', 'AI', '功能', '帮助', '开发者'],
+  [DocsPageLanguage.Arabic]: ['البدء', 'الذكاء الاصطناعي', 'الميزات', 'المساعدة', 'للمطورين'],
 };
 
 export function perLanguage<Value>(input: { valueOf: (language: DocsPageLanguage) => Value }): Record<DocsPageLanguage, Value> {

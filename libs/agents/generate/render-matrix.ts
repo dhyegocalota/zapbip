@@ -6,12 +6,14 @@ import { DELAY_NOT_MEASURED, MATRIX_HEADERS } from './matrix-copy';
 const SECONDS_PER_HOUR = 3600;
 const CELL_SEPARATOR = ' | ';
 
+const LATIN_DIGITS_EXTENSION = '-u-nu-latn';
+
 function delayLabelOf(input: { expectedDelaySeconds: number | null; language: DocsPageLanguage }): string {
   if (input.expectedDelaySeconds === null) return DELAY_NOT_MEASURED[input.language];
   const isWholeHours = input.expectedDelaySeconds % SECONDS_PER_HOUR === 0;
   const unit = isWholeHours ? 'hour' : 'second';
   const amount = isWholeHours ? input.expectedDelaySeconds / SECONDS_PER_HOUR : input.expectedDelaySeconds;
-  return new Intl.NumberFormat(input.language, { style: 'unit', unit, unitDisplay: 'long' }).format(amount);
+  return new Intl.NumberFormat(`${input.language}${LATIN_DIGITS_EXTENSION}`, { style: 'unit', unit, unitDisplay: 'long' }).format(amount);
 }
 
 function rowOf(input: { agent: ResolvedAgent; language: DocsPageLanguage }): string {

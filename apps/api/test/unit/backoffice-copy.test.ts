@@ -40,6 +40,7 @@ const POLISH_KEYS = [
 ];
 const SAME_IN_EVERY_LANGUAGE = [
   BackofficeCopyKey.EnvironmentStaging,
+  BackofficeCopyKey.EnvironmentDevelopment,
   BackofficeCopyKey.NumberWabaId,
   BackofficeCopyKey.WaitlistColumnPosition,
   BackofficeCopyKey.BrandName,
