@@ -1,12 +1,13 @@
 import { HttpStatus, WebLocale } from '@zapbip/types';
 import { Hono } from 'hono';
-import { LlmsFile, llmsPathOf } from './agentic-paths';
+import { LlmsFile, llmsPathOf, setupPathOf } from './agentic-paths';
 import { jsonResponse } from './agentic-answer';
 import { pricingHandler, quickStartHandler } from './catalog-routes';
 import { llmsFullTextOf, llmsTextOf } from './llms-files';
 import { markdownResponse, markdownTwinRoutes } from './page-twins';
 import { requestAccessHandler } from './request-access-route';
-import { PAGE_CACHE_CONTROL, PAGE_VARY, TEXT_CONTENT_TYPE } from './site-constants';
+import { setupMarkdownOf } from './setup-markdown';
+import { MARKDOWN_CONTENT_TYPE, PAGE_CACHE_CONTROL, PAGE_VARY, TEXT_CONTENT_TYPE } from './site-constants';
 import type { SiteEnv } from './site-env';
 import { SitePath } from './site-paths';
 import { agentCardOf, mcpDiscoveryOf, mcpServerCardOf, securityTextOf } from './well-known-documents';
@@ -27,6 +28,15 @@ Object.values(WebLocale).forEach((locale) =>
         ...DOCUMENT_HEADERS,
       }),
     ),
+  ),
+);
+
+Object.values(WebLocale).forEach((locale) =>
+  agenticRoutes.get(setupPathOf({ locale }), (context) =>
+    context.body(setupMarkdownOf({ origin: context.env.SITE_ORIGIN, locale }), HttpStatus.Ok, {
+      'Content-Type': MARKDOWN_CONTENT_TYPE,
+      ...DOCUMENT_HEADERS,
+    }),
   ),
 );
 

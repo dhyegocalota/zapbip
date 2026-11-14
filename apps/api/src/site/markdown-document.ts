@@ -22,6 +22,24 @@ export type MarkdownBlock =
   | { kind: MarkdownBlockKind.List; items: string[]; isOrdered: boolean }
   | { kind: MarkdownBlockKind.Code; language: string; code: string };
 
+export enum HeadingLevel {
+  Page = 1,
+  Section = 2,
+  Item = 3,
+}
+
+export function heading(input: { level: HeadingLevel; text: string }): MarkdownBlock {
+  return { kind: MarkdownBlockKind.Heading, ...input };
+}
+
+export function paragraph(input: { text: string }): MarkdownBlock {
+  return { kind: MarkdownBlockKind.Paragraph, ...input };
+}
+
+export function list(input: { items: string[]; isOrdered: boolean }): MarkdownBlock {
+  return { kind: MarkdownBlockKind.List, ...input };
+}
+
 type BlockOf<Kind extends MarkdownBlockKind> = Extract<MarkdownBlock, { kind: Kind }>;
 
 function fenceOf(input: { code: string }): string {

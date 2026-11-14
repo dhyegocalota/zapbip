@@ -1,7 +1,7 @@
 import type { InstallClient } from '@zapbip/agents/install';
 import type { WebLocale } from '@zapbip/types';
+import { setupPromptOf } from './setup-prompt';
 import { siteAgents, SiteStartTab, siteQuickStartOf } from './site-agents';
-import { SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 
@@ -12,29 +12,36 @@ export type QuickStartEntry = {
   agent: InstallClient | null;
   name: string;
   logoId: string | null;
+  prompt: string;
+  promptHint: string;
   hint: string;
   path: string[];
   code: string;
 };
 
-export function quickStartEntriesOf(input: { locale: WebLocale }): QuickStartEntry[] {
-  const { locale } = input;
+export function quickStartEntriesOf(input: { locale: WebLocale; origin: string; connectionLink: string }): QuickStartEntry[] {
+  const { locale, origin, connectionLink } = input;
   const translate = copyOf({ locale });
+  const prompt = setupPromptOf({ locale, origin });
   const agentEntries = siteAgents().map((agent) => ({
     id: agent.id,
     agent: agent.id,
     name: agent.name,
     logoId: agent.logo,
-    ...siteQuickStartOf({ id: agent.id, locale, connectionLink: SITE_EXAMPLE_CONNECTION_LINK }),
+    prompt,
+    promptHint: translate(SiteCopyKey.StartPromptHint, { agent: agent.name }),
+    ...siteQuickStartOf({ id: agent.id, locale, connectionLink }),
   }));
   const anyEntry: QuickStartEntry = {
     id: SiteStartTab.AnyMcp,
     agent: null,
     name: translate(SiteCopyKey.ClientsAnyMcpName),
     logoId: null,
+    prompt,
+    promptHint: translate(SiteCopyKey.StartPromptHintAny),
     hint: translate(SiteCopyKey.StartAnyHint),
     path: ANY_PATH_KEYS.map((key) => translate(key)),
-    code: SITE_EXAMPLE_CONNECTION_LINK,
+    code: connectionLink,
   };
   return [...agentEntries, anyEntry];
 }

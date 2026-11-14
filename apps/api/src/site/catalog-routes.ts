@@ -9,11 +9,12 @@ import {
   PRICING_PRO_INCLUDED_MESSAGES,
 } from '@zapbip/types';
 import type { Context } from 'hono';
+import { setupUrlOf } from './agentic-paths';
 import { AgentAnswerStatus, answerResponse, jsonResponse, requestedLocaleOf } from './agentic-answer';
 import { formatPrice, pricingValuesOf } from './price-format';
 import { FREE_FEATURE_KEYS } from './pricing-features';
 import { quickStartEntriesOf } from './quick-start-entries';
-import { PAGE_CACHE_CONTROL, PAGE_VARY, SITE_AGENT_PARAMETER } from './site-constants';
+import { PAGE_CACHE_CONTROL, PAGE_VARY, SITE_AGENT_PARAMETER, SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import type { SiteEnv } from './site-env';
@@ -67,7 +68,8 @@ export function pricingHandler(context: Context<SiteEnv>): Response {
 export function quickStartHandler(context: Context<SiteEnv>): Response {
   const locale = requestedLocaleOf({ context, value: context.req.query(LANGUAGE_PARAMETER) });
   if (locale === null) return answerResponse({ context, status: AgentAnswerStatus.UnsupportedLanguage, locale: context.get('locale') });
-  const entries = quickStartEntriesOf({ locale });
+  const origin = context.env.SITE_ORIGIN;
+  const entries = quickStartEntriesOf({ locale, origin, connectionLink: SITE_EXAMPLE_CONNECTION_LINK });
   const requested = context.req.query(SITE_AGENT_PARAMETER);
   const entry = entries.find((candidate) => candidate.id === requested);
   if (entry === undefined)
@@ -89,9 +91,11 @@ export function quickStartHandler(context: Context<SiteEnv>): Response {
       hint: entry.hint,
       path: entry.path,
       code: entry.code,
+      prompt: entry.prompt,
+      setupUrl: setupUrlOf({ locale, origin }),
       isExample: true,
       caption: translate(SiteCopyKey.StartExampleCaption),
-      requestAccess: `${context.env.SITE_ORIGIN}${SitePath.RequestAccess}`,
+      requestAccess: `${origin}${SitePath.RequestAccess}`,
     },
   });
 }

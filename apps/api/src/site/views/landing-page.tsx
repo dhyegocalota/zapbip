@@ -21,7 +21,7 @@ export function LandingPage(props: { model: PageModel }) {
       <WhySection locale={model.locale} />
       <StepsSection locale={model.locale} />
       <CapabilitiesSection locale={model.locale} />
-      <QuickStartSection locale={model.locale} referralCode={model.referralCode} startTab={model.startTab} />
+      <QuickStartSection locale={model.locale} siteOrigin={model.siteOrigin} referralCode={model.referralCode} startTab={model.startTab} />
       <PricingSection locale={model.locale} />
       <PrivacyBand locale={model.locale} />
       <FaqSection locale={model.locale} />
