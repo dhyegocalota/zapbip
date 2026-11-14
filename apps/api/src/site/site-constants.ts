@@ -40,7 +40,7 @@ export const PAGE_CACHE_CONTROL = 'private, no-cache';
 export const PAGE_VARY = 'Accept, Accept-Language, Cookie';
 export const STYLESHEET_CONTENT_TYPE = 'text/css; charset=utf-8';
 export const SCRIPT_CONTENT_TYPE = 'text/javascript; charset=utf-8';
-export const LEGAL_UPDATED_ON = '2026-11-13';
+export const LEGAL_UPDATED_ON = '2026-11-14';
 export const SITE_UPDATED_ON = '2026-11-14';
 export const REFERRAL_SHARING_OPEN = false;
 export const PRICING_FRAGMENT = '#pricing';
