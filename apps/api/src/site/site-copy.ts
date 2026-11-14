@@ -206,7 +206,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.PrivacyKeysBody]: 'Each agent has its own secret. Revoke any of them from WhatsApp, anytime.',
     [SiteCopyKey.PrivacyWaitlistTitle]: 'About this waitlist',
     [SiteCopyKey.PrivacyWaitlistBody]:
-      'We keep your email, language and referral data only to invite you. We store no IP address and set no tracking cookies; two cookies remember your language and theme. To be removed, write to {contactEmail}.',
+      'We keep your email, language and referral data only to welcome you, keep you posted on your access and invite you. We store no IP address and set no tracking cookies; two cookies remember your language and theme. To be removed, write to {contactEmail}.',
     [SiteCopyKey.FaqEyebrow]: 'FAQ',
     [SiteCopyKey.FaqTitle]: 'Questions',
     [SiteCopyKey.FaqWhenQuestion]: 'When can I use it?',
@@ -456,7 +456,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.PrivacyKeysBody]: 'Cada agente tem o próprio segredo. Revogue qualquer um pelo WhatsApp, quando quiser.',
     [SiteCopyKey.PrivacyWaitlistTitle]: 'Sobre esta lista',
     [SiteCopyKey.PrivacyWaitlistBody]:
-      'Guardamos seu e-mail, idioma e dados de indicação só para te convidar. Não guardamos endereço IP nem usamos cookies de rastreamento; dois cookies lembram seu idioma e tema. Para sair da lista, escreva para {contactEmail}.',
+      'Guardamos seu e-mail, idioma e dados de indicação só para te dar as boas-vindas, avisar sobre o seu acesso e te convidar. Não guardamos endereço IP nem usamos cookies de rastreamento; dois cookies lembram seu idioma e tema. Para sair da lista, escreva para {contactEmail}.',
     [SiteCopyKey.FaqEyebrow]: 'Dúvidas',
     [SiteCopyKey.FaqTitle]: 'Perguntas',
     [SiteCopyKey.FaqWhenQuestion]: 'Quando posso usar?',

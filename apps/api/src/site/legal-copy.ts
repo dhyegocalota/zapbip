@@ -261,7 +261,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
           paragraphs: ['We do not sell your data, we show no ads, and we do not use your messages to train AI models.'],
           items: [
             'To provide the service you asked for: deliver messages between you and your agents and run your account (LGPD, article 7, V).',
-            'To manage the waitlist and send your invitation, with the consent you give when you join (article 7, I).',
+            'To manage the waitlist and email you about it (a welcome when you join, news about your access and your invitation), with the consent you give when you join (article 7, I).',
             'To keep zapbip secure and prevent abuse, such as the captcha on the waitlist form and rate limits (legitimate interest, article 7, IX).',
             'To meet legal obligations (article 7, II).',
           ],
@@ -286,12 +286,13 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
             'Meta Platforms, through the official WhatsApp Business Platform, which carries every WhatsApp message.',
             'Cloudflare, which hosts the service and its storage and runs the captcha (Turnstile) on the waitlist form.',
             'Mintlify, which hosts the documentation at docs.zapbip.com.',
+            'Resend, which sends our emails, such as the welcome to the waitlist.',
           ],
         },
         {
           heading: 'International transfer',
           paragraphs: [
-            'Meta and Cloudflare process data on servers outside Brazil, including in the United States. These transfers are needed to provide the service and follow the safeguards of the LGPD (article 33).',
+            'Meta, Cloudflare and Resend process data on servers outside Brazil, including in the United States. These transfers are needed to provide the service and follow the safeguards of the LGPD (article 33).',
           ],
           items: [],
         },
@@ -376,7 +377,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
           paragraphs: ['Não vendemos seus dados, não mostramos anúncios e não usamos suas mensagens para treinar modelos de IA.'],
           items: [
             'Para prestar o serviço que você pediu: entregar mensagens entre você e seus agentes e manter sua conta (LGPD, artigo 7º, V).',
-            'Para gerenciar a lista de espera e enviar o seu convite, com o consentimento que você dá ao entrar (artigo 7º, I).',
+            'Para gerenciar a lista de espera e mandar e-mails sobre ela (as boas-vindas quando você entra, novidades sobre o seu acesso e o seu convite), com o consentimento que você dá ao entrar (artigo 7º, I).',
             'Para manter o zapbip seguro e evitar abuso, como o captcha do formulário da lista e os limites de uso (legítimo interesse, artigo 7º, IX).',
             'Para cumprir obrigações legais (artigo 7º, II).',
           ],
@@ -401,12 +402,13 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
             'Meta Platforms, pela plataforma oficial WhatsApp Business, que transporta todas as mensagens de WhatsApp.',
             'Cloudflare, que hospeda o serviço e o armazenamento e roda o captcha (Turnstile) do formulário da lista.',
             'Mintlify, que hospeda a documentação em docs.zapbip.com.',
+            'Resend, que envia os nossos e-mails, como as boas-vindas da lista de espera.',
           ],
         },
         {
           heading: 'Transferência internacional',
           paragraphs: [
-            'A Meta e a Cloudflare tratam dados em servidores fora do Brasil, inclusive nos Estados Unidos. Essas transferências são necessárias para prestar o serviço e seguem as garantias da LGPD (artigo 33).',
+            'A Meta, a Cloudflare e a Resend tratam dados em servidores fora do Brasil, inclusive nos Estados Unidos. Essas transferências são necessárias para prestar o serviço e seguem as garantias da LGPD (artigo 33).',
           ],
           items: [],
         },
