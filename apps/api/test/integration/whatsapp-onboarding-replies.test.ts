@@ -2,6 +2,7 @@ import { reset } from 'cloudflare:test';
 import { AccountState, OwnerLocale, WHATSAPP_LINK_ORIGIN } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
+import { D1AccountDirectory } from '../../src/adapters/d1/d1-account-directory';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
 import { recordGraphPosts } from '../support/record-graph-posts';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
@@ -27,6 +28,14 @@ async function onboardingTextsOf(input: { waId: string }): Promise<string[]> {
   if (account === undefined) throw new Error('account is missing');
   const texts = await screenTextsOf({ accountId: account.accountId });
   return texts.filter((text) => text.includes(SETUP_LINK_FRAGMENT));
+}
+
+async function noticeRowsOf(input: { accountId: string }): Promise<number> {
+  const row = await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM other_number_notices WHERE account_id = ?')
+    .bind(input.accountId)
+    .first<{ total: number }>();
+  if (row === null) throw new Error('count missing');
+  return row.total;
 }
 
 function deliverOnSecondNumber(input: { waId: string }) {
@@ -112,6 +121,20 @@ describe('a customer writing to a different zapbip number', () => {
     expect(posts[0]?.body.text.body).toContain(`${WHATSAPP_LINK_ORIGIN}/${TEST_DISPLAY_NUMBER}`);
     expect(await countAccounts()).toBe(accountsBefore);
     expect(await screenTextsOf({ accountId: 'acc_wrong' })).toEqual([]);
+  });
+
+  it('leaves no notice row behind when the account is deleted', async () => {
+    recordGraphPosts();
+    await seedOwnerIdentity({
+      accountId: 'acc_deleted',
+      phone: ACTIVE_PHONE,
+      ownerLocale: OwnerLocale.PortugueseBrazil,
+      numberId: TEST_NUMBER_ID,
+    });
+    await deliverOnSecondNumber({ waId: ACTIVE_PHONE });
+    expect(await noticeRowsOf({ accountId: 'acc_deleted' })).toBe(1);
+    await new D1AccountDirectory({ database: testEnv.CONNECTIONS }).remove({ accountId: 'acc_deleted' });
+    expect(await noticeRowsOf({ accountId: 'acc_deleted' })).toBe(0);
   });
 
   it('is told again after the cooldown', async () => {

@@ -19,4 +19,8 @@ export class D1OtherNumberNotices {
   async record(input: { accountId: string; noticedAt: number }): Promise<void> {
     await this.database.prepare(RECORD_STATEMENT).bind(input.accountId, input.noticedAt).run();
   }
+
+  async claim(input: { accountId: string; now: number; cooldownMs: number }): Promise<boolean> {
+    throw new Error(`claim is not implemented for ${input.accountId}`);
+  }
 }
