@@ -10,7 +10,7 @@ import { siteCopy } from './support/site-copy';
 
 const SCREENSHOT_DIRECTORY_VARIABLE = 'ZAPBIP_LANGUAGES_SCREENSHOT_DIRECTORY';
 const MOBILE_WIDTH = 375;
-const LANGUAGE_COUNT = 8;
+const LANGUAGE_COUNT = MENU_LOCALES.length;
 const SHOT_LOCALES = [OwnerLocale.Japanese, OwnerLocale.ChineseSimplified, OwnerLocale.Korean, OwnerLocale.German];
 const NO_SIDEWAYS_SCROLL_SCRIPT = 'document.documentElement.scrollWidth <= document.documentElement.clientWidth';
 const HERO_TITLE_SELECTOR = 'h1';
@@ -20,7 +20,7 @@ async function openMenu(input: { page: Page }): Promise<void> {
   await input.page.locator('.lang-trigger').click();
 }
 
-test('the menu lists the eight languages with their native names', async ({ page }) => {
+test('the menu lists the languages with their native names', async ({ page }) => {
   await page.goto('/');
   await openMenu({ page });
   const options = page.locator('.lang-option');

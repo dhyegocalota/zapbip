@@ -45,7 +45,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp입니다. 이용은 대기자 명단으로 열리고, 이미 명단에 등록되어 있습니다. 이용할 수 있게 되면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용이 열리면 "도움말"을 보내 주세요.`,
     [OwnerLocale.ChineseSimplified]: `zapbip 是你用来和 AI 智能体对话的专属 WhatsApp。使用资格通过候补名单开放，你已经在名单中：开放时我们会在这里通知你。想提前准备，可以看看如何连接你的智能体：${ONBOARDING_SETUP_LINKS[OwnerLocale.ChineseSimplified]}\n\n想早点进来？申请使用：${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.ChineseSimplified]}\n\n使用资格开放后，请发送“帮助”。`,
     [OwnerLocale.Arabic]:
-      `zapbip هو واتساب الشخصي الخاص بك للتحدث مع وكلاء الذكاء الاصطناعي. الوصول عبر قائمة انتظار وأنت مسجَّل فيها بالفعل: سنخبرك هنا عندما يُفعَّل وصولك. وللاستعداد، تعرّف على طريقة ربط وكلائك:\n${ONBOARDING_SETUP_LINKS[OwnerLocale.Arabic]}\n\nتريد الدخول مبكرًا؟ اطلب الوصول:\n${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Arabic]}\n\nأرسل «مساعدة» عندما يُفعَّل وصولك.`,
+      `zapbip هو WhatsApp الشخصي الخاص بك للتحدث مع وكلاء الذكاء الاصطناعي. الوصول عبر قائمة انتظار وأنت مسجَّل فيها بالفعل: سنخبرك هنا عندما يُفعَّل وصولك. وللاستعداد، تعرّف على طريقة ربط وكلائك:\n${ONBOARDING_SETUP_LINKS[OwnerLocale.Arabic]}\n\nتريد الدخول مبكرًا؟ اطلب الوصول:\n${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Arabic]}\n\nأرسل «مساعدة» عندما يُفعَّل وصولك.`,
   },
   [AccountReplyIntent.Suspended]: {
     [OwnerLocale.PortugueseBrazil]: 'Sua conta está suspensa.',
@@ -378,7 +378,7 @@ const INSTALL_LINES: LocalizedText = {
   [OwnerLocale.ChineseSimplified]:
     '请通过 zapbip 连接到我的 WhatsApp：阅读 {install_link} 并按说明操作。\n此链接 30 分钟内只能使用一次。请勿分享。',
   [OwnerLocale.Arabic]:
-    'اربط نفسك بواتساب الخاص بي عبر zapbip: اقرأ {install_link} واتبع التعليمات.\nيعمل هذا الرابط مرة واحدة خلال 30 دقيقة. لا تشاركه.',
+    'اربط نفسك بـ WhatsApp الخاص بي عبر zapbip: اقرأ {install_link} واتبع التعليمات.\nيعمل هذا الرابط مرة واحدة خلال 30 دقيقة. لا تشاركه.',
 };
 
 const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {

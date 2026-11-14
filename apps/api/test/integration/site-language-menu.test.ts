@@ -8,7 +8,7 @@ import { AGENT_INSTALLS } from '@zapbip/agents/install';
 
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
-const EXPECTED_LANGUAGE_COUNT = 8;
+const EXPECTED_LANGUAGE_COUNT = 9;
 const FLAGS_BY_LOCALE: Record<OwnerLocale, string> = {
   [OwnerLocale.EnglishUs]: 'us',
   [OwnerLocale.PortugueseBrazil]: 'br',
@@ -18,6 +18,7 @@ const FLAGS_BY_LOCALE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'jp',
   [OwnerLocale.Korean]: 'kr',
   [OwnerLocale.ChineseSimplified]: 'cn',
+  [OwnerLocale.Arabic]: 'arab',
 };
 const MENU_PATTERN = /<details class="lang-menu">([\s\S]*?)<\/details>/;
 
@@ -37,7 +38,7 @@ describe('the language menu', () => {
   });
 
   it.each(MENU_LOCALES)(
-    'lists the eight languages with a flag and the native name, the current one marked, on the %s page',
+    'lists the nine languages with a flag and the native name, the current one marked, on the %s page',
     async (current) => {
       const menu = await menuOf({ path: localePathOf({ locale: current }) });
       const options = [

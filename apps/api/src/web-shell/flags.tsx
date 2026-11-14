@@ -128,7 +128,7 @@ function ChinaFlag() {
 
 function ArabicFlag() {
   return (
-    <FlagFrame name="ar">
+    <FlagFrame name="arab">
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#007a3d" />
       <circle cx={ARABIC_MOON_CENTER.x} cy={ARABIC_MOON_CENTER.y} r={ARABIC_MOON_RADIUS} fill="#ffffff" />
       <circle cx={ARABIC_BITE_CENTER.x} cy={ARABIC_MOON_CENTER.y} r={ARABIC_BITE_RADIUS} fill="#007a3d" />

@@ -72,6 +72,7 @@ const screenSchema = z.object({
 });
 
 type DemoData = {
+  direction: string;
   agentName: string;
   question: string;
   questionShort: string;
