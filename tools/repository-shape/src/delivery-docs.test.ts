@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readmes, readRepositoryFile, repositoryPath, workspacePackages } from './repository-files';
@@ -58,6 +58,8 @@ const FOLDER_SUFFIX = '/';
 const ANCHOR_SEPARATOR = '#';
 const MAILBOX_MARKER = '@';
 const MARKDOWN_EXTENSION = '.md';
+const TOP_LEVEL_FOLDERS = ['apps', 'libs', 'tools', 'docs', 'scripts'];
+const DEPENDENCY_FOLDER = 'node_modules';
 const LANGUAGE_COUNT_PATTERN = /\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) languages\b/gi;
 
 enum PurposeViolation {
@@ -204,6 +206,14 @@ describe('delivery documents', () => {
       expect(readRepositoryFile(path).match(LANGUAGE_COUNT_PATTERN)).toBeNull();
     },
   );
+
+  test.each(TOP_LEVEL_FOLDERS)('%s has its own README that links every folder inside it', (folder) => {
+    const readme = readRepositoryFile(posix.join(folder, README_FILE));
+    const subfolders = readdirSync(repositoryPath(folder), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && entry.name !== DEPENDENCY_FOLDER)
+      .map((entry) => entry.name);
+    expect(subfolders.filter((name) => !readme.includes(`](${name}${FOLDER_SUFFIX})`))).toEqual([]);
+  });
 
   test('every workspace package has a README', () => {
     expect(workspacePackages().filter((path) => !existsSync(repositoryPath(posix.join(path, README_FILE))))).toEqual([]);
