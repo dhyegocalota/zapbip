@@ -28,12 +28,15 @@ One lane: the port comes first, then the templates, the welcome, the digest and 
 - [x] **Step 5:** red tests for the digest facts, content and schedule, then the `subscriber_digest` job. — red `4aff65bf`, green `ac043e46`
 - [x] **Step 6:** the privacy policy names the welcome, access news and Resend in every language. — red `9c39cecd`, green `599a2f89`
 - [x] **Step 7:** `RESEND_API_KEY` documented and warned by the deploy preflight; runbook, rules and README updated. — red `611ba05c`, green `720adc24`, `d597df41`
+- [x] **Step 8 (added 2026-11-14 at the lead's request):** React Email renders at build time: `pnpm emails:generate` writes `apps/api/src/emails/generated/email-templates.ts`, `pnpm emails:check` and a unit test catch a stale module, the Worker imports no React package. — red `8e01e8bf`, `b27469c6`, green `b9040ccc`
+- [x] **Step 9 (added 2026-11-14 at the lead's request):** merge `origin/main` and add Hindi to the welcome and the privacy wording. — merge `718c1cb0`, `51f64e3b`
 
 ## Failure modes
 
 | Step | What breaks | How I notice (the concrete signal) | How I back out |
 |------|-------------|------------------------------------|----------------|
 | 1 | The bundle does not build for workerd | `wrangler deploy --dry-run` fails | Remove the dependencies |
+| 8 | The generated module drifts from the templates | `pnpm emails:check` or `generated-emails.test.ts` fails | Run `pnpm emails:generate` and commit the module |
 | 4 | A join waits for Resend | The join integration test times out | Revert the route change |
 | 4 | Migration `0016` fails | `wrangler d1 migrations apply` fails | A new forward migration; the columns are nullable |
 | 5 | The digest sends twice in a day | Two emails at 11:00 | The idempotency key per day dedupes for 24 hours |
