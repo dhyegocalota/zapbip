@@ -10,7 +10,7 @@
 ```
 ---
 name: zapbip
-description: Regras para falar com o dono pelo WhatsApp usando o zapbip: perguntar, esperar a resposta e escrever curto.
+description: Regras para falar com a pessoa para quem você trabalha pelo WhatsApp usando o zapbip: perguntar, esperar a resposta e escrever curto.
 ---
 Call check_inbox at the start of every task. If it returns new messages, handle them first.
 Use ask for any decision the owner must make. Do not guess. Then wait with wait_for_reply.

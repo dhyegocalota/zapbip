@@ -16,7 +16,7 @@ describe('WHATSAPP_COPY', () => {
 
   it('AU-118 states the unsupported kind and the unavailable media as the spec does', () => {
     expect(WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.UnsupportedKind]).toBe(
-      'Este tipo de mensagem ainda não é suportado. Envie como texto ou foto.',
+      'Este tipo de mensagem ainda não tem suporte. Envie como texto ou foto.',
     );
     expect(WHATSAPP_COPY[OwnerLocale.EnglishUs][OwnerCopyKey.UnsupportedKind]).toBe(
       'This kind of message is not supported yet. Send it as text or a photo.',

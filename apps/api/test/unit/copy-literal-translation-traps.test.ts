@@ -22,21 +22,24 @@ const LANGUAGES: LanguageTraps[] = [
     docsFolder: 'pt-br',
     pageSuffix: 'page.pt-br.mdx',
     sourceFile: (path) => !/-(spanish|german|french|japanese|korean|chinese|keys)\.ts$/.test(path),
-    traps: /você toca|dono toca|pessoa toca|toca em (abrir|publicar)|seu toque|sua vez de tocar|um toque em|o toque em|esperar o toque/i,
+    traps:
+      /para você mesmo|junto o pr|toque num botão|dono responde publicar|você toca|dono toca|pessoa toca|toca em (abrir|publicar)|seu toque|sua vez de tocar|um toque em|o toque em|esperar o toque/i,
   },
   {
     name: 'es',
     docsFolder: 'es',
     pageSuffix: 'page.es.mdx',
     sourceFile: (path) => path.endsWith('-spanish.ts'),
-    traps: /tú tocas|tu toque|un toque|el toque|ese toque|dueño toca|propietario toca|persona toca/i,
+    traps:
+      /por tu cuenta|usen las herramientas|para su persona|http en streaming|tú tocas|tu toque|un toque|el toque|ese toque|dueño toca|propietario toca|persona toca/i,
   },
   {
     name: 'de',
     docsFolder: 'de',
     pageSuffix: 'page.de.mdx',
     sourceFile: (path) => path.endsWith('-german.ts'),
-    traps: /du tippst|dein(en)? tipp|ein tipp|das antippen|ein antippen|einem antippen|besitzer tippt|person tippt/i,
+    traps:
+      /für dich selbst|besitzer|zugang öffnet|für deinen client|du tippst|dein(en)? tipp|ein tipp|das antippen|ein antippen|einem antippen|besitzer tippt|person tippt/i,
   },
   {
     name: 'fr',
@@ -44,7 +47,7 @@ const LANGUAGES: LanguageTraps[] = [
     pageSuffix: 'page.fr.mdx',
     sourceFile: (path) => path.endsWith('-french.ts'),
     traps:
-      /vous appuyez['.]|votre appui|un appui|d.un toucher|votre toucher|le toucher|un toucher|ce toucher|propriétaire appuie|personne touche/i,
+      /par vous-même|http streamable|ouvre par vagues|pour sa personne|vous appuyez['.]|votre appui|un appui|d.un toucher|votre toucher|le toucher|un toucher|ce toucher|propriétaire appuie|personne touche/i,
   },
   {
     name: 'ja',
@@ -59,14 +62,15 @@ const LANGUAGES: LanguageTraps[] = [
     docsFolder: 'ko',
     pageSuffix: 'page.ko.mdx',
     sourceFile: (path) => path.endsWith('-korean.ts'),
-    traps: /내 탭|내가 탭|나는 탭|탭을 기다|탭으로 답|탭이 |탭 필요|그 뒤의 탭|한 번 탭|탭한 것|그 탭은/,
+    traps:
+      /직접 설정하세요|직접 설정하기|스트리머블|주인이|자신의 사용자|내 탭|내가 탭|나는 탭|탭을 기다|탭으로 답|탭이 |탭 필요|그 뒤의 탭|한 번 탭|탭한 것|그 탭은/,
   },
   {
     name: 'zh',
     docsFolder: 'zh',
     pageSuffix: 'page.zh.mdx',
     sourceFile: (path) => path.endsWith('-chinese.ts'),
-    traps: /你来点选|点一下|点按作答|等你点按|你点按|需要你点|点按钮才算数|可点按/,
+    traps: /主人|自己设置|可流式传输|你来点选|点一下|点按作答|等你点按|你点按|需要你点|点按钮才算数|可点按/,
   },
 ];
 

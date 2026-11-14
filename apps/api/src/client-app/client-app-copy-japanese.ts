@@ -41,7 +41,7 @@ export const JAPANESE_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.AgentCreated]: 'エージェント「{agent}」を作成しました。次の内容をエージェントに貼り付けてください:',
   [ClientAppCopyKey.AgentCreatedHint]:
     'この内容は一度しか表示されません。リンクの期限が切れた場合や使用済みの場合は、エージェントを無効にしてもう一度接続してください。',
-  [ClientAppCopyKey.AgentClient]: 'クライアント',
+  [ClientAppCopyKey.AgentClient]: 'アプリ',
   [ClientAppCopyKey.AgentAdded]: '{date}に追加',
   [ClientAppCopyKey.AgentLastActive]: '最終アクティブ: {date}',
   [ClientAppCopyKey.SignedInAs]: '{phone}でログイン中',

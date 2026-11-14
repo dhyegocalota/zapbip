@@ -10,7 +10,7 @@
 ```
 ---
 name: zapbip
-description: zapbip으로 WhatsApp에서 소유자와 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.
+description: zapbip으로 WhatsApp에서 함께 일하는 사람과 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.
 ---
 Call check_inbox at the start of every task. If it returns new messages, handle them first.
 Use ask for any decision the owner must make. Do not guess. Then wait with wait_for_reply.

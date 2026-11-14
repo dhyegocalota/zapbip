@@ -16,4 +16,5 @@ One word per product term per language. Docs and replies use the term in the sec
 
 - Say what the person does in the product ("you reply"), not the gesture. A button instruction that names a real button on a real screen ("tap Open") stays.
 - The docs say "AI" where a person talks to one assistant and "agent" where the product routes, connects or revokes it.
+- "Client" is "app" wherever it names the software the person uses.
 - Placeholders, limits and prices never change with the wording.

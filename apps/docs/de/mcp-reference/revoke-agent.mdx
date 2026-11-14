@@ -1,9 +1,9 @@
 ---
 title: 'revoke_agent'
-description: 'Widerruft einen Agenten dieses Kontos, nachdem der Besitzer es in WhatsApp erlaubt hat.'
+description: 'Widerruft einen Agenten dieses Kontos, nachdem der Owner es in WhatsApp erlaubt hat.'
 ---
 
-Widerruft einen Agenten dieses Kontos anhand seines Namens. Der Besitzer wird in WhatsApp gefragt, als der aufrufende Agent, und der Aufruf wartet auf die Antwort. Er führt denselben Anwendungsfall aus wie der Befehl `widerrufen`: Jede Verbindung dieses Agenten wird sofort beendet. Siehe [Lass deine KI zapbip verwalten](/de/features/let-your-ai-manage-zapbip).
+Widerruft einen Agenten dieses Kontos anhand seines Namens. Der Owner wird in WhatsApp gefragt, als der aufrufende Agent, und der Aufruf wartet auf die Antwort. Er führt denselben Anwendungsfall aus wie der Befehl `widerrufen`: Jede Verbindung dieses Agenten wird sofort beendet. Siehe [Lass deine KI zapbip verwalten](/de/features/let-your-ai-manage-zapbip).
 
 ## Eingabe
 
@@ -17,6 +17,6 @@ Zwei Buttons: **Allow** und **Deny**. Der Aufruf wartet bis zu 50 Sekunden. Nur 
 
 ## Ausgabe
 
-`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": null }`. `refused` mit `reason` `not_found` heißt: Kein aktiver Agent dieses Kontos hat diesen Namen; der Besitzer wird nicht gefragt. Ein Agent eines anderen Kontos ist nie erreichbar.
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": null }`. `refused` mit `reason` `not_found` heißt: Kein aktiver Agent dieses Kontos hat diesen Namen; der Owner wird nicht gefragt. Ein Agent eines anderen Kontos ist nie erreichbar.
 
 Es gilt dasselbe Limit wie bei [connect_agent](/de/mcp-reference/connect-agent): 3 handelnde Aufrufe pro Minute und Verbindung.

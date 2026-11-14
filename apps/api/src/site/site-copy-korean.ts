@@ -34,7 +34,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundTitle]: '이 페이지를 찾을 수 없습니다.',
   [SiteCopyKey.NotFoundHome]: '홈으로 가기',
   [SiteCopyKey.ThanksTitle]: '얼리 액세스 명단에 등록되었습니다.',
-  [SiteCopyKey.ThanksBody]: '이용이 열리면 바로 연락드리겠습니다. 더 하실 일은 없습니다.',
+  [SiteCopyKey.ThanksBody]: '이용할 수 있게 되면 바로 연락드리겠습니다. 더 하실 일은 없습니다.',
   [SiteCopyKey.ThanksReferralBody]:
     '이용 준비가 되면 이메일로 알려드릴게요. 더 빨리 쓰고 싶다면 링크를 공유해 보세요. 친구가 가입할 때마다 순서가 올라갑니다.',
   [SiteCopyKey.ThanksLinkLabel]: '내 초대 링크',
@@ -53,7 +53,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.DemoPause]: '데모 일시정지',
   [SiteCopyKey.DemoPlay]: '데모 재생',
   [SiteCopyKey.DemoDescription]:
-    '터미널에서 동작하는 코딩 에이전트가 “v2.4를 프로덕션에 배포할까요?”라고 묻습니다. 질문은 Ship it과 Wait 두 개의 버튼과 함께 WhatsApp으로 도착합니다. 주인이 Ship it을 고르면 에이전트가 배포한 뒤 “완료했습니다. v2.4가 라이브입니다.”라고 답합니다.',
+    '터미널에서 동작하는 코딩 에이전트가 “v2.4를 프로덕션에 배포할까요?”라고 묻습니다. 질문은 ‘배포’와 ‘대기’ 두 개의 버튼과 함께 WhatsApp으로 도착합니다. 내가 ‘배포’를 고르면 에이전트가 배포한 뒤 “완료했습니다. v2.4가 라이브입니다.”라고 답합니다.',
   [SiteCopyKey.WhyEyebrow]: 'zapbip을 쓰는 이유',
   [SiteCopyKey.WhyTitle]: '당신의 판단이 필요한 에이전트를 위해 만들었어요.',
   [SiteCopyKey.WhyOfficialTitle]: '공식 WhatsApp API만 사용합니다',
@@ -140,25 +140,25 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.StartExampleCaption]: '예시 링크입니다. 내 링크는 WhatsApp으로 받아요.',
   [SiteCopyKey.StartNote]: '그다음 붙여넣으면, 에이전트가 WhatsApp으로 메시지를 보냅니다.',
   [SiteCopyKey.StartCta]: '이용 신청',
-  [SiteCopyKey.StartAnyHint]: '이 주소에 원격 MCP 서버(스트리머블 HTTP)를 추가하세요',
+  [SiteCopyKey.StartAnyHint]: '이 주소에 원격 MCP 서버(Streamable HTTP)를 추가하세요',
   [SiteCopyKey.StartAnyStepOpen]: '앱에서 MCP 또는 커넥터 설정 열기',
-  [SiteCopyKey.StartAnyStepAdd]: '원격 서버(스트리머블 HTTP) 추가',
+  [SiteCopyKey.StartAnyStepAdd]: '원격 서버(Streamable HTTP) 추가',
   [SiteCopyKey.StartAnyStepPaste]: '이 주소 붙여넣기',
   [SiteCopyKey.StartPromptHint]: '{agent}용 프롬프트',
   [SiteCopyKey.StartPromptHintAny]: 'AI 앱용 프롬프트',
-  [SiteCopyKey.StartPromptLine]: 'zapbip를 직접 설정하세요. {setupUrl} 을(를) 읽고 안내를 따르세요.',
+  [SiteCopyKey.StartPromptLine]: 'zapbip에 연결하세요. {setupUrl}의 안내를 읽고 따르세요.',
   [SiteCopyKey.StartManualSummary]: '직접 설정하시겠어요?',
-  [SiteCopyKey.SetupTitle]: 'zapbip를 직접 설정하기',
+  [SiteCopyKey.SetupTitle]: 'zapbip에 연결하기',
   [SiteCopyKey.SetupDescription]: 'AI 에이전트가 스스로 zapbip에 연결하고, 함께 일하는 사람에게 WhatsApp으로 메시지를 보내는 단계',
   [SiteCopyKey.SetupIntro]:
     'zapbip는 AI 에이전트를 위한 개인용 WhatsApp 채널입니다. 함께 일하는 사람의 WhatsApp으로 메시지를 보내고, 버튼이나 목록으로 질문하고, 답을 기다립니다. 공식 WhatsApp Cloud API를 사용하며 그 사람하고만 대화합니다.',
   [SiteCopyKey.SetupStepOneTitle]: '1단계: 함께 일하는 사람에게서 링크 받기',
   [SiteCopyKey.SetupStepOneBody]:
-    '그 사람에게 휴대폰에서 {startLink} 을(를) 열어 달라고 요청하세요. zapbip와 WhatsApp이 열리면 자리표시자를 당신의 이름으로 바꾼 `{command}` 를 보내 달라고 하세요. zapbip가 당신 전용 설치 링크가 담긴 메시지로 답합니다. 그 메시지를 붙여넣어 달라고 요청하세요.',
+    '그 사람에게 휴대폰에서 {startLink} 링크를 열어 달라고 요청하세요. WhatsApp에서 zapbip와의 대화가 열리면 당신의 이름을 넣은 `{command}` 를 보내 달라고 하세요. zapbip가 당신 전용 설치 링크가 담긴 메시지로 답합니다. 그 메시지를 당신에게 전달해 달라고 요청하세요.',
   [SiteCopyKey.SetupAgentName]: '당신의 이름',
-  [SiteCopyKey.SetupStepTwoTitle]: '2단계: 사용 중인 클라이언트에 MCP 서버 추가하기',
+  [SiteCopyKey.SetupStepTwoTitle]: '2단계: 사용 중인 앱에 MCP 서버 추가하기',
   [SiteCopyKey.SetupStepTwoBody]:
-    '그 메시지의 설치 링크를 읽고 따라 하세요. 연결 링크와 사용 중인 클라이언트에 맞는 정확한 단계가 들어 있습니다. 링크를 열지 않고 단계만 알고 싶다면 각 클라이언트가 하는 일은 다음과 같으며, {placeholder} 은(는) 당신의 연결 링크를 뜻합니다.',
+    '그 메시지의 설치 링크를 읽고 따라 하세요. 연결 링크와 사용 중인 앱에 맞는 정확한 단계가 들어 있습니다. 링크를 열지 않고 단계만 알고 싶다면 각 앱이 하는 일은 다음과 같으며, {placeholder} 은(는) 당신의 연결 링크를 뜻합니다.',
   [SiteCopyKey.SetupStepThreeTitle]: '3단계: 작동 확인하기',
   [SiteCopyKey.SetupStepThreeBody]:
     'zapbip MCP 서버의 send_message 도구를 "{selfTest}" 텍스트로 호출하세요. 함께 일하는 사람이 WhatsApp에서 확인합니다. 아무것도 도착하지 않으면 말없이 다시 시도하지 말고 무엇이 실패했는지 그 사람에게 알려 주세요.',
@@ -167,7 +167,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
     '설치 링크와 연결 링크는 비밀입니다. 자신의 MCP 설정에만 넣고, 공유 로그나 커밋, 다른 사람에게 보내는 메시지에는 절대 넣지 마세요. zapbip는 함께 일하는 사람의 WhatsApp으로 그 사람하고만 대화합니다.',
   [SiteCopyKey.PricingEyebrow]: '요금',
   [SiteCopyKey.PricingTitle]: '무료로 써 보세요.',
-  [SiteCopyKey.PricingLead]: '카드는 필요 없습니다. 이용은 대기자 명단부터 순차적으로 열립니다.',
+  [SiteCopyKey.PricingLead]: '카드 등록은 필요 없습니다. 이용은 대기자 명단부터 순차적으로 열립니다.',
   [SiteCopyKey.PricingFreeName]: '무료',
   [SiteCopyKey.PricingFreeNote]: '체험용 메시지 {free}건',
   [SiteCopyKey.PricingFreeIncludes]: '무료 요금제에 포함된 것',
@@ -182,7 +182,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PricingProIncluded]: '월 {included}건 포함',
   [SiteCopyKey.PricingProOverage]: '초과분은 {block}건당 {overage}',
   [SiteCopyKey.PricingProCta]: '이용 신청',
-  [SiteCopyKey.PricingBilling]: '결제는 이용이 열릴 때 시작됩니다',
+  [SiteCopyKey.PricingBilling]: '결제는 이용할 수 있게 될 때 시작됩니다',
   [SiteCopyKey.PricingMessageDefinition]:
     '메시지는 zapbip을 통해 에이전트가 나에게 보내거나 내가 에이전트에게 보내는 모든 메시지를 말합니다.',
   [SiteCopyKey.FaqOwnNumberQuestion]: '내 WhatsApp 번호를 쓸 수 있나요?',
@@ -207,7 +207,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
     '체험은 무료입니다. 무료 요금제에는 메시지 {free}건이 포함됩니다. 이용은 얼리 액세스 명단에서 순차적으로 열립니다.',
   [SiteCopyKey.FaqPriceQuestion]: '가격은 얼마인가요?',
   [SiteCopyKey.FaqPriceAnswer]:
-    'Pro는 월 {price}이며 메시지 {included}건이 포함되고, 초과분은 {block}건당 {overage}입니다. 결제는 초대와 함께 열립니다.',
+    'Pro는 월 {price}이며 메시지 {included}건이 포함되고, 초과분은 {block}건당 {overage}입니다. 결제는 이용할 수 있게 될 때부터 시작됩니다.',
   [SiteCopyKey.FaqDeveloperQuestion]: '개발자여야 하나요?',
   [SiteCopyKey.FaqDeveloperAnswer]: '아니요. AI 어시스턴트를 쓰고 있다면 한 줄을 붙여넣어 연결할 수 있어요.',
   [SiteCopyKey.FaqOthersQuestion]: '다른 사람에게도 메시지를 보내나요?',
@@ -219,7 +219,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
     '가입하면 나만의 링크가 생깁니다. 이 링크로 친구가 가입할 때마다 명단에서 순서가 올라갑니다. 한 사람당 한도가 있으며, 가입 후에 표시됩니다.',
   [SiteCopyKey.FaqDataQuestion]: '제 이메일은 어디에 쓰이나요?',
   [SiteCopyKey.FaqDataAnswer]:
-    '이용이 열릴 때 초대하는 용도로만 씁니다. IP 주소도, 추적 쿠키도 없습니다. 삭제를 원하시면 {contactEmail}(으)로 문의해 주세요.',
+    '이용할 수 있게 될 때 초대하는 용도로만 씁니다. IP 주소도, 추적 쿠키도 없습니다. 삭제를 원하시면 {contactEmail}(으)로 문의해 주세요.',
   [SiteCopyKey.FinalTitle]: '에이전트가 당신에게 닿게 하세요.',
   [SiteCopyKey.FinalBody]: '이용은 순차적으로 열립니다. 10초면 신청할 수 있어요.',
   [SiteCopyKey.FinalButton]: '이용 신청',
@@ -234,7 +234,8 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.MetaDescription]:
     '{agents}, 그리고 모든 MCP 에이전트가 WhatsApp으로 메시지를 보내고, 버튼으로 묻고, 답을 기다립니다. 메시지 {free}건까지 무료로 써 보세요. 이용을 신청하세요.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: AI 에이전트가 WhatsApp으로 말을 겁니다',
-  [SiteCopyKey.MetaOgImageAlt]: 'AI 에이전트가 WhatsApp에서 “v2.4를 프로덕션에 배포할까요?”라고 묻는 화면. Ship it과 Wait 버튼이 있습니다.',
+  [SiteCopyKey.MetaOgImageAlt]:
+    'AI 에이전트가 WhatsApp에서 “v2.4를 프로덕션에 배포할까요?”라고 묻는 화면. ‘배포’와 ‘대기’ 버튼이 있습니다.',
   [SiteCopyKey.AboutTitle]: 'zapbip 소개',
   [SiteCopyKey.AboutDefinition]:
     'zapbip는 AI 에이전트를 위한 개인용 WhatsApp 채널로, 내 에이전트를 WhatsApp Cloud API 번호 하나, API 키 하나, MCP 서버 하나로 내 휴대폰에 연결합니다.',
@@ -247,5 +248,5 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: '페이지를 찾을 수 없습니다',
   [SiteCopyKey.AgentsTitle]: 'AI 에이전트용',
   [SiteCopyKey.AgentsBody]:
-    '에이전트는 캡차 없이 자신의 사용자를 위해 이용을 신청할 수 있습니다. JSON 본문 {"email", "language"}을 {endpoint}로 POST하세요. 같은 도구가 모든 페이지에서 WebMCP로도 등록됩니다.',
+    '에이전트는 캡차 없이 함께 일하는 사람을 위해 이용을 신청할 수 있습니다. JSON 본문 {"email", "language"}을 {endpoint}로 POST하세요. 같은 도구가 모든 페이지에서 WebMCP로도 등록됩니다.',
 };
