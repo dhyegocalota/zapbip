@@ -43,7 +43,9 @@ describe('self-hosting', () => {
   });
 
   test('the docker context leaves out secrets and local state', () => {
-    ['.git', '**/node_modules', '**/.dev.vars', '.env'].forEach((entry) => expect(readRepositoryFile(DOCKER_IGNORE).split('\n')).toContain(entry));
+    ['.git', '**/node_modules', '**/.dev.vars', '.env'].forEach((entry) =>
+      expect(readRepositoryFile(DOCKER_IGNORE).split('\n')).toContain(entry),
+    );
   });
 
   test.each(LANGUAGES)('the %s open source pages exist', (language) => {
