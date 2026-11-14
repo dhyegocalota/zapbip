@@ -7,7 +7,7 @@ zapbip carries people's WhatsApp messages and the keys of their agents, so we ta
 Report privately, never in a public issue or pull request:
 
 - through GitHub's **Report a vulnerability** button on the Security tab of this repository, or
-- by email to dhyego@logicbit.com.br with "zapbip security" in the subject.
+- by email to support@zapbip.com with "zapbip security" in the subject.
 
 Include what you found, how to reproduce it and what an attacker could do with it. We answer within three business days, keep you informed while we fix it, and credit you when the fix ships, unless you prefer otherwise.
 
