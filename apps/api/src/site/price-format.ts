@@ -28,6 +28,12 @@ export function formatCount(input: { count: number; locale: OwnerLocale }): stri
   return new Intl.NumberFormat(formattingLocaleOf({ locale: input.locale })).format(input.count);
 }
 
+export function formatCompactCount(input: { count: number; locale: OwnerLocale }): string {
+  return new Intl.NumberFormat(formattingLocaleOf({ locale: input.locale }), { notation: 'compact', maximumFractionDigits: 1 }).format(
+    input.count,
+  );
+}
+
 export type PricingValues = { free: string; included: string; block: string; price: string; overage: string };
 
 export function pricingValuesOf(input: { locale: OwnerLocale }): PricingValues {

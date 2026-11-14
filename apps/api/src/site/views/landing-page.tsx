@@ -5,6 +5,7 @@ import { AgentsSection } from './agents-section';
 import { CapabilitiesSection } from './capabilities-section';
 import { FaqSection } from './faq-section';
 import { FinalCall } from './final-call';
+import { OpenSourceSection } from './open-source-section';
 import { HeroSection } from './hero-section';
 import { PricingSection } from './pricing-section';
 import { QuickStartSection } from './quick-start-section';
@@ -23,6 +24,7 @@ export function LandingPage(props: { model: PageModel }) {
       <CapabilitiesSection locale={model.locale} />
       <QuickStartSection locale={model.locale} siteOrigin={model.siteOrigin} referralCode={model.referralCode} startTab={model.startTab} />
       <PricingSection locale={model.locale} />
+      <OpenSourceSection locale={model.locale} />
       <PrivacyBand locale={model.locale} />
       <FaqSection locale={model.locale} />
       <AgentsSection locale={model.locale} siteOrigin={model.siteOrigin} />

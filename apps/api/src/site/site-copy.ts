@@ -20,11 +20,14 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.NavigationLabel]: 'Main',
     [SiteCopyKey.NavigationDocs]: 'Docs',
     [SiteCopyKey.HeaderJoin]: 'Request access',
+    [SiteCopyKey.GitHubLabel]: 'zapbip on GitHub',
+    [SiteCopyKey.GitHubStarsLabel]: 'zapbip on GitHub, {stars} stars',
     [SiteCopyKey.HeroEyebrow]: 'Early access · Opening in waves',
     [SiteCopyKey.HeroInvited]: 'A friend invited you',
     [SiteCopyKey.HeroTitleLead]: 'Your AI agents text you',
     [SiteCopyKey.HeroTitleAccent]: 'on WhatsApp.',
     [SiteCopyKey.HeroLead]: 'They ask with buttons, wait for your tap, then keep working. {agents} and any MCP agent.',
+    [SiteCopyKey.HeroOpenSource]: 'Open source · AGPL-3.0',
     [SiteCopyKey.JoinEmailLabel]: 'Your email address',
     [SiteCopyKey.JoinEmailPlaceholder]: 'you@example.com',
     [SiteCopyKey.JoinSubmit]: 'Request access',
@@ -176,7 +179,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.SetupSafetyTitle]: 'Safety',
     [SiteCopyKey.SetupSafetyBody]:
       'The install link and the connection link are secrets. Put them only in your own MCP configuration, never in a shared log, a commit or a message to anyone else. zapbip talks only to the person you work for, on their own WhatsApp.',
-    [SiteCopyKey.PricingEyebrow]: 'Pricing',
+    [SiteCopyKey.PricingEyebrow]: 'zapbip Cloud pricing',
     [SiteCopyKey.PricingTitle]: 'Try it free.',
     [SiteCopyKey.PricingLead]: 'No card needed. Access opens in waves, starting with the waitlist.',
     [SiteCopyKey.PricingFreeName]: 'Free',
@@ -195,8 +198,19 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.PricingProCta]: 'Request access',
     [SiteCopyKey.PricingBilling]: 'Billing starts when access opens',
     [SiteCopyKey.PricingMessageDefinition]: 'A message is any message an agent sends you, or you send an agent, through zapbip.',
+    [SiteCopyKey.PricingCloudNumber]:
+      'zapbip Cloud is the version we host for you. For now, it texts you from a Brazilian WhatsApp number (+55).',
+    [SiteCopyKey.PricingSelfHost]: 'Want your own number? zapbip is open source: host it yourself with your own Meta app and numbers.',
+    [SiteCopyKey.PricingSelfHostLink]: 'See the code',
+    [SiteCopyKey.OpenSourceEyebrow]: 'Open source',
+    [SiteCopyKey.OpenSourceTitle]: 'The code is public.',
+    [SiteCopyKey.OpenSourceBody]:
+      'zapbip is open source under AGPL-3.0. Read every line, run your own copy with your own Meta app and numbers, or let zapbip Cloud run it for you.',
+    [SiteCopyKey.OpenSourceRepository]: 'See the code on GitHub',
+    [SiteCopyKey.OpenSourceSelfHosting]: 'Host your own copy',
     [SiteCopyKey.FaqOwnNumberQuestion]: 'Can I use my own WhatsApp number?',
-    [SiteCopyKey.FaqOwnNumberAnswer]: 'Not yet. Every agent texts you from a zapbip number, so you have nothing to register.',
+    [SiteCopyKey.FaqOwnNumberAnswer]:
+      "Not on zapbip Cloud: every agent texts you from zapbip's number, Brazilian (+55) for now, so you have nothing to register. To use your own number, host zapbip yourself with your own Meta app.",
     [SiteCopyKey.PrivacyEyebrow]: 'Privacy',
     [SiteCopyKey.PrivacyTitle]: 'Official API. Only you.',
     [SiteCopyKey.PrivacyOfficialTitle]: 'The official WhatsApp Cloud API',
@@ -230,6 +244,9 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqDataQuestion]: 'What do you do with my email?',
     [SiteCopyKey.FaqDataAnswer]:
       'We use it only to invite you when access opens. No IP address, no tracking cookies. To be removed, write to {contactEmail}.',
+    [SiteCopyKey.FaqOpenSourceQuestion]: 'Is zapbip open source?',
+    [SiteCopyKey.FaqOpenSourceAnswer]:
+      'Yes. The code is public under AGPL-3.0, and you can host your own copy with your own Meta app and numbers. zapbip Cloud runs the same code for you, with nothing to set up.',
     [SiteCopyKey.FinalTitle]: 'Let your agents reach you.',
     [SiteCopyKey.FinalBody]: 'Access opens in waves. Ask for yours in ten seconds.',
     [SiteCopyKey.FinalButton]: 'Request access',
@@ -243,6 +260,8 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FooterQuickStart]: 'Quick start',
     [SiteCopyKey.FooterTrademarks]: 'WhatsApp is a trademark of Meta. Agent names are trademarks of their owners.',
     [SiteCopyKey.FooterLegalLabel]: 'Legal',
+    [SiteCopyKey.FooterGitHub]: 'GitHub',
+    [SiteCopyKey.FooterOpenSource]: 'Open source under AGPL-3.0',
     [SiteCopyKey.MetaTitle]: 'Your AI agents text you on WhatsApp',
     [SiteCopyKey.MetaDescription]:
       '{agents} and any MCP agent text you on WhatsApp, ask with buttons and wait for your answer. Try it free with {free} messages: request access.',
@@ -256,6 +275,8 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.AboutAgents]: 'Supported agents: {agents}.',
     [SiteCopyKey.AboutLimits]:
       'Limits: one WhatsApp number is shared by every account and each reply is routed to the agent it answers; only the official WhatsApp Cloud API is used; queued messages are kept {messageDays} days and media {mediaDays} days.',
+    [SiteCopyKey.AboutSource]:
+      'Source: open source under AGPL-3.0 at {repository}; zapbip Cloud is the hosted version, and for now its WhatsApp number is Brazilian (+55).',
     [SiteCopyKey.AboutUpdated]: 'Updated: {updatedOn}.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Page not found',
   },
@@ -267,11 +288,14 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.NavigationLabel]: 'Principal',
     [SiteCopyKey.NavigationDocs]: 'Documentação',
     [SiteCopyKey.HeaderJoin]: 'Pedir acesso',
+    [SiteCopyKey.GitHubLabel]: 'zapbip no GitHub',
+    [SiteCopyKey.GitHubStarsLabel]: 'zapbip no GitHub, {stars} estrelas',
     [SiteCopyKey.HeroEyebrow]: 'Acesso antecipado · Liberado aos poucos',
     [SiteCopyKey.HeroInvited]: 'Um amigo te convidou',
     [SiteCopyKey.HeroTitleLead]: 'Seus agentes de IA falam com você',
     [SiteCopyKey.HeroTitleAccent]: 'no WhatsApp.',
     [SiteCopyKey.HeroLead]: 'Eles perguntam com botões, esperam sua resposta e continuam o trabalho. {agents} e qualquer agente MCP.',
+    [SiteCopyKey.HeroOpenSource]: 'Código aberto · AGPL-3.0',
     [SiteCopyKey.JoinEmailLabel]: 'Seu e-mail',
     [SiteCopyKey.JoinEmailPlaceholder]: 'voce@exemplo.com',
     [SiteCopyKey.JoinSubmit]: 'Pedir acesso',
@@ -424,7 +448,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.SetupSafetyTitle]: 'Segurança',
     [SiteCopyKey.SetupSafetyBody]:
       'O link de instalação e o link de conexão são segredos. Coloque-os só na sua própria configuração de MCP, nunca em um log compartilhado, em um commit ou em uma mensagem para outra pessoa. O zapbip fala só com a pessoa para quem você trabalha, no WhatsApp dela.',
-    [SiteCopyKey.PricingEyebrow]: 'Preços',
+    [SiteCopyKey.PricingEyebrow]: 'Preços do zapbip Cloud',
     [SiteCopyKey.PricingTitle]: 'Teste grátis.',
     [SiteCopyKey.PricingLead]: 'Sem cartão. O acesso é liberado aos poucos, começando pela lista de espera.',
     [SiteCopyKey.PricingFreeName]: 'Grátis',
@@ -444,9 +468,20 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.PricingBilling]: 'A cobrança começa quando o acesso abrir',
     [SiteCopyKey.PricingMessageDefinition]:
       'Mensagem é qualquer mensagem que um agente te envia, ou que você envia a um agente, pelo zapbip.',
+    [SiteCopyKey.PricingCloudNumber]:
+      'O zapbip Cloud é a versão que nós hospedamos para você. Por enquanto, as mensagens chegam de um número de WhatsApp do Brasil (+55).',
+    [SiteCopyKey.PricingSelfHost]:
+      'Quer usar seu próprio número? O zapbip tem código aberto: hospede sua própria cópia com seu app da Meta e seus números.',
+    [SiteCopyKey.PricingSelfHostLink]: 'Ver o código',
+    [SiteCopyKey.OpenSourceEyebrow]: 'Código aberto',
+    [SiteCopyKey.OpenSourceTitle]: 'O código é público.',
+    [SiteCopyKey.OpenSourceBody]:
+      'O zapbip tem código aberto sob a licença AGPL-3.0. Leia cada linha, rode sua própria cópia com seu app da Meta e seus números, ou deixe o zapbip Cloud cuidar disso para você.',
+    [SiteCopyKey.OpenSourceRepository]: 'Ver o código no GitHub',
+    [SiteCopyKey.OpenSourceSelfHosting]: 'Hospedar sua própria cópia',
     [SiteCopyKey.FaqOwnNumberQuestion]: 'Posso usar meu próprio número de WhatsApp?',
     [SiteCopyKey.FaqOwnNumberAnswer]:
-      'Ainda não. Todo agente fala com você por um número do zapbip, então você não precisa registrar nada.',
+      'No zapbip Cloud, não: todo agente fala com você pelo número do zapbip, que por enquanto é do Brasil (+55), então você não precisa registrar nada. Para usar seu próprio número, hospede o zapbip com seu próprio app da Meta.',
     [SiteCopyKey.PrivacyEyebrow]: 'Privacidade',
     [SiteCopyKey.PrivacyTitle]: 'API oficial. Só você.',
     [SiteCopyKey.PrivacyOfficialTitle]: 'A API oficial do WhatsApp Cloud',
@@ -481,6 +516,9 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqDataQuestion]: 'O que vocês fazem com meu e-mail?',
     [SiteCopyKey.FaqDataAnswer]:
       'Usamos só para te convidar quando o acesso abrir. Sem endereço IP, sem cookies de rastreamento. Para sair da lista, escreva para {contactEmail}.',
+    [SiteCopyKey.FaqOpenSourceQuestion]: 'O zapbip tem código aberto?',
+    [SiteCopyKey.FaqOpenSourceAnswer]:
+      'Tem. O código é público sob a licença AGPL-3.0, e você pode hospedar sua própria cópia com seu app da Meta e seus números. O zapbip Cloud roda o mesmo código para você, sem nada para configurar.',
     [SiteCopyKey.FinalTitle]: 'Deixe seus agentes falarem com você.',
     [SiteCopyKey.FinalBody]: 'O acesso é liberado aos poucos. Peça o seu em dez segundos.',
     [SiteCopyKey.FinalButton]: 'Pedir acesso',
@@ -494,6 +532,8 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FooterQuickStart]: 'Início rápido',
     [SiteCopyKey.FooterTrademarks]: 'WhatsApp é marca da Meta. Os nomes dos agentes são marcas dos seus donos.',
     [SiteCopyKey.FooterLegalLabel]: 'Documentos legais',
+    [SiteCopyKey.FooterGitHub]: 'GitHub',
+    [SiteCopyKey.FooterOpenSource]: 'Código aberto sob a licença AGPL-3.0',
     [SiteCopyKey.MetaTitle]: 'Seus agentes de IA falam com você no WhatsApp',
     [SiteCopyKey.MetaDescription]:
       '{agents} e qualquer agente MCP falam com você no WhatsApp, perguntam com botões e esperam sua resposta. Teste grátis com {free} mensagens: peça acesso.',
@@ -507,6 +547,8 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.AboutAgents]: 'Agentes compatíveis: {agents}.',
     [SiteCopyKey.AboutLimits]:
       'Limites: um único número de WhatsApp é compartilhado por todas as contas e cada resposta volta ao agente que fez a pergunta; só a WhatsApp Cloud API oficial é usada; mensagens na fila ficam {messageDays} dias e mídias {mediaDays} dias.',
+    [SiteCopyKey.AboutSource]:
+      'Código-fonte: aberto sob a licença AGPL-3.0 em {repository}; o zapbip Cloud é a versão hospedada e, por enquanto, o número de WhatsApp dele é do Brasil (+55).',
     [SiteCopyKey.AboutUpdated]: 'Atualizado em: {updatedOn}.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Página não encontrada',
   },

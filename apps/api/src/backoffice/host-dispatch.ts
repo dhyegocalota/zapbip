@@ -6,6 +6,7 @@ import { createClientApp } from '../client-app/client-app';
 import { createEmailSender } from '../emails/email-delivery';
 import type { EmailSender } from '../emails/email-sender';
 import { httpsRedirectOf } from '../https-redirect';
+import { repositoryStarsOf } from '../site/repository-stars';
 import { createSiteApp } from '../site/site-app';
 import { createBackofficeApp, createRejectedHostApp } from './app';
 
@@ -58,7 +59,11 @@ const HOST_HANDLERS: Record<HostKind, (input: HostDispatch) => Response | Promis
   [HostKind.BackofficeWithTrailingDot]: ({ request, env, executionContext }) =>
     createRejectedHostApp().fetch(request, env, executionContext),
   [HostKind.Site]: ({ request, env, executionContext }) =>
-    createSiteApp({ fetchImplementation: fetch, emailSenderOf: productionEmailSenderOf }).fetch(request, env, executionContext),
+    createSiteApp({
+      fetchImplementation: fetch,
+      emailSenderOf: productionEmailSenderOf,
+      starCountOf: () => repositoryStarsOf({ fetchImplementation: fetch, cache: caches.default }),
+    }).fetch(request, env, executionContext),
   [HostKind.App]: ({ request, env, executionContext }) => createClientApp().fetch(request, env, executionContext),
   [HostKind.AppWithTrailingDot]: () => plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound }),
   [HostKind.WwwRedirect]: ({ request, env }) => redirectToSite({ request, siteOrigin: env.SITE_ORIGIN }),

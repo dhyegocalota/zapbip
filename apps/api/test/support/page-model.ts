@@ -18,5 +18,6 @@ export function pageModelFor(input: { locale: OwnerLocale; legalDocument: LegalD
     startTab: SiteStartTab.AnyMcp,
     join: { state: JoinState.Idle, emailValue: '' },
     legalDocument: input.legalDocument,
+    starCount: null,
   };
 }

@@ -8,11 +8,14 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NavigationLabel]: 'メインメニュー',
   [SiteCopyKey.NavigationDocs]: 'ドキュメント',
   [SiteCopyKey.HeaderJoin]: 'アクセスをリクエスト',
+  [SiteCopyKey.GitHubLabel]: 'GitHubのzapbip',
+  [SiteCopyKey.GitHubStarsLabel]: 'GitHubのzapbip、スター{stars}件',
   [SiteCopyKey.HeroEyebrow]: 'アーリーアクセス · 順次オープン',
   [SiteCopyKey.HeroInvited]: '友だちから招待されました',
   [SiteCopyKey.HeroTitleLead]: 'AIエージェントが',
   [SiteCopyKey.HeroTitleAccent]: 'WhatsAppでメッセージをくれる。',
   [SiteCopyKey.HeroLead]: 'ボタンで質問し、あなたの返信を待ってから作業を続けます。{agents}、そしてあらゆるMCPエージェントに対応。',
+  [SiteCopyKey.HeroOpenSource]: 'オープンソース · AGPL-3.0',
   [SiteCopyKey.JoinEmailLabel]: 'メールアドレス',
   [SiteCopyKey.JoinEmailPlaceholder]: 'you@example.jp',
   [SiteCopyKey.JoinSubmit]: 'アクセスをリクエスト',
@@ -167,7 +170,7 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.SetupSafetyTitle]: '安全のために',
   [SiteCopyKey.SetupSafetyBody]:
     'インストールリンクと接続リンクは秘密です。自分のMCP設定にだけ入力し、共有ログやコミット、ほかの人へのメッセージには決して書かないでください。zapbipは、仕えている人とだけ、その人自身のWhatsAppで話します。',
-  [SiteCopyKey.PricingEyebrow]: '料金',
+  [SiteCopyKey.PricingEyebrow]: 'zapbip Cloudの料金',
   [SiteCopyKey.PricingTitle]: 'まずは無料でお試し。',
   [SiteCopyKey.PricingLead]: 'クレジットカードの登録は不要です。アクセスはウェイトリストの順に、順次開放されます。',
   [SiteCopyKey.PricingFreeName]: '無料',
@@ -187,8 +190,20 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PricingBilling]: '課金はアクセス開放後に始まります',
   [SiteCopyKey.PricingMessageDefinition]:
     'メッセージとは、zapbipを通じてエージェントがあなたに送るメッセージ、またはあなたがエージェントに送るメッセージのことです。',
+  [SiteCopyKey.PricingCloudNumber]:
+    'zapbip Cloudは、私たちがホストして運用するバージョンです。現在、メッセージはブラジルのWhatsApp番号（+55）から届きます。',
+  [SiteCopyKey.PricingSelfHost]:
+    '自分の番号を使いたい場合は、セルフホストできます。zapbipはオープンソースなので、自分のMetaアプリと番号で運用できます。',
+  [SiteCopyKey.PricingSelfHostLink]: 'コードを見る',
+  [SiteCopyKey.OpenSourceEyebrow]: 'オープンソース',
+  [SiteCopyKey.OpenSourceTitle]: 'コードは公開されています。',
+  [SiteCopyKey.OpenSourceBody]:
+    'zapbipはAGPL-3.0のオープンソースです。コードをすべて読むことも、自分のMetaアプリと番号で自分の環境に立てることも、zapbip Cloudに運用を任せることもできます。',
+  [SiteCopyKey.OpenSourceRepository]: 'GitHubでコードを見る',
+  [SiteCopyKey.OpenSourceSelfHosting]: 'セルフホストの方法',
   [SiteCopyKey.FaqOwnNumberQuestion]: '自分のWhatsApp番号を使えますか？',
-  [SiteCopyKey.FaqOwnNumberAnswer]: '今のところできません。どのエージェントもzapbipの番号からメッセージを送るので、番号の登録は不要です。',
+  [SiteCopyKey.FaqOwnNumberAnswer]:
+    'zapbip Cloudではできません。どのエージェントもzapbipの番号（現在はブラジルの+55）からメッセージを送るので、番号の登録は不要です。自分の番号を使うには、自分のMetaアプリでzapbipをセルフホストしてください。',
   [SiteCopyKey.PrivacyEyebrow]: 'プライバシー',
   [SiteCopyKey.PrivacyTitle]: '公式API。あなただけのために。',
   [SiteCopyKey.PrivacyOfficialTitle]: '公式のWhatsApp Cloud API',
@@ -223,6 +238,9 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDataQuestion]: 'メールアドレスはどう使われますか？',
   [SiteCopyKey.FaqDataAnswer]:
     'アクセス開放時のご案内にのみ使用します。IPアドレスは保存せず、トラッキングCookieも使いません。削除をご希望の場合は {contactEmail} までご連絡ください。',
+  [SiteCopyKey.FaqOpenSourceQuestion]: 'zapbipはオープンソースですか？',
+  [SiteCopyKey.FaqOpenSourceAnswer]:
+    'はい。コードはAGPL-3.0で公開されていて、自分のMetaアプリと番号でセルフホストできます。zapbip Cloudでは同じコードを私たちが運用するので、設定は不要です。',
   [SiteCopyKey.FinalTitle]: 'エージェントから、あなたに連絡を。',
   [SiteCopyKey.FinalBody]: 'アクセスは順次開放されます。10秒でリクエストできます。',
   [SiteCopyKey.FinalButton]: 'アクセスをリクエスト',
@@ -233,6 +251,8 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterQuickStart]: 'クイックスタート',
   [SiteCopyKey.FooterTrademarks]: 'WhatsAppはMetaの商標です。エージェント名はそれぞれの所有者の商標です。',
   [SiteCopyKey.FooterLegalLabel]: '法的情報',
+  [SiteCopyKey.FooterGitHub]: 'GitHub',
+  [SiteCopyKey.FooterOpenSource]: 'AGPL-3.0のオープンソース',
   [SiteCopyKey.MetaTitle]: 'AIエージェントがWhatsAppでメッセージをくれる',
   [SiteCopyKey.MetaDescription]:
     '{agents}、そしてあらゆるMCPエージェントがWhatsAppでメッセージを送り、ボタンで質問して返事を待ちます。{free}通まで無料。アクセスをリクエストしてください。',
@@ -246,6 +266,8 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.AboutAgents]: '対応エージェント：{agents}。',
   [SiteCopyKey.AboutLimits]:
     '制限：1つのWhatsApp番号を全アカウントで共有し、各返信は返信先のエージェントに届きます。公式のWhatsApp Cloud APIのみを使用します。キュー内のメッセージは{messageDays}日、メディアは{mediaDays}日保管されます。',
+  [SiteCopyKey.AboutSource]:
+    'ソースコード：AGPL-3.0のオープンソースとして{repository}で公開しています。zapbip Cloudはホスト版で、現在のWhatsApp番号はブラジルの番号（+55）です。',
   [SiteCopyKey.AboutUpdated]: '更新日：{updatedOn}。',
   [SiteCopyKey.NotFoundMetaTitle]: 'ページが見つかりません',
   [SiteCopyKey.AgentsTitle]: 'AIエージェント向け',

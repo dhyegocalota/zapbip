@@ -10,7 +10,7 @@ import { quickStartEntriesOf } from './quick-start-entries';
 import { setupPromptOf } from './setup-prompt';
 import { plainContactTextOf } from './plain-contact-text';
 import { leadingAgentNames } from './site-agents';
-import { SITE_BRAND_SEPARATOR, SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
+import { REPOSITORY_SELF_HOSTING_URL, REPOSITORY_URL, SITE_BRAND_SEPARATOR, SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import { SitePath } from './site-paths';
@@ -50,7 +50,11 @@ const GUARANTEES: TitledCopy[] = [
 
 function textOf(input: { locale: OwnerLocale; endpoint: string }): Text {
   const translate = copyOf({ locale: input.locale });
-  const values = { ...pricingValuesOf({ locale: input.locale }), agents: leadingAgentNames({ locale: input.locale }), endpoint: input.endpoint };
+  const values = {
+    ...pricingValuesOf({ locale: input.locale }),
+    agents: leadingAgentNames({ locale: input.locale }),
+    endpoint: input.endpoint,
+  };
   return (key, extraValues) => plainContactTextOf({ text: translate(key, { ...values, ...extraValues }) });
 }
 
@@ -93,6 +97,10 @@ function quickStartBlocks(input: { text: Text; locale: OwnerLocale; origin: stri
   ];
 }
 
+function linkOf(input: { label: string; url: string }): string {
+  return `[${input.label}](${input.url})`;
+}
+
 function pricingBlocks(input: { text: Text; locale: OwnerLocale }): MarkdownBlock[] {
   const { text, locale } = input;
   const { price } = pricingValuesOf({ locale });
@@ -100,6 +108,7 @@ function pricingBlocks(input: { text: Text; locale: OwnerLocale }): MarkdownBloc
   return [
     sectionHeading({ text, key: SiteCopyKey.PricingTitle }),
     paragraph({ text: text(SiteCopyKey.PricingLead) }),
+    paragraph({ text: text(SiteCopyKey.PricingCloudNumber) }),
     heading({ level: HeadingLevel.Item, text: text(SiteCopyKey.PricingFreeName) }),
     paragraph({ text: `${freePrice}${SITE_BRAND_SEPARATOR}${text(SiteCopyKey.PricingFreeNote)}` }),
     list({ items: FREE_FEATURE_KEYS.map((key) => text(key)), isOrdered: false }),
@@ -108,6 +117,24 @@ function pricingBlocks(input: { text: Text; locale: OwnerLocale }): MarkdownBloc
     list({ items: [text(SiteCopyKey.PricingProIncluded), text(SiteCopyKey.PricingProOverage)], isOrdered: false }),
     paragraph({ text: text(SiteCopyKey.PricingBilling) }),
     paragraph({ text: text(SiteCopyKey.PricingMessageDefinition) }),
+    paragraph({
+      text: `${text(SiteCopyKey.PricingSelfHost)}${SPACE}${linkOf({ label: text(SiteCopyKey.PricingSelfHostLink), url: REPOSITORY_URL })}`,
+    }),
+  ];
+}
+
+function openSourceBlocks(input: { text: Text }): MarkdownBlock[] {
+  const { text } = input;
+  return [
+    sectionHeading({ text, key: SiteCopyKey.OpenSourceTitle }),
+    paragraph({ text: text(SiteCopyKey.OpenSourceBody) }),
+    list({
+      items: [
+        linkOf({ label: text(SiteCopyKey.OpenSourceRepository), url: REPOSITORY_URL }),
+        linkOf({ label: text(SiteCopyKey.OpenSourceSelfHosting), url: REPOSITORY_SELF_HOSTING_URL }),
+      ],
+      isOrdered: false,
+    }),
   ];
 }
 
@@ -138,6 +165,7 @@ export function homeMarkdownOf(input: { locale: OwnerLocale; origin: string }): 
       ...titledBlocks({ text, entries: CAPABILITIES }),
       ...quickStartBlocks({ text, locale, origin }),
       ...pricingBlocks({ text, locale }),
+      ...openSourceBlocks({ text }),
       sectionHeading({ text, key: SiteCopyKey.PrivacyTitle }),
       ...titledBlocks({ text, entries: GUARANTEES }),
       heading({ level: HeadingLevel.Item, text: text(SiteCopyKey.PrivacyWaitlistTitle) }),

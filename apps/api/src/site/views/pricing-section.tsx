@@ -1,11 +1,13 @@
-import { PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS } from '@zapbip/types';
+import { Flag } from '../../web-shell/flags';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
-import { JOIN_FRAGMENT } from '../site-constants';
+import { JOIN_FRAGMENT, REPOSITORY_URL } from '../site-constants';
 import { FREE_FEATURE_KEYS } from '../pricing-features';
 import { formatPrice, pricingValuesOf } from '../price-format';
 
 const CHECK_GLYPH = '✓';
+const CLOUD_NUMBER_FLAG = OwnerLocale.PortugueseBrazil;
 export function PricingSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   const values = pricingValuesOf({ locale: props.locale });
@@ -18,6 +20,10 @@ export function PricingSection(props: { locale: OwnerLocale }) {
           {translate(SiteCopyKey.PricingTitle)}
         </h2>
         <p class="lead reveal">{translate(SiteCopyKey.PricingLead)}</p>
+        <p class="plan-cloud reveal">
+          <Flag locale={CLOUD_NUMBER_FLAG} />
+          {translate(SiteCopyKey.PricingCloudNumber)}
+        </p>
         <div class="plans">
           <article class="card plan plan-free hero-card reveal">
             <h3 class="plan-name">{translate(SiteCopyKey.PricingFreeName)}</h3>
@@ -66,6 +72,12 @@ export function PricingSection(props: { locale: OwnerLocale }) {
           </article>
         </div>
         <p class="plan-definition reveal">{translate(SiteCopyKey.PricingMessageDefinition)}</p>
+        <p class="plan-definition reveal">
+          {translate(SiteCopyKey.PricingSelfHost)}{' '}
+          <a href={REPOSITORY_URL} rel="noopener">
+            {translate(SiteCopyKey.PricingSelfHostLink)}
+          </a>
+        </p>
       </div>
     </section>
   );

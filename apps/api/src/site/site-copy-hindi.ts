@@ -8,11 +8,14 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NavigationLabel]: 'मुख्य',
   [SiteCopyKey.NavigationDocs]: 'डॉक्स',
   [SiteCopyKey.HeaderJoin]: 'एक्सेस माँगें',
+  [SiteCopyKey.GitHubLabel]: 'GitHub पर zapbip',
+  [SiteCopyKey.GitHubStarsLabel]: 'GitHub पर zapbip, {stars} स्टार',
   [SiteCopyKey.HeroEyebrow]: 'अर्ली एक्सेस · चरणों में खुल रहा है',
   [SiteCopyKey.HeroInvited]: 'आपको एक दोस्त ने बुलाया है',
   [SiteCopyKey.HeroTitleLead]: 'आपके AI एजेंट आपको लिखते हैं',
   [SiteCopyKey.HeroTitleAccent]: 'WhatsApp पर।',
   [SiteCopyKey.HeroLead]: 'वे बटन के साथ पूछते हैं, आपके जवाब का इंतज़ार करते हैं, फिर काम आगे बढ़ाते हैं। {agents} और कोई भी MCP एजेंट।',
+  [SiteCopyKey.HeroOpenSource]: 'ओपन सोर्स · AGPL-3.0',
   [SiteCopyKey.JoinEmailLabel]: 'आपका ईमेल पता',
   [SiteCopyKey.JoinEmailPlaceholder]: 'aap@example.com',
   [SiteCopyKey.JoinSubmit]: 'एक्सेस माँगें',
@@ -166,7 +169,7 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.SetupSafetyTitle]: 'सुरक्षा',
   [SiteCopyKey.SetupSafetyBody]:
     'इंस्टॉल लिंक और कनेक्शन लिंक सीक्रेट हैं। इन्हें सिर्फ़ अपने MCP कॉन्फ़िगरेशन में रखें, कभी किसी शेयर किए गए लॉग, commit या किसी और को भेजे गए संदेश में नहीं। zapbip सिर्फ़ उसी व्यक्ति से बात करता है जिसके लिए आप काम करते हैं, उसके अपने WhatsApp पर।',
-  [SiteCopyKey.PricingEyebrow]: 'कीमत',
+  [SiteCopyKey.PricingEyebrow]: 'zapbip Cloud की कीमत',
   [SiteCopyKey.PricingTitle]: 'मुफ़्त में आज़माएँ।',
   [SiteCopyKey.PricingLead]: 'कार्ड की ज़रूरत नहीं। एक्सेस चरणों में खुलता है, वेटलिस्ट से शुरुआत होती है।',
   [SiteCopyKey.PricingFreeName]: 'फ़्री',
@@ -185,8 +188,20 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PricingProCta]: 'एक्सेस माँगें',
   [SiteCopyKey.PricingBilling]: 'बिलिंग एक्सेस खुलने पर शुरू होगी',
   [SiteCopyKey.PricingMessageDefinition]: 'एक संदेश यानी कोई भी संदेश जो zapbip के ज़रिए कोई एजेंट आपको भेजे, या आप किसी एजेंट को भेजें।',
+  [SiteCopyKey.PricingCloudNumber]:
+    'zapbip Cloud वह वर्शन है जिसे हम आपके लिए होस्ट करते हैं। फ़िलहाल संदेश ब्राज़ील के एक WhatsApp नंबर (+55) से आते हैं।',
+  [SiteCopyKey.PricingSelfHost]:
+    'अपना नंबर इस्तेमाल करना चाहते हैं? zapbip ओपन सोर्स है: अपने Meta ऐप और अपने नंबरों के साथ इसे ख़ुद होस्ट करें।',
+  [SiteCopyKey.PricingSelfHostLink]: 'कोड देखें',
+  [SiteCopyKey.OpenSourceEyebrow]: 'ओपन सोर्स',
+  [SiteCopyKey.OpenSourceTitle]: 'कोड सबके लिए खुला है।',
+  [SiteCopyKey.OpenSourceBody]:
+    'zapbip, AGPL-3.0 लाइसेंस के तहत ओपन सोर्स है। हर लाइन पढ़ें, अपने Meta ऐप और नंबरों के साथ अपनी कॉपी चलाएँ, या इसे चलाने का काम zapbip Cloud पर छोड़ दें।',
+  [SiteCopyKey.OpenSourceRepository]: 'GitHub पर कोड देखें',
+  [SiteCopyKey.OpenSourceSelfHosting]: 'अपनी कॉपी ख़ुद होस्ट करें',
   [SiteCopyKey.FaqOwnNumberQuestion]: 'क्या अपना WhatsApp नंबर इस्तेमाल किया जा सकता है?',
-  [SiteCopyKey.FaqOwnNumberAnswer]: 'अभी नहीं। हर एजेंट आपको zapbip के एक नंबर से लिखता है, इसलिए आपको कुछ भी रजिस्टर नहीं करना पड़ता।',
+  [SiteCopyKey.FaqOwnNumberAnswer]:
+    'zapbip Cloud पर नहीं: हर एजेंट आपको zapbip के नंबर से लिखता है, जो फ़िलहाल ब्राज़ील का (+55) है, इसलिए आपको कुछ भी रजिस्टर नहीं करना पड़ता। अपना नंबर इस्तेमाल करने के लिए, अपने Meta ऐप के साथ zapbip ख़ुद होस्ट करें।',
   [SiteCopyKey.PrivacyEyebrow]: 'गोपनीयता',
   [SiteCopyKey.PrivacyTitle]: 'आधिकारिक API। सिर्फ़ आप।',
   [SiteCopyKey.PrivacyOfficialTitle]: 'आधिकारिक WhatsApp Cloud API',
@@ -220,6 +235,9 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDataQuestion]: 'आप मेरे ईमेल का क्या करते हैं?',
   [SiteCopyKey.FaqDataAnswer]:
     'हम इसका इस्तेमाल सिर्फ़ एक्सेस खुलने पर आपको बुलाने के लिए करते हैं। न IP पता, न ट्रैकिंग कुकीज़। हटवाने के लिए {contactEmail} पर लिखें।',
+  [SiteCopyKey.FaqOpenSourceQuestion]: 'क्या zapbip ओपन सोर्स है?',
+  [SiteCopyKey.FaqOpenSourceAnswer]:
+    'हाँ। कोड AGPL-3.0 लाइसेंस के तहत सबके लिए खुला है, और आप अपने Meta ऐप और नंबरों के साथ अपनी कॉपी ख़ुद होस्ट कर सकते हैं। zapbip Cloud यही कोड आपके लिए चलाता है, कुछ भी सेट अप करने की ज़रूरत नहीं।',
   [SiteCopyKey.FinalTitle]: 'अपने एजेंटों को आप तक पहुँचने दें।',
   [SiteCopyKey.FinalBody]: 'एक्सेस चरणों में खुलता है। दस सेकंड में अपना एक्सेस माँगें।',
   [SiteCopyKey.FinalButton]: 'एक्सेस माँगें',
@@ -233,6 +251,8 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterQuickStart]: 'क्विक स्टार्ट',
   [SiteCopyKey.FooterTrademarks]: 'WhatsApp, Meta का ट्रेडमार्क है। एजेंटों के नाम उनके मालिकों के ट्रेडमार्क हैं।',
   [SiteCopyKey.FooterLegalLabel]: 'कानूनी',
+  [SiteCopyKey.FooterGitHub]: 'GitHub',
+  [SiteCopyKey.FooterOpenSource]: 'AGPL-3.0 लाइसेंस के तहत ओपन सोर्स',
   [SiteCopyKey.MetaTitle]: 'आपके AI एजेंट आपको WhatsApp पर लिखते हैं',
   [SiteCopyKey.MetaDescription]:
     '{agents} और कोई भी MCP एजेंट WhatsApp पर आपको लिखते हैं और बटन से पूछकर जवाब का इंतज़ार करते हैं। {free} संदेश मुफ़्त आज़माएँ।',
@@ -247,6 +267,8 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.AboutAgents]: 'सपोर्टेड एजेंट: {agents}।',
   [SiteCopyKey.AboutLimits]:
     'सीमाएँ: एक WhatsApp नंबर सभी अकाउंट इस्तेमाल करते हैं और हर जवाब उसी एजेंट तक पहुँचाया जाता है जिसे वह जवाब दिया गया है; सिर्फ़ आधिकारिक WhatsApp Cloud API का इस्तेमाल होता है; कतार में रखे संदेश {messageDays} दिन और मीडिया {mediaDays} दिन रखे जाते हैं।',
+  [SiteCopyKey.AboutSource]:
+    'सोर्स कोड: AGPL-3.0 लाइसेंस के तहत {repository} पर ओपन सोर्स; zapbip Cloud होस्ट किया गया वर्शन है, और फ़िलहाल इसका WhatsApp नंबर ब्राज़ील का (+55) है।',
   [SiteCopyKey.AboutUpdated]: 'अपडेट: {updatedOn}।',
   [SiteCopyKey.NotFoundMetaTitle]: 'पेज नहीं मिला',
 };

@@ -7,7 +7,7 @@ import type { LegalDocument } from './legal-links';
 import type { PageModel } from './page-model';
 import { plainContactTextOf } from './plain-contact-text';
 import { pricingValuesOf } from './price-format';
-import { PRICING_FRAGMENT } from './site-constants';
+import { PRICING_FRAGMENT, REPOSITORY_URL, SOURCE_LICENSE_URL } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import { canonicalUrlOf, pageUrlOf } from './site-links';
@@ -20,6 +20,7 @@ enum SchemaType {
   Organization = 'Organization',
   WebSite = 'WebSite',
   WebApplication = 'WebApplication',
+  SoftwareSourceCode = 'SoftwareSourceCode',
   FaqPage = 'FAQPage',
   Question = 'Question',
   Answer = 'Answer',
@@ -32,6 +33,7 @@ const SCHEMA_CONTEXT = 'https://schema.org';
 const PRE_ORDER_AVAILABILITY = 'https://schema.org/PreOrder';
 const APPLICATION_CATEGORY = 'DeveloperApplication';
 const OPERATING_SYSTEM = 'Web';
+const PROGRAMMING_LANGUAGE = 'TypeScript';
 const CENTS_PER_UNIT = 100;
 const PRICE_FRACTION_DIGITS = 2;
 const FIRST_POSITION = 1;
@@ -100,6 +102,21 @@ function applicationOf(input: { model: PageModel }): StructuredDataNode {
   };
 }
 
+function sourceCodeOf(input: { model: PageModel }): StructuredDataNode {
+  const { model } = input;
+  return {
+    '@type': SchemaType.SoftwareSourceCode,
+    ...idOf({ origin: model.siteOrigin, fragment: 'source' }),
+    name: copyOf({ locale: model.locale })(SiteCopyKey.BrandName),
+    codeRepository: REPOSITORY_URL,
+    license: SOURCE_LICENSE_URL,
+    isAccessibleForFree: true,
+    programmingLanguage: PROGRAMMING_LANGUAGE,
+    targetProduct: idOf({ origin: model.siteOrigin, fragment: 'application' }),
+    publisher: idOf({ origin: model.siteOrigin, fragment: 'organization' }),
+  };
+}
+
 function faqPageOf(input: { locale: OwnerLocale }): StructuredDataNode {
   const translate = copyOf({ locale: input.locale });
   const values = pricingValuesOf({ locale: input.locale });
@@ -135,7 +152,8 @@ function graphOf(input: { nodes: StructuredDataNode[] }): StructuredData {
 export function structuredDataOf(input: { model: PageModel }): StructuredData {
   const { model } = input;
   const common = [organizationOf({ origin: model.siteOrigin }), websiteOf({ model })];
-  if (model.legalDocument === null) return graphOf({ nodes: [...common, applicationOf({ model }), faqPageOf({ locale: model.locale })] });
+  if (model.legalDocument === null)
+    return graphOf({ nodes: [...common, applicationOf({ model }), sourceCodeOf({ model }), faqPageOf({ locale: model.locale })] });
   return graphOf({ nodes: [...common, breadcrumbOf({ model, document: model.legalDocument })] });
 }
 

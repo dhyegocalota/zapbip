@@ -562,15 +562,19 @@ describe('the free offer across the page', () => {
   });
 
   it.each([
-    [ENGLISH_HEADERS, [/your own phone/i, /your own number/i, /ban on your own/i]],
-    [PORTUGUESE_HEADERS, [/o seu celular/i, /no seu celular/i, /banir o seu número/i, /seu número fica/i]],
-  ])('offers no way to bring your own number anywhere on the page', async (headers, wordings) => {
-    const html = await pageOf({ headers });
+    [OwnerLocale.EnglishUs, ENGLISH_HEADERS, [/your own phone/i, /your own number/i, /ban on your own/i]],
+    [OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS, [/o seu celular/i, /no seu celular/i, /banir o seu número/i, /seu número fica/i]],
+  ])('offers your own number in %s only by hosting zapbip yourself', async (locale, headers, wordings) => {
+    const selfHostingCopies = [SiteCopyKey.PricingSelfHost, SiteCopyKey.FaqOwnNumberAnswer].flatMap((key) => [
+      copyHtml({ key, locale }),
+      renderSiteCopy({ key, locale }),
+    ]);
+    const html = selfHostingCopies.reduce((page, copy) => page.replaceAll(copy, ''), await pageOf({ headers }));
     expect(wordings.filter((wording) => wording.test(html))).toEqual([]);
   });
 
   it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])(
-    'says in the FAQ that nobody brings their own number yet in %s',
+    'says in the FAQ that zapbip Cloud brings no number of your own in %s',
     async (locale) => {
       const html = await pageOf({ headers: locale === OwnerLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
       expect(html).toContain(`<summary>${copyHtml({ key: SiteCopyKey.FaqOwnNumberQuestion, locale })}</summary>`);

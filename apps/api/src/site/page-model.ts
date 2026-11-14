@@ -32,4 +32,5 @@ export type PageModel = {
   startTab: InstallClient | SiteStartTab;
   join: JoinView;
   legalDocument: LegalDocument | null;
+  starCount: number | null;
 };

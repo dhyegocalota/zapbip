@@ -9,8 +9,8 @@ import { LandingPage } from './views/landing-page';
 import { LegalPage } from './views/legal-page';
 import { NotFoundPage } from './views/not-found-page';
 
-export function pageModelOf(input: { context: Context<SiteEnv>; join: JoinView }): PageModel {
-  const { context, join } = input;
+export function pageModelOf(input: { context: Context<SiteEnv>; join: JoinView; starCount: number | null }): PageModel {
+  const { context, join, starCount } = input;
   return {
     locale: context.get('locale'),
     theme: context.get('theme'),
@@ -22,6 +22,7 @@ export function pageModelOf(input: { context: Context<SiteEnv>; join: JoinView }
     startTab: context.get('startTab'),
     join,
     legalDocument: null,
+    starCount,
   };
 }
 
@@ -34,22 +35,31 @@ export function renderLanding(input: {
   join: JoinView;
   status: HttpStatus;
   headers: Record<string, string>;
+  starCount: number | null;
 }): Response | Promise<Response> {
-  const { context, join, status, headers } = input;
-  return context.html(<LandingPage model={pageModelOf({ context, join })} />, status as ContentfulStatusCode, headers);
+  const { context, join, status, headers, starCount } = input;
+  return context.html(<LandingPage model={pageModelOf({ context, join, starCount })} />, status as ContentfulStatusCode, headers);
 }
 
-export function renderNotFound(input: { context: Context<SiteEnv>; status: HttpStatus }): Response | Promise<Response> {
-  const { context, status } = input;
-  return context.html(<NotFoundPage model={pageModelOf({ context, join: idleJoinOf({ context }) })} />, status as ContentfulStatusCode);
+export function renderNotFound(input: {
+  context: Context<SiteEnv>;
+  status: HttpStatus;
+  starCount: number | null;
+}): Response | Promise<Response> {
+  const { context, status, starCount } = input;
+  return context.html(
+    <NotFoundPage model={pageModelOf({ context, join: idleJoinOf({ context }), starCount })} />,
+    status as ContentfulStatusCode,
+  );
 }
 
 export function renderLegal(input: {
   context: Context<SiteEnv>;
   document: LegalDocument;
   headers: Record<string, string>;
+  starCount: number | null;
 }): Response | Promise<Response> {
-  const { context, document, headers } = input;
-  const model = { ...pageModelOf({ context, join: idleJoinOf({ context }) }), legalDocument: document };
+  const { context, document, headers, starCount } = input;
+  const model = { ...pageModelOf({ context, join: idleJoinOf({ context }), starCount }), legalDocument: document };
   return context.html(<LegalPage model={model} document={document} />, HttpStatus.Ok, headers);
 }
