@@ -111,13 +111,14 @@ describe('renderInstallLines', () => {
 });
 
 describe('buildMenuRows', () => {
-  test.each(LOCALES)('lists the six menu commands in order in %s', (locale) => {
+  test.each(LOCALES)('lists the seven menu commands in order in %s', (locale) => {
     expect(buildMenuRows({ locale }).map((row) => row.id)).toEqual([
       'zapbip:create_agent',
       'zapbip:list_agents',
       'zapbip:revoke_agent',
       'zapbip:rotate_agent',
       'zapbip:help',
+      'zapbip:set_language',
       'zapbip:request_deletion',
     ]);
   });

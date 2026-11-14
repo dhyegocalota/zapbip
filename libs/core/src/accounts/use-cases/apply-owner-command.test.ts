@@ -21,7 +21,7 @@ describe('applyOwnerCommand', () => {
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.EmptyList]);
   });
 
-  test('help replies with the menu list of the six commands', async () => {
+  test('help replies with the menu list of the seven commands', async () => {
     const { result } = await apply({ command: commandOf({ kind: CommandKind.Help }) });
     const [reply] = result.replies;
     expect(result.replies).toHaveLength(1);
@@ -33,6 +33,7 @@ describe('applyOwnerCommand', () => {
       'zapbip:revoke_agent',
       'zapbip:rotate_agent',
       'zapbip:help',
+      'zapbip:set_language',
       'zapbip:request_deletion',
     ]);
   });

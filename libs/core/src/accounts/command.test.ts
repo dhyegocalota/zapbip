@@ -22,7 +22,7 @@ describe('parseAccountCommand text', () => {
     ['agents', CommandKind.ListAgents, OwnerLocale.EnglishUs],
     ['  AGENTES  ', CommandKind.ListAgents, OwnerLocale.PortugueseBrazil],
     ['ajuda', CommandKind.Help, OwnerLocale.PortugueseBrazil],
-    ['menu', CommandKind.Help, OwnerLocale.PortugueseBrazil],
+    ['menu', CommandKind.Help, OwnerLocale.EnglishUs],
     ['help', CommandKind.Help, OwnerLocale.EnglishUs],
     ['apagar conta', CommandKind.RequestDeletion, OwnerLocale.PortugueseBrazil],
     ['delete account', CommandKind.RequestDeletion, OwnerLocale.EnglishUs],

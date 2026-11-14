@@ -129,7 +129,7 @@ describe('receiveAccountMessage rule 0', () => {
     expect(text!.kind).toBe(MessageKind.Text);
     if (list!.kind !== MessageKind.Choice) throw new Error('expected a list');
     expect(list!.questionId).toBe(ACCOUNT_MENU_QUESTION_ID);
-    expect(list!.options).toHaveLength(6);
+    expect(list!.options).toHaveLength(7);
   });
 
   test('the same delivery twice sends nothing new', async () => {

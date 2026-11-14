@@ -67,8 +67,10 @@ export function localizeCopy<Text>(input: {
   texts: Record<OwnerLocale, Text>;
   build: LocalizedSectionBuilder<Text>;
 }): Record<OwnerLocale, (section: InstallSectionInput) => string> {
-  return {
-    [OwnerLocale.PortugueseBrazil]: (section) => input.build({ section, text: input.texts[OwnerLocale.PortugueseBrazil] }),
-    [OwnerLocale.EnglishUs]: (section) => input.build({ section, text: input.texts[OwnerLocale.EnglishUs] }),
-  };
+  return Object.fromEntries(
+    Object.values(OwnerLocale).map((locale) => [
+      locale,
+      (section: InstallSectionInput) => input.build({ section, text: input.texts[locale] }),
+    ]),
+  ) as Record<OwnerLocale, (section: InstallSectionInput) => string>;
 }
