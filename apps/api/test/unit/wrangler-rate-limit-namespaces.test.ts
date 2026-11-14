@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { unstable_readConfig as readConfig } from 'wrangler';
 
 const CONFIG_PATH = join(import.meta.dirname, '..', '..', 'wrangler.jsonc');
-const LIMITERS_PER_ENVIRONMENT = 6;
+const LIMITERS_PER_ENVIRONMENT = 7;
 const ENVIRONMENTS = [undefined, 'staging', 'development'];
 
 function namespaceIdsOf(input: { environment: string | undefined }): string[] {

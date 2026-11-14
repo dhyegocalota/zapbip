@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { AGENT_RULES, AGENT_RULES_PROMPT_NAME, InboxError } from '@zapbip/core';
+import { createAccountChangeGuard } from '../adapters/guard/account-change-guard';
 import { createOutboundGuard } from '../adapters/guard/outbound-guard';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createPlatformClock } from '../adapters/platform/clock';
@@ -9,7 +10,8 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { McpToolName, TOOL_DEFINITIONS } from '../contract/tool-definitions';
 import { logEvent } from '../log';
-import { OUTBOUND_TOOLS, TOOL_HANDLERS } from './tool-handlers';
+import { assertAccountChangeAdmitted } from './account-change-admission';
+import { ACCOUNT_CHANGE_TOOLS, OUTBOUND_TOOLS, TOOL_HANDLERS } from './tool-handlers';
 import { assertOutboundAdmitted } from './outbound-admission';
 import { toolErrorResult, toolSuccessResult } from './tool-error';
 import type { ResolvedConnection } from '../routes/resolve-connection';
@@ -26,6 +28,7 @@ async function runTool(input: { name: McpToolName; context: ToolContext; toolArg
   const handler = TOOL_HANDLERS[input.name] as UntypedToolHandler;
   try {
     if (OUTBOUND_TOOLS.has(input.name)) await assertOutboundAdmitted({ context: input.context });
+    if (ACCOUNT_CHANGE_TOOLS.has(input.name)) await assertAccountChangeAdmitted({ context: input.context });
     return toolSuccessResult(await handler({ context: input.context, arguments: input.toolArguments }));
   } catch (error) {
     if (!(error instanceof InboxError)) throw error;
@@ -51,6 +54,7 @@ export function createConnectionServer(input: { resolved: ResolvedConnection; en
       connectionLimiter: environment.OUTBOUND_RATE_LIMITER,
       accountLimiter: environment.ACCOUNT_OUTBOUND_RATE_LIMITER,
     }),
+    accountChangeGuard: createAccountChangeGuard({ limiter: environment.ACCOUNT_CHANGE_RATE_LIMITER }),
   };
   const server = new McpServer({ name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION }, { instructions: AGENT_RULES });
   server.registerPrompt(AGENT_RULES_PROMPT_NAME, { description: AGENT_RULES_PROMPT_DESCRIPTION }, () => ({

@@ -1,7 +1,7 @@
 import { ACCESS_BATCH_LIMIT } from '@zapbip/types';
 import type { ShapeOutput } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import type { ZodRawShape } from 'zod';
-import { maskedPhoneOf } from '../../client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { auditedBatch, type BatchAuditRecorder } from '../access/access-audit';
 import { parseAccessFilter } from '../access/access-filter';
 import { inviteCountsOf, issueInvites, startNumberOf } from '../access/access-invite';

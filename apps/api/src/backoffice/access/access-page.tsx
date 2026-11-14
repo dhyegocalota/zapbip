@@ -1,6 +1,6 @@
 import { ACCESS_BATCH_LIMIT, OwnerLocale, WaitlistSource } from '@zapbip/types';
+import { maskedPhoneOf } from '@zapbip/core';
 import { SOURCE_LABELS } from '../waitlist/source-labels';
-import { maskedPhoneOf } from '../../client-app/masked-phone';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { NoticeVariant } from '../backoffice-notice';

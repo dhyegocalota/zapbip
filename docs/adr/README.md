@@ -65,4 +65,5 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0042](0042-the-customer-web-app-signs-in-with-a-one-time-link-sent-over-whatsapp.md) | The customer web app signs in with a one-time link sent over WhatsApp | Accepted | 2026-11-13 |
 | [0043](0043-access-opens-in-batches-from-the-backoffice.md) | Access opens in batches from the backoffice | Accepted | 2026-11-13 |
 | [0044](0044-an-agent-requests-access-without-the-captcha-under-weighted-limits.md) | An agent requests access without the captcha, under weighted limits | Accepted | 2026-11-13 |
+| [0045](0045-an-agent-manages-the-account-through-mcp-with-the-owner-approving-on-whatsapp.md) | An agent manages the account through MCP, with the owner approving on WhatsApp | Accepted | 2026-11-13 |
 | [0046](0046-an-operator-agent-runs-the-backoffice-through-mcp-with-a-scoped-key.md) | An operator agent runs the backoffice through MCP with a scoped key | Accepted | 2026-11-13 |

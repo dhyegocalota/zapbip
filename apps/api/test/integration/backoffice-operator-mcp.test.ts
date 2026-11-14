@@ -3,7 +3,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vi
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { RETRY_AFTER_SECONDS } from '../../src/backoffice/auth/rate-limit';
-import { maskedPhoneOf } from '../../src/client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import {
   OPERATOR_KEY_LAST_USED_INTERVAL_MS,
   OPERATOR_MCP_AUDIT_LIMIT,

@@ -43,7 +43,7 @@ describe('ask', () => {
     await environment.clock.advance({ ms: 0 });
     const questionId = await openQuestionId({ environment });
     const answer = await tap({ environment, questionId, optionIndex: 0, optionTitle: 'Sim' });
-    expect(await waiting).toEqual({ status: ReplyStatus.Answered, answer: 'Sim', messageId: answer.messageId });
+    expect(await waiting).toEqual({ status: ReplyStatus.Answered, answer: 'Sim', messageId: answer.messageId, optionIndex: 0 });
   });
 
   test('an owner text answers the open question', async () => {
@@ -51,7 +51,7 @@ describe('ask', () => {
     const waiting = asking({ environment });
     await environment.clock.advance({ ms: 0 });
     const answer = await receiveText({ environment, text: 'talvez' });
-    expect(await waiting).toEqual({ status: ReplyStatus.Answered, answer: 'talvez', messageId: answer.messageId });
+    expect(await waiting).toEqual({ status: ReplyStatus.Answered, answer: 'talvez', messageId: answer.messageId, optionIndex: null });
   });
 
   test('CU-103 a retry after the answer returns the answer and sends nothing', async () => {
@@ -61,7 +61,7 @@ describe('ask', () => {
     const answer = await tap({ environment, questionId: await openQuestionId({ environment }), optionIndex: 0, optionTitle: 'Sim' });
     await waiting;
     const retry = await asking({ environment });
-    expect(retry).toEqual({ status: ReplyStatus.Answered, answer: 'Sim', messageId: answer.messageId });
+    expect(retry).toEqual({ status: ReplyStatus.Answered, answer: 'Sim', messageId: answer.messageId, optionIndex: 0 });
     expect(environment.sender.sessions).toHaveLength(1);
   });
 

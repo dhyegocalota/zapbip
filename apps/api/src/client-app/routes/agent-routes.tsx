@@ -1,4 +1,4 @@
-import { AGENTS_PER_ACCOUNT_LIMIT, type AccountReply, type AccountCommandResult } from '@zapbip/core';
+import { AGENTS_PER_ACCOUNT_LIMIT, firstReplyOf, type AccountReply } from '@zapbip/core';
 import { AccountReplyIntent, AccountReplyParameter, CommandKind, HttpStatus } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { SEE_OTHER_STATUS } from '../../backoffice/backoffice-constants';
@@ -42,12 +42,6 @@ async function applyWebCommand(input: {
   });
   if (!outcome.ok) throw new Error(outcome.message);
   return firstReplyOf({ result: outcome.value });
-}
-
-function firstReplyOf(input: { result: AccountCommandResult }): AccountReply {
-  const [reply] = input.result.replies;
-  if (reply === undefined) throw new Error('the web command produced no reply');
-  return reply;
 }
 
 function respondProblem(input: { context: Context<ClientAppEnv>; session: ClientAppSession; key: ClientAppCopyKey }): Promise<Response> {
