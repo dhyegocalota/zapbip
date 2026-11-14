@@ -15,6 +15,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '웹의 Grok은 외부에서 깨울 수 없어요. 선택한 대기 에이전트가 몇 초 안에 대신 답해요.',
   [OwnerLocale.ChineseSimplified]: '网页版 Grok 无法从外部唤醒：所选的备用智能体会在几秒内代它回应。',
   [OwnerLocale.Arabic]: 'لا يمكن إيقاظ Grok على الويب من الخارج: الوكيل الاحتياطي المختار يرد نيابةً عنه خلال ثوانٍ.',
+  [OwnerLocale.Hindi]: 'वेब पर Grok को बाहर से नहीं जगाया जा सकता: चुना गया स्टैंडबाय एजेंट कुछ ही सेकंड में उसकी जगह जवाब देता है।',
 };
 const WAKE_NOTE_WITHOUT_STANDBY: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Sem um agente de prontidão, o Grok na web só vê mensagens novas quando você abre o chat dele.',
@@ -26,6 +27,7 @@ const WAKE_NOTE_WITHOUT_STANDBY: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '대기 에이전트가 없으면 웹의 Grok은 사용자가 채팅을 열었을 때만 새 메시지를 봐요.',
   [OwnerLocale.ChineseSimplified]: '没有备用智能体的话，只有你打开聊天时，网页版 Grok 才能看到新消息。',
   [OwnerLocale.Arabic]: 'من دون وكيل احتياطي، لن يرى Grok على الويب الرسائل الجديدة إلا عند فتح المحادثة.',
+  [OwnerLocale.Hindi]: 'स्टैंडबाय एजेंट के बिना, वेब पर Grok नए संदेश तभी देखता है जब आप चैट खोलते हैं।',
 };
 
 describe('the Grok web install section', () => {

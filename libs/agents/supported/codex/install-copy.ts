@@ -73,6 +73,11 @@ const CODEX_TEXT: Record<OwnerLocale, CodexText> = {
     confirmChange: `سأكتب خادم zapbip في ${CONFIG_PATH}. هذا يتيح لأدوات zapbip العمل دون إشراف، من دون طلب موافقة عند كل استخدام. هل أستطيع ذلك؟`,
     restart: 'أعد تشغيل Codex لاستخدام zapbip.',
   },
+  [OwnerLocale.Hindi]: {
+    wakeNote: 'कनेक्टर हर संदेश पर Codex सेशन को करीब 6 सेकंड में फिर से शुरू करता है, बिना किसी समय-सीमा के।',
+    confirmChange: `zapbip सर्वर को ${CONFIG_PATH} में लिखना है। इससे zapbip के टूल हर बार मंज़ूरी माँगे बिना अपने आप चल सकेंगे। क्या मैं आगे बढ़ूँ?`,
+    restart: 'zapbip इस्तेमाल करने के लिए Codex को फिर से शुरू करें।',
+  },
 };
 
 export const CODEX_COPY = localizeCopy({
@@ -116,6 +121,7 @@ const CODEX_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: `${CONFIG_PATH}에 추가하세요`,
   [OwnerLocale.ChineseSimplified]: `把它添加到 ${CONFIG_PATH}`,
   [OwnerLocale.Arabic]: `أضفه إلى ${CONFIG_PATH}`,
+  [OwnerLocale.Hindi]: `इसे ${CONFIG_PATH} में जोड़ें`,
 };
 
 export const CODEX_QUICK_START = quickStartOf({

@@ -74,6 +74,13 @@ const CHATGPT_TEXT: Record<OwnerLocale, ChatGptText> = {
     createTask:
       'في محادثة مخصّصة واحدة، أنشئ مهمة كل ساعة بالخيار `Run on this computer` تستدعي check_inbox، واختر `Always allow` مرة واحدة لكل أداة.',
   },
+  [OwnerLocale.Hindi]: {
+    wakeNote: 'ChatGPT को हर घंटे एक शेड्यूल्ड टास्क जगाता है: किसी संदेश को एक घंटे तक इंतज़ार करना पड़ सकता है।',
+    addApp: (connectionLink) =>
+      `ChatGPT की सेटिंग्स में डेवलपर मोड चालू करें और URL ${connectionLink} से एक ऐप जोड़ें, \`No authentication\` के साथ।`,
+    createTask:
+      'एक अलग चैट में `Run on this computer` के साथ हर घंटे चलने वाला एक टास्क बनाएँ जो check_inbox कॉल करे, और हर टूल के लिए एक बार `Always allow` चुनें।',
+  },
 };
 
 export const CHATGPT_COPY = localizeCopy({
@@ -104,6 +111,7 @@ const CHATGPT_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'ChatGPT에서 이렇게 하세요',
   [OwnerLocale.ChineseSimplified]: '在 ChatGPT 中这样做',
   [OwnerLocale.Arabic]: 'افعل هذا في ChatGPT',
+  [OwnerLocale.Hindi]: 'यह ChatGPT में करें',
 };
 
 const CHATGPT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
@@ -141,6 +149,7 @@ const CHATGPT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Korean]: ['ChatGPT 열기 → 설정', '개발자 모드 켜기', 'URL로 앱 추가, 인증 없음', '이 주소 붙여넣기'],
   [OwnerLocale.ChineseSimplified]: ['打开 ChatGPT → 设置', '开启开发者模式', '通过网址添加应用，无需认证', '粘贴这个地址'],
   [OwnerLocale.Arabic]: ['افتح ChatGPT ← الإعدادات', 'فعّل وضع المطوّر', 'أضف تطبيقًا عبر العنوان دون مصادقة', 'الصق هذا العنوان'],
+  [OwnerLocale.Hindi]: ['ChatGPT खोलें → सेटिंग्स', 'डेवलपर मोड चालू करें', 'URL से ऐप जोड़ें, बिना ऑथेंटिकेशन', 'यह पता पेस्ट करें'],
 };
 
 export const CHATGPT_QUICK_START = quickStartOf({ hint: CHATGPT_QUICK_START_HINT, path: CHATGPT_QUICK_START_PATH, code: addressText });

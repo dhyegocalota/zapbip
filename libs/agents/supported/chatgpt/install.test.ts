@@ -14,6 +14,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'ChatGPT는 1시간마다 예약 작업으로 깨어나요. 메시지는 최대 1시간 기다릴 수 있어요.',
   [OwnerLocale.ChineseSimplified]: 'ChatGPT 每小时由一个计划任务唤醒：一条消息最多可能要等一个小时。',
   [OwnerLocale.Arabic]: 'يوقظ ChatGPT مهمة مجدولة كل ساعة: قد تنتظر الرسالة حتى ساعة كاملة.',
+  [OwnerLocale.Hindi]: 'ChatGPT को हर घंटे एक शेड्यूल्ड टास्क जगाता है: किसी संदेश को एक घंटे तक इंतज़ार करना पड़ सकता है।',
 };
 
 describe('the ChatGPT install section', () => {

@@ -22,6 +22,8 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.ChineseSimplified]: 'Claude Code 不限时地监听：会话打开时，通道会立即送达；会话停止时，连接器大约 7 秒就能让它恢复。',
   [OwnerLocale.Arabic]:
     'يستمع Claude Code دون حد زمني: تسلّم القناة الرسائل فورًا ما دامت الجلسة مفتوحة، ويستأنف الموصّل جلسة متوقفة خلال نحو 7 ثوانٍ.',
+  [OwnerLocale.Hindi]:
+    'Claude Code बिना किसी समय-सीमा के सुनता है: सेशन खुला हो तो चैनल संदेश तुरंत पहुँचाता है, और रुके हुए सेशन को कनेक्टर करीब 7 सेकंड में फिर से शुरू कर देता है।',
 };
 const SKILL_DESCRIPTION = 'Rules for talking to the owner on WhatsApp through zapbip: ask, wait for the answer and write short.';
 const RESTART_MARK: Record<OwnerLocale, string> = {
@@ -34,6 +36,7 @@ const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '다시 시작',
   [OwnerLocale.ChineseSimplified]: '重新启动',
   [OwnerLocale.Arabic]: 'أعد تشغيل',
+  [OwnerLocale.Hindi]: 'फिर से शुरू करें',
 };
 
 describe('the Claude Code install section', () => {

@@ -16,6 +16,8 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'Cursor는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답해요. 시간 제한은 없어요.',
   [OwnerLocale.ChineseSimplified]: 'Cursor 通过后台终端监听，运行期间几秒内就会回应，不限时。',
   [OwnerLocale.Arabic]: 'يستمع Cursor عبر الطرفية الخلفية ويرد خلال ثوانٍ ما دامت تعمل، دون حد زمني.',
+  [OwnerLocale.Hindi]:
+    'Cursor बैकग्राउंड टर्मिनल के ज़रिए सुनता है और उसके चलते रहने तक कुछ ही सेकंड में जवाब देता है, बिना किसी समय-सीमा के।',
 };
 const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Reinicie',
@@ -27,6 +29,7 @@ const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '다시 시작',
   [OwnerLocale.ChineseSimplified]: '重新启动',
   [OwnerLocale.Arabic]: 'أعد تشغيل',
+  [OwnerLocale.Hindi]: 'फिर से शुरू करें',
 };
 
 describe('the Cursor install section', () => {

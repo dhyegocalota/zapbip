@@ -31,6 +31,7 @@ const LANGUAGE_LABEL: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: 'Korean',
   [DocsPageLanguage.Chinese]: 'Chinese',
   [DocsPageLanguage.Arabic]: 'Arabic',
+  [DocsPageLanguage.Hindi]: 'Hindi',
 };
 
 function uniqueInOrder(values: string[]): string[] {
