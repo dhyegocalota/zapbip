@@ -12,7 +12,7 @@ function deleteCommandOf(input: { locale: OwnerLocale }): string {
   return COMMAND_WORDS.find((entry) => entry.kind === CommandKind.RequestDeletion && entry.locale === input.locale)!.words;
 }
 
-const PROVIDER_NAMES = ['Meta', 'Cloudflare', 'Mintlify'];
+const PROVIDER_NAMES = ['Meta', 'Cloudflare', 'Mintlify', 'Resend'];
 const CASES = DOCUMENTS.flatMap((document) => LOCALES.map((locale) => [document, locale] as const));
 
 function stringsOf(input: { document: LegalDocument; locale: OwnerLocale }): string[] {
