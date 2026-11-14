@@ -14,6 +14,9 @@ import {
   THEME_SWITCH_ID,
   PRICING_FRAGMENT,
   START_FRAGMENT,
+  REPOSITORY_URL,
+  SITE_BRAND_SEPARATOR,
+  SOURCE_LICENSE_URL,
 } from '../site-constants';
 import { markdownUrlOf } from '../agentic-paths';
 import { ShellControls } from '../../web-shell/shell-controls';
@@ -31,6 +34,7 @@ import { serializeStructuredData, structuredDataOf } from '../structured-data';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
 import { APPLE_TOUCH_ICON_PATH, SiteAssetKind, siteAssetOf, SitePath } from '../site-paths';
 import { SITE_STYLESHEET_HREF } from '../site-stylesheet';
+import { GitHubButton } from './github-link';
 
 const FORM_FRAGMENT = '#join-email';
 const CONTENT_FRAGMENT = '#content';
@@ -67,6 +71,7 @@ function SiteHeader(props: { model: PageModel }) {
           <a class="nav-link" href={docsUrlOf({ locale: model.locale, path: '' })}>
             {translate(SiteCopyKey.NavigationDocs)}
           </a>
+          <GitHubButton locale={model.locale} starCount={model.starCount} />
           {isJoinOffered ? (
             <a class="button button-primary header-join" href={joinHref}>
               {translate(SiteCopyKey.HeaderJoin)}
@@ -105,6 +110,7 @@ function SiteFooter(props: { model: PageModel }) {
     { href: `${homePath}${PRICING_FRAGMENT}`, text: translate(SiteCopyKey.FooterPricing) },
     { href: `${homePath}${START_FRAGMENT}`, text: translate(SiteCopyKey.FooterQuickStart) },
     { href: docsUrlOf({ locale: model.locale, path: '' }), text: shellText(ShellCopyKey.FooterDocs) },
+    { href: REPOSITORY_URL, text: translate(SiteCopyKey.FooterGitHub), rel: 'noopener' },
   ];
   const legalLinks = LEGAL_LINKS.map((link) => ({
     href: legalPathOf({ document: link.document, locale: model.locale }),
@@ -132,7 +138,13 @@ function SiteFooter(props: { model: PageModel }) {
           <FooterColumn label={SiteCopyKey.FooterLegalLabel} locale={model.locale} links={legalLinks} />
           <FooterColumn label={SiteCopyKey.FooterCompany} locale={model.locale} links={companyLinks} />
         </div>
-        <p class="footer-legal">{translate(SiteCopyKey.FooterTrademarks)}</p>
+        <p class="footer-legal">
+          <a href={SOURCE_LICENSE_URL} rel="license noopener">
+            {translate(SiteCopyKey.FooterOpenSource)}
+          </a>
+          {SITE_BRAND_SEPARATOR}
+          {translate(SiteCopyKey.FooterTrademarks)}
+        </p>
         <div class="footer-wordmark" aria-hidden="true">
           {translate(SiteCopyKey.BrandName)}
         </div>

@@ -9,6 +9,7 @@ import { joinWaitlist, normalizeEmail } from './join-waitlist';
 import { isReferralCode } from './referral-code';
 import { JoinState, type JoinView } from './page-model';
 import { renderLanding } from './render-landing';
+import type { StarCountSource } from './repository-stars';
 import { turnstileSecretOf } from './site-configuration';
 import { NO_STORE_CACHE_CONTROL, RATE_KEY_PREFIX, RETRY_AFTER_VALUE, TURNSTILE_RESPONSE_FIELD } from './site-constants';
 import type { SiteEnv } from './site-env';
@@ -86,7 +87,10 @@ async function answerOf(input: {
   };
 }
 
-export function joinHandler(input: { fetchImplementation: typeof fetch }): (context: Context<SiteEnv>) => Promise<Response> {
+export function joinHandler(input: {
+  fetchImplementation: typeof fetch;
+  starCountOf: StarCountSource;
+}): (context: Context<SiteEnv>) => Promise<Response> {
   return async (context) => {
     const clientAddress = context.req.header(CLIENT_ADDRESS_HEADER);
     if (clientAddress === undefined) return plainResponse({ body: BAD_REQUEST_TEXT, status: HttpStatus.BadRequest });
@@ -94,6 +98,12 @@ export function joinHandler(input: { fetchImplementation: typeof fetch }): (cont
     context.set('locale', formLocaleOf({ form, fallback: context.get('locale') }));
     context.set('referralCode', formReferralCodeOf({ form }));
     const answer = await answerOf({ context, form, clientAddress, fetchImplementation: input.fetchImplementation });
-    return renderLanding({ context, join: answer.view, status: answer.status, headers: { ...NO_STORE_HEADERS, ...answer.headers } });
+    return renderLanding({
+      context,
+      join: answer.view,
+      status: answer.status,
+      headers: { ...NO_STORE_HEADERS, ...answer.headers },
+      starCount: await input.starCountOf(),
+    });
   };
 }

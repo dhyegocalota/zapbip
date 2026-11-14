@@ -47,20 +47,26 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch; starCo
     logEvent({ event: LogEvent.SiteError, errorCode: error instanceof Error ? error.name : SITE_ERROR_CODE });
     return plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError });
   });
-  const landing = (context: Context<SiteEnv>): Response | Promise<Response> =>
+  const landing = async (context: Context<SiteEnv>): Promise<Response> =>
     renderLanding({
       context,
       join: idleJoinOf({ context }),
       status: HttpStatus.Ok,
       headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY },
+      starCount: await input.starCountOf(),
     });
   Object.values(OwnerLocale).forEach((locale) => app.get(localePathOf({ locale }), landing));
   LEGAL_PAGES.forEach((page) =>
-    app.get(legalPathOf(page), (context) =>
-      renderLegal({ context, document: page.document, headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY } }),
+    app.get(legalPathOf(page), async (context) =>
+      renderLegal({
+        context,
+        document: page.document,
+        headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY },
+        starCount: await input.starCountOf(),
+      }),
     ),
   );
-  app.post(SitePath.Join, joinHandler({ fetchImplementation: input.fetchImplementation }));
+  app.post(SitePath.Join, joinHandler({ fetchImplementation: input.fetchImplementation, starCountOf: input.starCountOf }));
   app.get(SitePath.Join, (context) => {
     const target = pagePathOf({ locale: context.get('locale'), agent: null, referralCode: context.get('referralCode') });
     return context.redirect(target, SEE_OTHER_STATUS);
@@ -82,6 +88,6 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch; starCo
   app.get(SitePath.Favicon, (context) =>
     context.body(FAVICON_SVG, HttpStatus.Ok, { 'Content-Type': FAVICON_CONTENT_TYPE, 'Cache-Control': STYLESHEET_CACHE_CONTROL }),
   );
-  app.notFound((context) => renderNotFound({ context, status: HttpStatus.NotFound }));
+  app.notFound(async (context) => renderNotFound({ context, status: HttpStatus.NotFound, starCount: await input.starCountOf() }));
   return app;
 }

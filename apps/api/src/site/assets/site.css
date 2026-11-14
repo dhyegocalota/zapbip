@@ -337,6 +337,31 @@ a {
   display: none;
 }
 
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-tap);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.github-mark {
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.github-stars {
+  min-inline-size: 5ch;
+  font-variant-numeric: tabular-nums;
+}
+
 .hero {
   position: relative;
   isolation: isolate;
@@ -368,7 +393,8 @@ a {
   max-width: var(--measure-hero-copy);
 }
 
-.hero-eyebrow {
+.hero-eyebrow,
+.hero-source {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -381,6 +407,14 @@ a {
   font-weight: 700;
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
+}
+
+.hero-source {
+  margin-inline-start: var(--space-2);
+  border: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-muted);
+  text-decoration: none;
 }
 
 .live-dot {
@@ -1356,6 +1390,7 @@ html[dir='rtl'] .button-arrow:hover::after {
 }
 
 .hero-eyebrow,
+.hero-source,
 .hero-title,
 .hero-lead,
 .join-block {
@@ -1967,6 +2002,21 @@ summary::before {
 
 .plan-definition {
   margin-top: var(--space-5);
+}
+
+.plan-cloud {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+  font-weight: 600;
+}
+
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
 }
 
 .why-list {
