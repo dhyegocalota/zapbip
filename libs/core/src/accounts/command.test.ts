@@ -3,16 +3,21 @@ import { describe, expect, test } from 'vitest';
 import { parseAccountCommand } from './command';
 
 function parseText(input: { text: string; isQuoting?: boolean }) {
-  return parseAccountCommand({ text: input.text, listReplyId: null, isQuoting: input.isQuoting === true });
+  return parseAccountCommand({ text: input.text, listReplyId: null, isQuoting: input.isQuoting === true, locale: OwnerLocale.EnglishUs });
 }
 
-function parseListReply(input: { listReplyId: string | null; text?: string | null }) {
-  return parseAccountCommand({ text: input.text === undefined ? null : input.text, listReplyId: input.listReplyId, isQuoting: false });
+function parseListReply(input: { listReplyId: string | null; text?: string | null; locale?: OwnerLocale }) {
+  return parseAccountCommand({
+    text: input.text === undefined ? null : input.text,
+    listReplyId: input.listReplyId,
+    isQuoting: false,
+    locale: input.locale === undefined ? OwnerLocale.EnglishUs : input.locale,
+  });
 }
 
 describe('parseAccountCommand on the start link text', () => {
   test.each(Object.values(OwnerLocale))('reads the prefilled text of %s as no command', (locale) => {
-    expect(parseAccountCommand({ text: START_PREFILLED_TEXT[locale], listReplyId: null, isQuoting: false })).toBeNull();
+    expect(parseAccountCommand({ text: START_PREFILLED_TEXT[locale], listReplyId: null, isQuoting: false, locale })).toBeNull();
   });
 });
 
@@ -70,6 +75,13 @@ describe('parseAccountCommand list replies', () => {
     ['zapbip:request_deletion', CommandKind.RequestDeletion],
   ])('maps %s to a menu command', (listReplyId, kind) => {
     expect(parseListReply({ listReplyId })).toMatchObject({ kind, rawName: null });
+  });
+
+  test('answers a menu choice in the locale of the account', () => {
+    expect(parseListReply({ listReplyId: 'zapbip:help', locale: OwnerLocale.Japanese })).toMatchObject({
+      kind: CommandKind.Help,
+      locale: OwnerLocale.Japanese,
+    });
   });
 
   test.each(['zapbip:bogus', 'zapbip:confirm_deletion', 'zapbip:unknown', 'zapbip:'])('maps %s to the unknown command', (listReplyId) => {

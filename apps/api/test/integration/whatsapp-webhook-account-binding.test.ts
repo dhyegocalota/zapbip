@@ -74,6 +74,7 @@ describe('account binding to a number', () => {
         number: missing,
         bindings: testEnv,
         waId: LATE_OWNER_PHONE,
+        writtenText: null,
         channelMessageId: 'wamid.BIND2',
         entryOf: async () => {
           throw new Error('no entry expected');
@@ -116,6 +117,7 @@ describe('account binding to a number', () => {
       number: { ...TEST_REGISTERED_NUMBER, phoneNumberId: TEST_PHONE_NUMBER_ID },
       bindings: testEnv,
       waId: UNBOUND_OWNER_PHONE,
+      writtenText: null,
       channelMessageId: 'wamid.BIND4',
       entryOf: async () => {
         throw new Error('no entry expected');
@@ -141,6 +143,7 @@ describe('account binding to a number', () => {
       number: { ...TEST_REGISTERED_NUMBER, numberId: THIRD.numberId, phoneNumberId: THIRD.phoneNumberId },
       bindings: testEnv,
       waId: LEAVING_OWNER_PHONE,
+      writtenText: null,
       channelMessageId: 'wamid.BIND5',
       entryOf: async () => {
         throw new Error('no entry expected');

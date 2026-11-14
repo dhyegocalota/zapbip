@@ -1,4 +1,12 @@
-import { AccountReplyIntent, AccountState, AccountStateOutcome, ChannelInboundKind, CommandKind, MessageKind } from '@zapbip/types';
+import {
+  AccountReplyIntent,
+  AccountState,
+  AccountStateOutcome,
+  ChannelInboundKind,
+  CommandKind,
+  MessageKind,
+  OwnerLocale,
+} from '@zapbip/types';
 import { openWindow } from '../../inbox/use-cases/open-window';
 import { receiveChannelMessage } from '../../inbox/use-cases/receive-channel-message';
 import type { ChannelInboundEntry, ReceiveResult } from '../../inbox/use-cases/types';
@@ -33,25 +41,23 @@ const DROPPED_RESULT: ReceiveAccountMessageResult = {
   connectionId: null,
 };
 
-function toCommandInput(input: { entry: ChannelInboundEntry }): CommandInput {
-  const { entry } = input;
-  if (entry.kind !== ChannelInboundKind.Owner) return { text: null, listReplyId: null, isQuoting: false };
+function toCommandInput(input: { entry: ChannelInboundEntry; locale: OwnerLocale }): CommandInput {
+  const { entry, locale } = input;
+  if (entry.kind !== ChannelInboundKind.Owner) return { text: null, listReplyId: null, isQuoting: false, locale };
   const { content, replyToChannelMessageId } = entry;
   return {
     text: content.kind === MessageKind.Text ? content.text : null,
     listReplyId: content.kind === MessageKind.Choice ? content.optionId : null,
     isQuoting: replyToChannelMessageId !== null,
+    locale,
   };
 }
 
 function parseCommand(input: ReceiveAccountMessageInput): AccountCommand | null {
-  const { entry } = input;
+  const { entry, account } = input;
   const isForwarded = entry.kind === ChannelInboundKind.Owner && entry.forwarded;
   if (isForwarded) return null;
-  const commandInput = toCommandInput(input);
-  const command = parseAccountCommand(commandInput);
-  if (command === null || commandInput.listReplyId === null) return command;
-  return { ...command, locale: input.account.locale };
+  return parseAccountCommand(toCommandInput({ entry, locale: account.locale }));
 }
 
 async function answerLocally(input: AnswerInput): Promise<ReceiveAccountMessageResult> {

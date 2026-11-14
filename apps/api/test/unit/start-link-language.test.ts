@@ -22,8 +22,8 @@ describe('startLinkLocaleOf', () => {
     expect(startLinkLocaleOf({ values: [language] })).toBe(locale);
   });
 
-  it('takes the product default locale when the parameter is absent', () => {
-    expect(startLinkLocaleOf({ values: undefined })).toBe(OwnerLocale.PortugueseBrazil);
+  it('takes the English fallback when the parameter is absent', () => {
+    expect(startLinkLocaleOf({ values: undefined })).toBe(OwnerLocale.EnglishUs);
   });
 
   it.each(['', 'EN', 'zh-CN', 'zh_CN', 'es-MX', 'FR', 'it', 'pt-br', 'pt_BR', 'en_US', 'en ', '__proto__', 'constructor'])(

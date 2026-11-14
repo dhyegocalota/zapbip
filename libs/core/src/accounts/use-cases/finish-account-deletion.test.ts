@@ -117,6 +117,7 @@ describe('finishAccountDeletion', () => {
       const reopened = await openOwnerAccount({
         dependencies: environment.lifecycle,
         waId: BRAZIL_WA_ID,
+        writtenText: null,
         homeNumberId: 'num_home',
         waitlistEnabled,
         createdAt: 1,

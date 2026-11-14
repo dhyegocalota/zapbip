@@ -47,6 +47,7 @@ export function deliver(input: { bindings: Bindings; text: string; waId?: string
     number: TEST_REGISTERED_NUMBER,
     bindings: input.bindings,
     waId: input.waId === undefined ? WA_ID : input.waId,
+    writtenText: input.text,
     channelMessageId: input.channelMessageId === undefined ? nextWamid() : input.channelMessageId,
     entryOf: async () => entry,
   });

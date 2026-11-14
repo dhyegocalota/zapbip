@@ -237,6 +237,7 @@ describe('owner inbound orchestrator', () => {
       number: TEST_REGISTERED_NUMBER,
       bindings,
       waId: WA_ID,
+      writtenText: null,
       channelMessageId: nextWamid(),
       entryOf: async () => imageEntry(),
     });
@@ -253,6 +254,7 @@ describe('owner inbound orchestrator', () => {
       number: TEST_REGISTERED_NUMBER,
       bindings,
       waId: WA_ID,
+      writtenText: null,
       channelMessageId: nextWamid(),
       entryOf: async () => imageEntry(),
     });
@@ -270,6 +272,7 @@ describe('owner inbound orchestrator', () => {
       number: TEST_REGISTERED_NUMBER,
       bindings: bindingsWith({ waitlistEnabled: false }),
       waId: WA_ID,
+      writtenText: null,
       channelMessageId: nextWamid(),
       entryOf,
     });
@@ -295,7 +298,14 @@ describe('owner inbound orchestrator', () => {
       forwarded: false,
       noticeText: null,
     });
-    await receiveOwnerInbound({ number: TEST_REGISTERED_NUMBER, bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf });
+    await receiveOwnerInbound({
+      number: TEST_REGISTERED_NUMBER,
+      bindings,
+      waId: WA_ID,
+      writtenText: null,
+      channelMessageId: nextWamid(),
+      entryOf,
+    });
     expect(entryOf).toHaveBeenCalledWith(expect.objectContaining({ downloadsMedia: true }));
   });
 
@@ -306,6 +316,7 @@ describe('owner inbound orchestrator', () => {
       number: TEST_REGISTERED_NUMBER,
       bindings: bindingsWith({ waitlistEnabled: true }),
       waId: WA_ID,
+      writtenText: null,
       channelMessageId: nextWamid(),
       entryOf,
     });
