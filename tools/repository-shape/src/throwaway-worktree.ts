@@ -2,16 +2,18 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { DOCS_LANGUAGE_FOLDERS } from '@zapbip/types';
 import { REPOSITORY_ROOT } from './repository-files';
 
 export const REPOSITORY_ROOT_FOR_PROOFS = REPOSITORY_ROOT;
 export const PROOF_ENVIRONMENT_VARIABLE = 'ZAPBIP_WORKTREE_PROOF';
 export const IS_INSIDE_PROOF = process.env[PROOF_ENVIRONMENT_VARIABLE] !== undefined;
 export const WORKTREE_PROOF_TIMEOUT_MS = 1_200_000;
+const TRANSLATED_DOCS_FOLDERS = Object.values(DOCS_LANGUAGE_FOLDERS).filter(Boolean).join('|');
 export const GENERATED_PATTERNS = [
   /^libs\/agents\/src\/generated\//,
-  /^apps\/docs\/(?:pt-br\/)?agents\/[a-z0-9-]+\.mdx$/,
-  /^apps\/docs\/snippets\/(?:pt-br\/)?agents\//,
+  new RegExp(`^apps/docs/(?:(?:${TRANSLATED_DOCS_FOLDERS})/)?agents/[a-z0-9-]+\\.mdx$`),
+  new RegExp(`^apps/docs/snippets/(?:(?:${TRANSLATED_DOCS_FOLDERS})/)?agents/`),
   /^apps\/docs\/docs\.json$/,
   /^\.github\/workflows\/verify\.yml$/,
 ];

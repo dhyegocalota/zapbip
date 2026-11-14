@@ -4,6 +4,7 @@ import { parseAccountCommand } from './command';
 import { COMMAND_WORDS, MENU_COMMAND_KINDS } from './command-words';
 
 const LOCALES = Object.values(OwnerLocale);
+const COMMAND_TEXTS = [...new Set(COMMAND_WORDS.map((entry) => entry.words))];
 const SPOKEN_KINDS = Object.values(CommandKind).filter((kind) => kind !== CommandKind.Unknown);
 const COMMAND_PHRASE = (words: string): { text: string; isQuoting: boolean; listReplyId: null } => ({
   text: words,
@@ -43,6 +44,14 @@ const ORDINARY_MESSAGES = [
   'agents are great',
 ];
 
+function kindsOfText(words: string): Set<CommandKind> {
+  return new Set(COMMAND_WORDS.filter((entry) => entry.words === words).map((entry) => entry.kind));
+}
+
+function localesOfText(words: string): OwnerLocale[] {
+  return COMMAND_WORDS.filter((entry) => entry.words === words).map((entry) => entry.locale);
+}
+
 describe('the command words of the eight languages', () => {
   it.each(LOCALES)('gives %s a word for every command', (locale) => {
     const kinds = COMMAND_WORDS.filter((entry) => entry.locale === locale).map((entry) => entry.kind);
@@ -57,15 +66,11 @@ describe('the command words of the eight languages', () => {
   });
 
   it('never gives one text two kinds, or two languages for different kinds', () => {
-    const kindsOfText = new Map<string, Set<CommandKind>>();
-    COMMAND_WORDS.forEach((entry) => kindsOfText.set(entry.words, new Set([...(kindsOfText.get(entry.words) ?? []), entry.kind])));
-    expect([...kindsOfText].filter(([, kinds]) => kinds.size > 1).map(([words]) => words)).toEqual([]);
+    expect(COMMAND_TEXTS.filter((words) => kindsOfText(words).size > 1)).toEqual([]);
   });
 
   it('lets a text answer in more than one language only when it is the shared menu or the same word', () => {
-    const localesOfText = new Map<string, OwnerLocale[]>();
-    COMMAND_WORDS.forEach((entry) => localesOfText.set(entry.words, [...(localesOfText.get(entry.words) ?? []), entry.locale]));
-    const shared = [...localesOfText].filter(([, locales]) => locales.length > 1).map(([words]) => words);
+    const shared = COMMAND_TEXTS.filter((words) => localesOfText(words).length > 1);
     expect(shared.sort()).toEqual(['menu']);
   });
 
