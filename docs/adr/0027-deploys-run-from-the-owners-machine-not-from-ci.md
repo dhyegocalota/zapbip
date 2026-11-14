@@ -1,6 +1,6 @@
 # 0027. Deploys run from the owner's machine, and CI does not deploy
 
-- Status: Accepted
+- Status: Superseded by [0063](0063-an-agent-may-deploy-when-the-command-names-the-environment.md)
 - Date: 2026-11-06
 - Deciders: Dhyego Calota (owner, delegated); Claude (advisor)
 - Inspired by: [ADR 0005](0005-the-local-gate-runs-what-the-diff-can-break.md), which keeps the gate local because hosted CI is not the proof the harness waits for; the owner's rule that production deploys are only ever run by the owner

@@ -11,9 +11,7 @@ export const HINDI_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: 'हम कौन हैं',
-        paragraphs: [
-          'zapbip, {tradeName} की सेवा है, जो {legalName} (CNPJ {cnpj}, {address}) का व्यापारिक नाम है। संपर्क: {contactEmail}।',
-        ],
+        paragraphs: ['zapbip, {tradeName} की सेवा है, जो {legalName} (CNPJ {cnpj}) का व्यापारिक नाम है। संपर्क: {contactEmail}।'],
         items: [],
       },
       {
@@ -113,7 +111,7 @@ export const HINDI_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'ज़िम्मेदार कौन है',
         paragraphs: [
-          '{tradeName} ({legalName}, CNPJ {cnpj}, {address}) आपके व्यक्तिगत डेटा का नियंत्रक है। हमारे डेटा संरक्षण अधिकारी से {contactEmail} पर संपर्क किया जा सकता है।',
+          '{tradeName} ({legalName}, CNPJ {cnpj}) आपके व्यक्तिगत डेटा का नियंत्रक है। हमारे डेटा संरक्षण अधिकारी से {contactEmail} पर संपर्क किया जा सकता है।',
         ],
         items: [],
       },

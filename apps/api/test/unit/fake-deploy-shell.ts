@@ -155,7 +155,6 @@ export const COMPLETE_COMPANY: CompanyFacts = {
   legalName: 'Logic Bit Tecnologia Ltda',
   tradeName: 'Logic Bit',
   cnpj: '00.000.000/0001-00',
-  address: 'Rua Exemplo 1, Sao Paulo',
   website: 'https://logicbit.example',
   contactEmail: 'contact@logicbit.example',
 };

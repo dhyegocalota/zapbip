@@ -46,7 +46,7 @@ function workerInput(input: {
   environment?: DeployEnvironment;
   shell?: FakeShell;
   block?: DeployBlock;
-  isInteractive?: boolean;
+  canConfirm?: boolean;
   firstDeploy?: boolean;
   environmentVariables?: EnvironmentVariables;
   company?: CompanyFacts;
@@ -56,7 +56,7 @@ function workerInput(input: {
   workerFacts?: WorkerFacts;
   warnings?: PreflightWarning[];
 }) {
-  const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false, warnings = [] } = input;
+  const { environment = DeployEnvironment.Staging, canConfirm = true, firstDeploy = false, warnings = [] } = input;
   const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES } = input;
   const {
     block = blockOf({ environment }),
@@ -72,7 +72,7 @@ function workerInput(input: {
     block,
     workerFacts,
     shell,
-    isInteractive,
+    canConfirm,
     environmentVariables,
     company,
     npmVersion,
@@ -98,7 +98,7 @@ describe('worker preflight', () => {
 
   it('refuses a terminal that is not interactive and records no command', async () => {
     const shell = fakeShell({});
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, isInteractive: false }));
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, canConfirm: false }));
     expect(refusal?.step).toBe(PreflightStep.Environment);
     expect(refusal?.message).toContain('interactive');
     expect(shell.commands).toEqual([]);

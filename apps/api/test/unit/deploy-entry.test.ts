@@ -50,6 +50,7 @@ async function deploy(input: {
   shell?: FakeShell;
   answers?: string[];
   isInteractive?: boolean;
+  confirmedEnvironment?: DeployEnvironment | null;
   firstDeploy?: boolean;
 }) {
   const {
@@ -57,6 +58,7 @@ async function deploy(input: {
     shell = fakeShell({ replies: REPLIES }),
     answers = [],
     isInteractive = true,
+    confirmedEnvironment = null,
     firstDeploy = false,
   } = input;
   const prompt = fakePrompt({ answers });
@@ -69,6 +71,7 @@ async function deploy(input: {
     shell,
     prompt,
     isInteractive,
+    confirmedEnvironment,
     environmentVariables: COMPLETE_VARIABLES,
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
@@ -112,6 +115,27 @@ describe('deploy entry', () => {
     const { exitCode, shell, output } = await deploy({ isInteractive: false });
     expect(exitCode).toBe(1);
     expect(output).toContain('interactive');
+    expect(shell.commands).toEqual([]);
+  });
+
+  it('deploys production without a terminal when --confirm names production, and asks nothing', async () => {
+    const { exitCode, shell, prompt } = await deploy({
+      environment: DeployEnvironment.Production,
+      isInteractive: false,
+      confirmedEnvironment: DeployEnvironment.Production,
+    });
+    expect(exitCode).toBe(0);
+    expect(shell.commands).toContain(`${WRANGLER} deploy`);
+    expect(prompt.questions).toEqual([]);
+  });
+
+  it('refuses without a terminal when --confirm names another environment', async () => {
+    const { exitCode, shell } = await deploy({
+      environment: DeployEnvironment.Production,
+      isInteractive: false,
+      confirmedEnvironment: DeployEnvironment.Staging,
+    });
+    expect(exitCode).toBe(1);
     expect(shell.commands).toEqual([]);
   });
 

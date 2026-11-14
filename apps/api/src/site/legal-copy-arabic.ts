@@ -11,9 +11,7 @@ export const ARABIC_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: 'من نحن',
-        paragraphs: [
-          'zapbip خدمة تقدّمها {tradeName}، وهي الاسم التجاري لـ {legalName}، رقم CNPJ {cnpj}، {address}. للتواصل: {contactEmail}.',
-        ],
+        paragraphs: ['zapbip خدمة تقدّمها {tradeName}، وهي الاسم التجاري لـ {legalName}، رقم CNPJ {cnpj}. للتواصل: {contactEmail}.'],
         items: [],
       },
       {
@@ -111,7 +109,7 @@ export const ARABIC_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'من المسؤول',
         paragraphs: [
-          '{tradeName} ({legalName}، رقم CNPJ {cnpj}، {address}) هي المتحكّمة في بياناتك الشخصية. يمكن التواصل مع مسؤول حماية البيانات لدينا عبر {contactEmail}.',
+          '{tradeName} ({legalName}، رقم CNPJ {cnpj}) هي المتحكّمة في بياناتك الشخصية. يمكن التواصل مع مسؤول حماية البيانات لدينا عبر {contactEmail}.',
         ],
         items: [],
       },

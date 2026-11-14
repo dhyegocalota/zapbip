@@ -90,7 +90,7 @@ lost_for() {
     gitleaks) echo "the secret scan; pnpm verify fails without it" ;;
     ffmpeg) echo "the recorder's mp4 and gif; a PR that touches UI cannot ship" ;;
     python) echo "the Python plugins' typecheck and tests; pnpm verify fails in a Python plugin" ;;
-    wrangler) echo "the deploy guard refuses every wrangler command, and agent shells can reach the owner's Cloudflare session" ;;
+    wrangler) echo "agent shells can reach the owner's Cloudflare session" ;;
   esac
 }
 

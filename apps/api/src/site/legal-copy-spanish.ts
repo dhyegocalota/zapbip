@@ -11,9 +11,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: 'Quiénes somos',
-        paragraphs: [
-          'zapbip es un servicio de {tradeName}, nombre comercial de {legalName}, CNPJ {cnpj}, {address}. Contacto: {contactEmail}.',
-        ],
+        paragraphs: ['zapbip es un servicio de {tradeName}, nombre comercial de {legalName}, CNPJ {cnpj}. Contacto: {contactEmail}.'],
         items: [],
       },
       {
@@ -92,7 +90,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Ley y tribunales',
         paragraphs: [
-          'Estos términos se rigen por las leyes de Brasil. Las disputas se someten a los tribunales de Belo Horizonte, Minas Gerais, salvo que la ley te permita, como consumidor, acudir a los tribunales de tu lugar de residencia. Estos términos están redactados en portugués y traducidos al español; si ambas versiones difieren, prevalece la versión en portugués.',
+          'Estos términos se rigen por las leyes de Brasil. Las disputas se someten a los tribunales de Brasil, salvo que la ley te permita, como consumidor, acudir a los tribunales de tu lugar de residencia. Estos términos están redactados en portugués y traducidos al español; si ambas versiones difieren, prevalece la versión en portugués.',
         ],
         items: [],
       },
@@ -110,7 +108,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Quién es el responsable',
         paragraphs: [
-          '{tradeName} ({legalName}, CNPJ {cnpj}, {address}) es el responsable del tratamiento de tus datos personales. Nuestro delegado de protección de datos está en {contactEmail}.',
+          '{tradeName} ({legalName}, CNPJ {cnpj}) es el responsable del tratamiento de tus datos personales. Nuestro delegado de protección de datos está en {contactEmail}.',
         ],
         items: [],
       },

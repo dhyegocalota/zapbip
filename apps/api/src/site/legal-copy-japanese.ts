@@ -11,7 +11,7 @@ export const JAPANESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: '運営者について',
-        paragraphs: ['zapbipは、{legalName}(CNPJ {cnpj}、{address})の商号である{tradeName}が提供するサービスです。連絡先: {contactEmail}'],
+        paragraphs: ['zapbipは、{legalName}(CNPJ {cnpj})の商号である{tradeName}が提供するサービスです。連絡先: {contactEmail}'],
         items: [],
       },
       {
@@ -105,7 +105,7 @@ export const JAPANESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: '責任者',
         paragraphs: [
-          '{tradeName}({legalName}、CNPJ {cnpj}、{address})が、お客様の個人データの管理者です。データ保護責任者には {contactEmail} で連絡できます。',
+          '{tradeName}({legalName}、CNPJ {cnpj})が、お客様の個人データの管理者です。データ保護責任者には {contactEmail} で連絡できます。',
         ],
         items: [],
       },

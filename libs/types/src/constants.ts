@@ -66,7 +66,6 @@ export type CompanyFacts = {
   legalName: string;
   tradeName: string;
   cnpj: string;
-  address: string;
   website: string;
   contactEmail: string;
 };
@@ -75,7 +74,6 @@ export const COMPANY = {
   tradeName: 'Logic Bit',
   legalName: 'Logic Bit AI Software Boutique Ltda',
   cnpj: '32.555.315/0001-91',
-  address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
   website: 'https://logicbit.com.br',
   contactEmail: 'support@zapbip.com',
 } as const;

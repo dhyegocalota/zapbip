@@ -47,7 +47,7 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0024](0024-a-standby-gets-a-copy-of-the-owner-message.md) | A standby gets a copy of the owner's message, never its primary's inbox | Accepted | 2026-11-06 |
 | [0025](0025-a-stale-poller-degrades-the-effective-rung.md) | Pollers are recorded per connection, and a stale poller degrades the effective rung | Accepted | 2026-11-06 |
 | [0026](0026-runbooks-live-in-the-repository-not-on-mintlify.md) | Runbooks live in the repository, not on Mintlify | Accepted | 2026-11-06 |
-| [0027](0027-deploys-run-from-the-owners-machine-not-from-ci.md) | Deploys run from the owner's machine, and CI does not deploy | Accepted | 2026-11-06 |
+| [0027](0027-deploys-run-from-the-owners-machine-not-from-ci.md) | Deploys run from the owner's machine, and CI does not deploy | Superseded by [0063](0063-an-agent-may-deploy-when-the-command-names-the-environment.md) | 2026-11-06 |
 | [0028](0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md) | The native channel plugin is the first rung for OpenClaw and Hermes | Accepted | 2026-11-06 |
 | [0029](0029-a-plugin-acknowledges-a-handoff-and-a-listener-does-not.md) | A plugin acknowledges after the handoff; a listener acknowledges after it prints | Accepted | 2026-11-06 |
 | [0030](0030-the-docs-speak-to-any-ai-user-in-two-languages-and-the-switcher-picks-the-language.md) | The docs speak to any AI user in two languages, and the switcher picks the language | Accepted | 2026-11-06 |
@@ -83,3 +83,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0060](0060-the-site-shows-the-github-star-count-the-worker-reads-and-caches-and-says-it-is-open-source.md) | The site shows the GitHub star count the Worker reads and caches, and says it is open source | Accepted | 2026-11-14 |
 | [0061](0061-the-public-docs-carry-an-open-source-section-and-link-the-runbooks.md) | The public docs carry an open source section and link the runbooks | Accepted | 2026-11-14 |
 | [0062](0062-an-agent-opens-the-form-already-filled-in-and-the-person-presses-the-button.md) | An agent opens the form already filled in and the person presses the button | Accepted | 2026-11-14 |
+| [0063](0063-an-agent-may-deploy-when-the-command-names-the-environment.md) | An agent may deploy when the command names the environment | Accepted | 2026-11-14 |

@@ -24,6 +24,7 @@ import { missingSmokeInputs } from './smoke-inputs';
 import { WarnedWorkerSecret, WorkerSecret } from './worker-secret';
 import { INSTALL_ROUTE_PATH } from './worker-facts';
 
+const REFUSAL_CANNOT_CONFIRM = 'deploy needs an interactive terminal or --confirm <environment>';
 const PNPM = 'pnpm';
 const GIT = 'git';
 const NPM = 'npm';
@@ -83,7 +84,7 @@ export type WorkerPreflightInput = {
   block: DeployBlock;
   workerFacts: WorkerFacts;
   shell: DeployShell;
-  isInteractive: boolean;
+  canConfirm: boolean;
   environmentVariables: EnvironmentVariables;
   company: CompanyFacts;
   npmVersion: string;
@@ -148,7 +149,7 @@ function placeholderPathsOf(input: { value: unknown; path: string }): string[] {
 async function refuseUnlessDeployable(input: WorkerPreflightInput): Promise<string | null> {
   if (!DEPLOYABLE_ENVIRONMENTS.includes(input.environment))
     return `deploy supports ${DEPLOYABLE_ENVIRONMENTS.join(' or ')}, not ${input.environment}`;
-  if (!input.isInteractive) return 'deploy needs an interactive terminal';
+  if (!input.canConfirm) return REFUSAL_CANNOT_CONFIRM;
   return null;
 }
 

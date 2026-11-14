@@ -31,9 +31,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
       sections: [
         {
           heading: 'Who we are',
-          paragraphs: [
-            'zapbip is a service of {tradeName}, the trade name of {legalName}, CNPJ {cnpj}, {address}. Contact: {contactEmail}.',
-          ],
+          paragraphs: ['zapbip is a service of {tradeName}, the trade name of {legalName}, CNPJ {cnpj}. Contact: {contactEmail}.'],
           items: [],
         },
         {
@@ -112,7 +110,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'Law and courts',
           paragraphs: [
-            'These terms follow the laws of Brazil. Disputes go to the courts of Belo Horizonte, Minas Gerais, unless the law lets you, as a consumer, use the courts where you live. These terms are written in Portuguese and in English; if the two differ, the Portuguese version prevails.',
+            'These terms follow the laws of Brazil. Disputes go to the courts of Brazil, unless the law lets you, as a consumer, use the courts where you live. These terms are written in Portuguese and in English; if the two differ, the Portuguese version prevails.',
           ],
           items: [],
         },
@@ -132,9 +130,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
       sections: [
         {
           heading: 'Quem somos',
-          paragraphs: [
-            'O zapbip é um serviço da {tradeName}, nome fantasia de {legalName}, CNPJ {cnpj}, {address}. Contato: {contactEmail}.',
-          ],
+          paragraphs: ['O zapbip é um serviço da {tradeName}, nome fantasia de {legalName}, CNPJ {cnpj}. Contato: {contactEmail}.'],
           items: [],
         },
         {
@@ -211,7 +207,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'Lei e foro',
           paragraphs: [
-            'Estes termos seguem as leis do Brasil. Fica eleito o foro de Belo Horizonte, Minas Gerais, salvo quando a lei garantir a você, como consumidor, o foro do seu domicílio. Estes termos estão escritos em português e em inglês; se as versões divergirem, vale a versão em português.',
+            'Estes termos seguem as leis do Brasil. Fica eleito o foro brasileiro, salvo quando a lei garantir a você, como consumidor, o foro do seu domicílio. Estes termos estão escritos em português e em inglês; se as versões divergirem, vale a versão em português.',
           ],
           items: [],
         },
@@ -242,7 +238,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'Who is responsible',
           paragraphs: [
-            '{tradeName} ({legalName}, CNPJ {cnpj}, {address}) is the controller of your personal data. Our data protection officer can be reached at {contactEmail}.',
+            '{tradeName} ({legalName}, CNPJ {cnpj}) is the controller of your personal data. Our data protection officer can be reached at {contactEmail}.',
           ],
           items: [],
         },
@@ -358,7 +354,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'Quem é o responsável',
           paragraphs: [
-            'A {tradeName} ({legalName}, CNPJ {cnpj}, {address}) é a controladora dos seus dados pessoais. O nosso encarregado de dados atende pelo e-mail {contactEmail}.',
+            'A {tradeName} ({legalName}, CNPJ {cnpj}) é a controladora dos seus dados pessoais. O nosso encarregado de dados atende pelo e-mail {contactEmail}.',
           ],
           items: [],
         },
@@ -499,7 +495,6 @@ function legalValuesOf(input: { locale: OwnerLocale }): Record<string, string> {
     tradeName: COMPANY.tradeName,
     legalName: COMPANY.legalName,
     cnpj: COMPANY.cnpj,
-    address: COMPANY.address,
     free: formatCount({ count: PRICING_FREE_MESSAGES, locale }),
     messageDays: daysOf({ milliseconds: QUEUE_RETENTION_MS, locale }),
     mediaDays: daysOf({ milliseconds: MEDIA_RETENTION_MS, locale }),

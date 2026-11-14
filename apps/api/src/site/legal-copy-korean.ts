@@ -11,7 +11,7 @@ export const KOREAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: '운영자 정보',
-        paragraphs: ['zapbip은 {legalName}(CNPJ {cnpj}, {address})의 상호인 {tradeName}이 제공하는 서비스입니다. 문의: {contactEmail}'],
+        paragraphs: ['zapbip은 {legalName}(CNPJ {cnpj})의 상호인 {tradeName}이 제공하는 서비스입니다. 문의: {contactEmail}'],
         items: [],
       },
       {
@@ -105,7 +105,7 @@ export const KOREAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: '책임자',
         paragraphs: [
-          '{tradeName}({legalName}, CNPJ {cnpj}, {address})이 회원님의 개인정보 처리자입니다. 개인정보 보호책임자는 {contactEmail}로 연락할 수 있습니다.',
+          '{tradeName}({legalName}, CNPJ {cnpj})이 회원님의 개인정보 처리자입니다. 개인정보 보호책임자는 {contactEmail}로 연락할 수 있습니다.',
         ],
         items: [],
       },
