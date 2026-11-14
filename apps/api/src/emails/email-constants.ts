@@ -8,3 +8,4 @@ export const EMAIL_REPLY_TO = COMPANY.contactEmail;
 export const SUBSCRIBER_DIGEST_RECIPIENT = COMPANY.contactEmail;
 export const WELCOME_IDEMPOTENCY_PREFIX = 'welcome-';
 export const SUBSCRIBER_DIGEST_IDEMPOTENCY_PREFIX = 'subscriber-digest-';
+export const OWNER_TIME_ZONE = 'America/Sao_Paulo';
