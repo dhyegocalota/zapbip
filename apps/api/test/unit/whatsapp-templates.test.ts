@@ -63,7 +63,7 @@ describe('WhatsApp templates', () => {
     },
   );
 
-  it('AU-96 maps each owner locale to its language code, and the seven new languages to the English template until theirs is approved', () => {
+  it('AU-96 maps each owner locale to its language code, and every further language to the English template until its own is approved', () => {
     expect(OWNER_LOCALE_TO_LANGUAGE_CODE).toEqual({
       [OwnerLocale.PortugueseBrazil]: WhatsAppLanguageCode.PortugueseBrazil,
       [OwnerLocale.EnglishUs]: WhatsAppLanguageCode.EnglishUs,

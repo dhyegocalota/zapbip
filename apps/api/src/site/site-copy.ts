@@ -6,6 +6,7 @@ import { FRENCH_SITE_COPY } from './site-copy-french';
 import { JAPANESE_SITE_COPY } from './site-copy-japanese';
 import { KOREAN_SITE_COPY } from './site-copy-korean';
 import { ARABIC_SITE_COPY } from './site-copy-arabic';
+import { HINDI_SITE_COPY } from './site-copy-hindi';
 import { CHINESE_SITE_COPY } from './site-copy-chinese';
 
 export { SiteCopyKey };
@@ -516,6 +517,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
   [OwnerLocale.Korean]: KOREAN_SITE_COPY,
   [OwnerLocale.ChineseSimplified]: CHINESE_SITE_COPY,
   [OwnerLocale.Arabic]: ARABIC_SITE_COPY,
+  [OwnerLocale.Hindi]: HINDI_SITE_COPY,
 };
 
 export function renderSiteCopy(input: { key: SiteCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {

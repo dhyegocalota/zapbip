@@ -22,6 +22,7 @@ const LOCALES_BY_PRIMARY_LANGUAGE: Record<string, OwnerLocale> = {
   ko: OwnerLocale.Korean,
   zh: OwnerLocale.ChineseSimplified,
   ar: OwnerLocale.Arabic,
+  hi: OwnerLocale.Hindi,
 };
 const TRADITIONAL_CHINESE_SUBTAGS = ['hant', 'tw', 'hk', 'mo'];
 const TRADITIONAL_CHINESE_PRIMARY_LANGUAGE = 'zh';

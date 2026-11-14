@@ -7,7 +7,7 @@ import { daysOf, legalTextOf } from '../../src/site/legal-copy';
 import { LegalDocument } from '../../src/site/legal-links';
 import { SITE_COPY } from '../../src/site/site-copy';
 
-const GENDERED_FIRST_PERSON_PATTERN = /(?:ूँगा|ूंगा|ूँगी|ूंगी|ता हूँ|ती हूँ|ता हूं|ती हूं)/;
+const GENDERED_FIRST_PERSON_PATTERN = /(?:[ूऊ][ँं]ग[ाी]|त[ाी] हू[ँं]|रह[ाी] हू[ँं])/;
 const DEVANAGARI_DIGIT_PATTERN = /[०-९]/;
 const COINED_TERMS = ['अभिकर्ता', 'कड़ी', 'संकेत-वाक्य'];
 

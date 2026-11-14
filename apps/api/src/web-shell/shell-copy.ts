@@ -132,6 +132,19 @@ const SHELL_COPY: Record<OwnerLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'من صنع Logic Bit',
     [ShellCopyKey.FooterSupport]: 'الدعم',
   },
+  [OwnerLocale.Hindi]: {
+    [ShellCopyKey.LocaleLabel]: 'भाषा',
+    [ShellCopyKey.ThemeLabel]: 'थीम',
+    [ShellCopyKey.ThemeLight]: 'लाइट',
+    [ShellCopyKey.ThemeDark]: 'डार्क',
+    [ShellCopyKey.ThemeSystem]: 'सिस्टम',
+    [ShellCopyKey.FooterLinksLabel]: 'zapbip के बारे में और जानें',
+    [ShellCopyKey.FooterDocs]: 'डॉक्यूमेंटेशन',
+    [ShellCopyKey.FooterTerms]: 'उपयोग की शर्तें',
+    [ShellCopyKey.FooterPrivacy]: 'गोपनीयता नीति',
+    [ShellCopyKey.FooterMadeBy]: 'Logic Bit ने बनाया',
+    [ShellCopyKey.FooterSupport]: 'सहायता',
+  },
 };
 
 export function renderShellCopy(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
