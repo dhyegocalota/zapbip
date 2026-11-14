@@ -1,6 +1,6 @@
 # Arabic, the ninth language
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-14 (owner delegated)
 **ADRs:** [0053](../../adr/0053-arabic-is-the-ninth-language-and-the-first-that-reads-right-to-left.md)
