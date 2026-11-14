@@ -19,7 +19,7 @@ const LINE_SEPARATOR = '\n';
 
 const PUBLISHED_COMPANY_FACTS = {
   tradeName: 'Logic Bit',
-  legalName: 'Dhyego Fernando Rissao Calota',
+  legalName: 'Logic Bit AI Software Boutique Ltda',
   cnpj: '32.555.315/0001-91',
   address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
   website: 'https://logicbit.com.br',
