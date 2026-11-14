@@ -57,11 +57,11 @@ flowchart TD
 
 - `libs/types`: `ONBOARDING_SETUP_LINKS` and `ONBOARDING_REQUEST_ACCESS_LINKS` per `OwnerLocale`.
 - `libs/core` `receiveAccountMessage`: the `Waitlisted` verdict goes through the existing `approvalCooldowns` port with the key `onboarding_reply` for `ONBOARDING_REPLY_COOLDOWN_MS` (one day). The cooldown starts only after a reply was sent for a message that was not a redelivery.
-- `apps/api` `receiveOwnerInbound`: `refuseOtherNumber` consults `other_number_notices` (migration `0015`, one row per account) for `OTHER_NUMBER_NOTICE_COOLDOWN_MS` (one day) and adds the `wa.me` link of the home number to the copy.
+- `apps/api` `receiveOwnerInbound`: `refuseOtherNumber` claims `other_number_notices` (migration `0015`, one row per account) for `OTHER_NUMBER_NOTICE_COOLDOWN_MS` (one day) and adds the `wa.me` link of the home number to the copy.
 
 ### Failure handling
 
-- A failed send leaves the cooldown unstarted, so the webhook retry replies.
+- A failed send of the waitlisted reply leaves its cooldown unstarted, so the webhook retry replies. The other-number notice is claimed with one conditional upsert before the send, so two deliveries at once send one; a failed send there is not retried until the cooldown ends.
 - A deleted account loses its `other_number_notices` row in the same batch as the rest of its rows; the Durable Object cooldown goes with the object.
 
 ## Open questions → answers

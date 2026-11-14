@@ -127,20 +127,17 @@ async function refuseOtherNumber(input: { bindings: Bindings; number: Registered
   }
   const home = await registry.findNumber({ numberId: account.homeNumberId });
   if (home === null) throw new Error(`account ${account.accountId} has no home number`);
-  const notices = new D1OtherNumberNotices({ database: bindings.CONNECTIONS });
-  const { accountId } = account;
-  const isCoolingDown = await notices.isCoolingDown({
-    accountId,
+  const isClaimed = await new D1OtherNumberNotices({ database: bindings.CONNECTIONS }).claim({
+    accountId: account.accountId,
     now: createPlatformClock().now(),
     cooldownMs: OTHER_NUMBER_NOTICE_COOLDOWN_MS,
   });
-  if (isCoolingDown) return DROPPED_RESULT;
+  if (!isClaimed) return DROPPED_RESULT;
   const text = fillCopyTokens({
     text: WHATSAPP_COPY[account.locale][OwnerCopyKey.AccountOnOtherNumber],
     values: { displayNumber: home.displayNumber, whatsAppLink: `${WHATSAPP_LINK_ORIGIN}/${digitsOf({ value: home.displayNumber })}` },
   });
   await sendNumberNotice({ bindings, registry, numberId: number.numberId, waId: account.waId, text });
-  await notices.record({ accountId, noticedAt: createPlatformClock().now() });
   return DROPPED_RESULT;
 }
 
