@@ -17,7 +17,16 @@ const SCRIPT_SOURCE = `(function () {
   var TYPING_CLASS = 'has-typing';
   var REVEAL_CLASS = 'has-reveal';
   var VISIBLE_CLASS = 'is-visible';
+  var IDLE_FALLBACK_MS = 1;
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function whenIdle(task) {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(task);
+      return;
+    }
+    window.setTimeout(task, IDLE_FALLBACK_MS);
+  }
 
   function byId(id) {
     return document.getElementById(id);
@@ -140,8 +149,10 @@ const SCRIPT_SOURCE = `(function () {
       reveal(tab, reducedMotion ? 'auto' : 'smooth');
       if (shouldFocus) tab.focus({ preventScroll: true });
     }
-    reveal(document.querySelector('.start-tab[aria-selected="true"]'), 'auto');
-    fade();
+    whenIdle(function () {
+      reveal(document.querySelector('.start-tab[aria-selected="true"]'), 'auto');
+      fade();
+    });
     tabs.forEach(function (tab, index) {
       tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
       tab.addEventListener('click', function (event) {
