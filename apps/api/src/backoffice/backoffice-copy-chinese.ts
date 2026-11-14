@@ -16,7 +16,6 @@ export const CHINESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'zapbip 后台 · {environment}',
   [BackofficeCopyKey.SignInTitle]: '登录',
   [BackofficeCopyKey.SignInEyebrow]: '运营人员入口',
-  [BackofficeCopyKey.SignInLead]: '先输入邮箱和密码，再输入身份验证器应用中的验证码。',
   [BackofficeCopyKey.SignInEmailLabel]: '邮箱',
   [BackofficeCopyKey.SignInPasswordLabel]: '密码',
   [BackofficeCopyKey.SignInCodeLead]: '请输入身份验证器应用中的 6 位验证码。此步骤将在 5 分钟后失效。',

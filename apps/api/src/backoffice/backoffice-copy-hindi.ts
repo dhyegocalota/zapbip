@@ -16,7 +16,6 @@ export const HINDI_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'zapbip बैकऑफ़िस · {environment}',
   [BackofficeCopyKey.SignInTitle]: 'लॉग इन',
   [BackofficeCopyKey.SignInEyebrow]: 'ऑपरेटर एक्सेस',
-  [BackofficeCopyKey.SignInLead]: 'पहले अपना ईमेल और पासवर्ड, फिर अपने ऑथेंटिकेटर ऐप का कोड।',
   [BackofficeCopyKey.SignInEmailLabel]: 'ईमेल',
   [BackofficeCopyKey.SignInPasswordLabel]: 'पासवर्ड',
   [BackofficeCopyKey.SignInCodeLead]: 'अपने ऑथेंटिकेटर ऐप का 6 अंकों का कोड डालें। यह स्टेप 5 मिनट में एक्सपायर हो जाता है।',
