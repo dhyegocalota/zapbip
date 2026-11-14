@@ -7,10 +7,6 @@
     },
     "agents": {
       "type": "object",
-      "propertyNames": {
-        "type": "string",
-        "enum": ["claude-code", "codex"]
-      },
       "additionalProperties": {
         "type": "object",
         "properties": {
@@ -28,9 +24,6 @@
           },
           "environment": {
             "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
             "additionalProperties": {
               "type": "string"
             },

@@ -22,9 +22,7 @@ const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const NAVIGATION_FILE = 'apps/docs/docs.json';
 const HARNESS_FOLDERS = ['.claude/', '.codex/'];
 const HARNESS_LITERAL_EXEMPT_FILES = ['.agents/hooks/doctor.sh', '.agents/hooks/remind-docs.sh'];
-// NB ADR 0065: the connector config schema lists the connector clients of the registry, so it is generated output and exempt
 const FULLY_EXEMPT_FILES = [
-  'apps/docs/schemas/connector-config.json',
   '.agents/hooks/hooks.test.sh',
   '.agents/skills/brainstorming/scripts/start-server.sh',
   '.agents/skills/brainstorming/scripts/server.cjs',

@@ -199,10 +199,11 @@ describe.each(CONNECTOR_CLIENTS)('launchOf the %s client', (client) => {
 
 describe('launchOf across clients', () => {
   it('leaves every other client on its defaults', () => {
-    const [, otherClient] = CONNECTOR_CLIENTS;
-    if (otherClient === undefined) throw new Error('the connector needs a second client to compare');
+    const otherClients = CONNECTOR_CLIENTS.filter((client) => client !== SUBJECT_CLIENT);
 
-    expect(launchOf({ config: CONFIG_FOR_SUBJECT, client: otherClient }).command).toBe(CONNECTOR_RUNTIMES[otherClient].binaryName);
+    otherClients.forEach((client) => {
+      expect(launchOf({ config: CONFIG_FOR_SUBJECT, client }).command).toBe(CONNECTOR_RUNTIMES[client].binaryName);
+    });
     expect(launchOf({ config: CONFIG_FOR_SUBJECT, client: SUBJECT_CLIENT }).command).toBe(CUSTOM_COMMAND);
   });
 });

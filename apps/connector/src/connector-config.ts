@@ -24,7 +24,11 @@ export const connectorConfigSchema = z.strictObject({
 export type ConnectorConfig = z.infer<typeof connectorConfigSchema>;
 
 export function connectorConfigJsonSchema(): object {
-  return z.toJSONSchema(connectorConfigSchema);
+  return z.toJSONSchema(connectorConfigSchema, {
+    override: ({ jsonSchema }) => {
+      delete jsonSchema.propertyNames;
+    },
+  });
 }
 export type ConnectorLaunch = {
   command: string;
