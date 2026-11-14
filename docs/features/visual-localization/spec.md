@@ -1,6 +1,6 @@
 # Visual localization: every language shows its own examples and animations
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-14 (owner delegated)
 **ADRs:** none; builds on [0047](../../adr/0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md) and removes its English media fallback
