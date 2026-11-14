@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
+import { COMPANY } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -47,7 +48,12 @@ const RELEASE_ASSET_PATTERN = /releases\/download/;
 const CODE_OWNERS_FILE = '.github/CODEOWNERS';
 const CODE_OWNER = '@dhyegocalota';
 const DEPENDABOT_FILE = '.github/dependabot.yml';
-const DEPENDABOT_FRAGMENTS = ['package-ecosystem: npm', 'package-ecosystem: github-actions', 'interval: weekly', 'groups:'];
+const CONTRIBUTOR_AGREEMENT_FILE = '.github/CLA.md';
+const CONTRIBUTOR_AGREEMENT_LINK = 'CLA.md';
+const CONTRIBUTOR_AGREEMENT_GRANTS = ['relicense', 'patent', 'original work', 'AGPL-3.0'];
+const CONTRIBUTING_FILE = '.github/CONTRIBUTING.md';
+const PULL_REQUEST_TEMPLATE = '.github/pull_request_template.md';
+const CONTRIBUTOR_AGREEMENT_CHECKBOX = '- [ ] ✍️ I agree to the [Contributor License Agreement]';
 const PYPROJECT_VERSION_PATTERN = /^version = "(.+)"$/m;
 
 type PackageManifest = { private?: boolean; version?: string; license?: string; repository?: { directory?: string } };
@@ -160,8 +166,18 @@ describe('open source', () => {
     expect(readRepositoryFile(CODE_OWNERS_FILE)).toContain(CODE_OWNER);
   });
 
-  test('dependabot updates npm and the GitHub Actions weekly, grouped', () => {
-    const dependabot = readRepositoryFile(DEPENDABOT_FILE);
-    expect(DEPENDABOT_FRAGMENTS.filter((fragment) => !dependabot.includes(fragment))).toEqual([]);
+  test('no dependabot configuration opens update pull requests', () => {
+    expect(existsSync(repositoryPath(DEPENDABOT_FILE))).toBe(false);
+  });
+
+  test('the contributor license agreement names the company and what it grants', () => {
+    const agreement = readRepositoryFile(CONTRIBUTOR_AGREEMENT_FILE);
+    expect(agreement).toContain(COMPANY.legalName);
+    expect(CONTRIBUTOR_AGREEMENT_GRANTS.filter((grant) => !agreement.includes(grant))).toEqual([]);
+  });
+
+  test('contributing and the pull request template ask for the agreement', () => {
+    expect(readRepositoryFile(CONTRIBUTING_FILE)).toContain(CONTRIBUTOR_AGREEMENT_LINK);
+    expect(readRepositoryFile(PULL_REQUEST_TEMPLATE)).toContain(CONTRIBUTOR_AGREEMENT_CHECKBOX);
   });
 });

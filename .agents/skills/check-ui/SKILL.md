@@ -16,7 +16,7 @@ This command is the `recorder` role run inline. For anything longer than one flo
 3. **Screenshots.** `browser_take_screenshot` for each scene into `.pr-media/<slug>/<nn>-<scene>.png` (lowercase, dashes). Read each image back and confirm it shows what the caption will claim.
 4. **Health.** `browser_console_messages` at error level must be empty. `browser_network_requests` for the feature's calls must all be 2xx; list any that are not.
 5. **Video** (`--video`): follow `.agents/roles/recorder.md` steps 3–4 (`recordVideo` context, close to flush, never `video.path()`, ffmpeg to `walkthrough.mp4` and `walkthrough.gif`).
-6. **Attach** (`--pr <n>`): follow `.agents/roles/recorder.md` steps 5–6: `scripts/pr-media.sh <slug> <files>`, then update the PR body with `gh api repos/{owner}/{repo}/pulls/<n> -X PATCH --field body=@<file>` placing the `.mp4` link under `## Video`, the gif as fallback, and the screenshot table under `## Screenshots`.
+6. **Attach** (`--pr <n>`): follow `.agents/roles/recorder.md` steps 5–6: `scripts/pr-media.sh <n> <files>` attaches each file to the pull request through GitHub's `user-attachments` upload, then update the PR body with `gh api repos/{owner}/{repo}/pulls/<n> -X PATCH --field body=@<file>` placing the `.mp4` link under `## Video`, the gif as fallback, and the screenshot table under `## Screenshots`.
 7. **Report** pass/fail per scene: what rendered, key values on screen, console errors, failing requests, and the media paths or URLs.
 
 `.pr-media/` is git-ignored; never commit media. A bug found here goes back to the plan with a regression test; this command never edits product code.
