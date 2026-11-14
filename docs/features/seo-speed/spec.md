@@ -1,6 +1,6 @@
 # SEO, GEO and speed of the landing page and the app
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** [0052](../../adr/0052-structured-data-is-one-json-ld-graph-built-from-the-same-copy-and-constants-as-the-page.md)
