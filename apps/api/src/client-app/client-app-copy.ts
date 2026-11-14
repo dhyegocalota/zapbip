@@ -5,6 +5,7 @@ import { GERMAN_CLIENT_APP_COPY } from './client-app-copy-german';
 import { FRENCH_CLIENT_APP_COPY } from './client-app-copy-french';
 import { JAPANESE_CLIENT_APP_COPY } from './client-app-copy-japanese';
 import { KOREAN_CLIENT_APP_COPY } from './client-app-copy-korean';
+import { ARABIC_CLIENT_APP_COPY } from './client-app-copy-arabic';
 import { CHINESE_CLIENT_APP_COPY } from './client-app-copy-chinese';
 
 export { ClientAppCopyKey };
@@ -155,6 +156,7 @@ const CLIENT_APP_COPY: Record<OwnerLocale, CopyEntries> = {
   [OwnerLocale.Japanese]: JAPANESE_CLIENT_APP_COPY,
   [OwnerLocale.Korean]: KOREAN_CLIENT_APP_COPY,
   [OwnerLocale.ChineseSimplified]: CHINESE_CLIENT_APP_COPY,
+  [OwnerLocale.Arabic]: ARABIC_CLIENT_APP_COPY,
 };
 
 export function renderClientAppCopy(input: { key: ClientAppCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {

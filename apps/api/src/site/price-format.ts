@@ -8,14 +8,14 @@ import {
   PRICING_PRO_MONTHLY_CENTS,
   type PricingCurrency,
 } from '@zapbip/types';
-import { languageOf } from '../web-shell/locale-profiles';
+import { formattingLocaleOf } from '../web-shell/locale-profiles';
 
 const CENTS_PER_UNIT = 100;
 
 export function formatPrice(input: { cents: number; currency: PricingCurrency; locale: OwnerLocale }): string {
   const amount = input.cents / CENTS_PER_UNIT;
   const isWholeAmount = Number.isInteger(amount);
-  return new Intl.NumberFormat(languageOf({ locale: input.locale }), {
+  return new Intl.NumberFormat(formattingLocaleOf({ locale: input.locale }), {
     style: 'currency',
     currency: input.currency,
     currencyDisplay: 'narrowSymbol',
@@ -25,7 +25,7 @@ export function formatPrice(input: { cents: number; currency: PricingCurrency; l
 }
 
 export function formatCount(input: { count: number; locale: OwnerLocale }): string {
-  return new Intl.NumberFormat(languageOf({ locale: input.locale })).format(input.count);
+  return new Intl.NumberFormat(formattingLocaleOf({ locale: input.locale })).format(input.count);
 }
 
 export type PricingValues = { free: string; included: string; block: string; price: string; overage: string };

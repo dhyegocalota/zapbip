@@ -6,11 +6,12 @@ import { GERMAN_LEGAL_COPY } from './legal-copy-german';
 import { FRENCH_LEGAL_COPY } from './legal-copy-french';
 import { JAPANESE_LEGAL_COPY } from './legal-copy-japanese';
 import { KOREAN_LEGAL_COPY } from './legal-copy-korean';
+import { ARABIC_LEGAL_COPY } from './legal-copy-arabic';
 import { CHINESE_LEGAL_COPY } from './legal-copy-chinese';
 import { formatCount } from './price-format';
 import { leadingAgentNames } from './site-agents';
 import { LEGAL_UPDATED_ON } from './site-constants';
-import { languageOf } from '../web-shell/locale-profiles';
+import { formattingLocaleOf } from '../web-shell/locale-profiles';
 
 export type LegalSection = { heading: string; paragraphs: string[]; items: string[] };
 export type LegalText = { title: string; description: string; summary: string; updated: string; sections: LegalSection[] };
@@ -225,6 +226,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
     [OwnerLocale.Japanese]: JAPANESE_LEGAL_COPY[LegalDocument.Terms],
     [OwnerLocale.Korean]: KOREAN_LEGAL_COPY[LegalDocument.Terms],
     [OwnerLocale.ChineseSimplified]: CHINESE_LEGAL_COPY[LegalDocument.Terms],
+    [OwnerLocale.Arabic]: ARABIC_LEGAL_COPY[LegalDocument.Terms],
   },
   [LegalDocument.Privacy]: {
     [OwnerLocale.EnglishUs]: {
@@ -463,6 +465,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
     [OwnerLocale.Japanese]: JAPANESE_LEGAL_COPY[LegalDocument.Privacy],
     [OwnerLocale.Korean]: KOREAN_LEGAL_COPY[LegalDocument.Privacy],
     [OwnerLocale.ChineseSimplified]: CHINESE_LEGAL_COPY[LegalDocument.Privacy],
+    [OwnerLocale.Arabic]: ARABIC_LEGAL_COPY[LegalDocument.Privacy],
   },
 };
 
@@ -482,7 +485,7 @@ function legalValuesOf(input: { locale: OwnerLocale }): Record<string, string> {
     messageDays: daysOf({ milliseconds: QUEUE_RETENTION_MS, locale }),
     mediaDays: daysOf({ milliseconds: MEDIA_RETENTION_MS, locale }),
     sessionDays: daysOf({ milliseconds: CLIENT_APP_SESSION_TTL_MS, locale }),
-    updatedOn: new Intl.DateTimeFormat(languageOf({ locale }), { dateStyle: 'long', timeZone: UTC_TIME_ZONE }).format(
+    updatedOn: new Intl.DateTimeFormat(formattingLocaleOf({ locale }), { dateStyle: 'long', timeZone: UTC_TIME_ZONE }).format(
       new Date(LEGAL_UPDATED_ON),
     ),
   };

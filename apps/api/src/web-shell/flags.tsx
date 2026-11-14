@@ -28,6 +28,11 @@ const KOREA_TRIGRAM_WIDTH = 3;
 const KOREA_TRIGRAM_HEIGHT = 1.4;
 const CHINA_STAR = '4.00,1.20 4.65,3.11 6.66,3.13 5.05,4.34 5.65,6.27 4.00,5.10 2.35,6.27 2.95,4.34 1.34,3.13 3.35,3.11';
 
+const ARABIC_MOON_CENTER = { x: 9, y: 7 };
+const ARABIC_MOON_RADIUS = 4.2;
+const ARABIC_BITE_CENTER = { x: 10.6 };
+const ARABIC_BITE_RADIUS = 3.5;
+
 type FlagFrameProps = { name: string; children: Child };
 
 function FlagFrame(props: FlagFrameProps) {
@@ -121,6 +126,16 @@ function ChinaFlag() {
   );
 }
 
+function ArabicFlag() {
+  return (
+    <FlagFrame name="ar">
+      <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#007a3d" />
+      <circle cx={ARABIC_MOON_CENTER.x} cy={ARABIC_MOON_CENTER.y} r={ARABIC_MOON_RADIUS} fill="#ffffff" />
+      <circle cx={ARABIC_BITE_CENTER.x} cy={ARABIC_MOON_CENTER.y} r={ARABIC_BITE_RADIUS} fill="#007a3d" />
+    </FlagFrame>
+  );
+}
+
 const FLAGS: Record<OwnerLocale, FC> = {
   [OwnerLocale.EnglishUs]: UnitedStatesFlag,
   [OwnerLocale.PortugueseBrazil]: BrazilFlag,
@@ -130,6 +145,7 @@ const FLAGS: Record<OwnerLocale, FC> = {
   [OwnerLocale.Japanese]: JapanFlag,
   [OwnerLocale.Korean]: KoreaFlag,
   [OwnerLocale.ChineseSimplified]: ChinaFlag,
+  [OwnerLocale.Arabic]: ArabicFlag,
 };
 
 export function Flag(props: { locale: OwnerLocale }) {

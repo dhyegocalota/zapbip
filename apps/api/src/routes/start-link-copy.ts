@@ -47,4 +47,9 @@ export const START_LINK_COPY: Record<OwnerLocale, StartLinkTexts> = {
     unavailableTitle: 'zapbip：马上回来',
     unavailableBody: '目前不接受新的注册。请过几分钟再试。',
   },
+  [OwnerLocale.Arabic]: {
+    htmlLanguage: 'ar',
+    unavailableTitle: 'zapbip: سنعود قريبًا',
+    unavailableBody: 'لا نستقبل تسجيلات جديدة الآن. حاول مرة أخرى بعد بضع دقائق.',
+  },
 };

@@ -119,6 +119,19 @@ const SHELL_COPY: Record<OwnerLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: '由 Logic Bit 打造',
     [ShellCopyKey.FooterSupport]: '支持',
   },
+  [OwnerLocale.Arabic]: {
+    [ShellCopyKey.LocaleLabel]: 'اللغة',
+    [ShellCopyKey.ThemeLabel]: 'المظهر',
+    [ShellCopyKey.ThemeLight]: 'فاتح',
+    [ShellCopyKey.ThemeDark]: 'داكن',
+    [ShellCopyKey.ThemeSystem]: 'حسب النظام',
+    [ShellCopyKey.FooterLinksLabel]: 'اعرف المزيد عن zapbip',
+    [ShellCopyKey.FooterDocs]: 'الوثائق',
+    [ShellCopyKey.FooterTerms]: 'شروط الاستخدام',
+    [ShellCopyKey.FooterPrivacy]: 'سياسة الخصوصية',
+    [ShellCopyKey.FooterMadeBy]: 'من صنع Logic Bit',
+    [ShellCopyKey.FooterSupport]: 'الدعم',
+  },
 };
 
 export function renderShellCopy(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
