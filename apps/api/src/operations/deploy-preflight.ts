@@ -85,6 +85,7 @@ export type WorkerPreflightInput = {
   workerFacts: WorkerFacts;
   shell: DeployShell;
   canConfirm: boolean;
+  skipSmoke: boolean;
   environmentVariables: EnvironmentVariables;
   company: CompanyFacts;
   npmVersion: string;
@@ -460,6 +461,7 @@ async function refusePendingMigrations(input: WorkerPreflightInput): Promise<str
 }
 
 async function refuseMissingSmokeInputs(input: WorkerPreflightInput): Promise<string | null> {
+  if (input.skipSmoke) return null;
   const missing = missingSmokeInputs(input);
   if (missing.length === 0) return null;
   return `set these in .env before deploying: ${missing.join(', ')}`;

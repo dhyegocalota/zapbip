@@ -47,6 +47,7 @@ function workerInput(input: {
   shell?: FakeShell;
   block?: DeployBlock;
   canConfirm?: boolean;
+  skipSmoke?: boolean;
   firstDeploy?: boolean;
   environmentVariables?: EnvironmentVariables;
   company?: CompanyFacts;
@@ -56,7 +57,7 @@ function workerInput(input: {
   workerFacts?: WorkerFacts;
   warnings?: PreflightWarning[];
 }) {
-  const { environment = DeployEnvironment.Staging, canConfirm = true, firstDeploy = false, warnings = [] } = input;
+  const { environment = DeployEnvironment.Staging, canConfirm = true, skipSmoke = false, firstDeploy = false, warnings = [] } = input;
   const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES } = input;
   const {
     block = blockOf({ environment }),
@@ -73,6 +74,7 @@ function workerInput(input: {
     workerFacts,
     shell,
     canConfirm,
+    skipSmoke,
     environmentVariables,
     company,
     npmVersion,
@@ -613,6 +615,12 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ environmentVariables }));
     expect(refusal?.step).toBe(PreflightStep.SmokeInputs);
     expect(refusal?.message).toContain(SmokeInput.OwnerPhone);
+  });
+
+  it('does not look for the smoke inputs when the smoke test is skipped on request', async () => {
+    const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.OwnerPhone]: undefined };
+    const refusal = await runWorkerPreflight(workerInput({ environmentVariables, skipSmoke: true }));
+    expect(refusal?.step).not.toBe(PreflightStep.SmokeInputs);
   });
 
   it('refuses a placeholder smoke input', async () => {
