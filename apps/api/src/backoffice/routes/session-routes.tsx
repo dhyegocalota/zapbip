@@ -33,6 +33,7 @@ sessionRoutes.post(BackofficePath.SignOut, async (context) => {
       targetKind: null,
       targetId: null,
       clientAddress: context.get('clientAddress'),
+      actorKeyId: null,
     },
   });
   deleteCookie(context, SESSION_COOKIE_NAME, { secure: true, path: '/' });

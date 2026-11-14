@@ -32,6 +32,13 @@ const DEPLOYED_BLOCK_MAIN = 'src/index.ts';
 const DEVELOPMENT_BLOCK_MAIN = 'src/index.dev.ts';
 const BACKOFFICE_RATE_LIMITER = 'BACKOFFICE_RATE_LIMITER';
 const BACKOFFICE_LIMIT = { limit: 5, period: 60 };
+const OPERATOR_KEY_RATE_LIMITER = 'OPERATOR_KEY_RATE_LIMITER';
+const OPERATOR_KEY_LIMIT = { limit: 60, period: 60 };
+const OPERATOR_KEY_NAMESPACES: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: '1006',
+  [DeployEnvironment.Staging]: '2006',
+  [DeployEnvironment.Development]: '3006',
+};
 const BACKOFFICE_ORIGINS: Record<DeployEnvironment, string> = {
   [DeployEnvironment.Production]: 'https://backoffice.zapbip.com',
   [DeployEnvironment.Staging]: 'https://backoffice-staging.zapbip.com',
@@ -240,6 +247,11 @@ describe('wrangler config', () => {
   it.each(blockEntries)('the %s block limits backoffice sign-ins to five a minute in its own namespace', (environment, block) => {
     const limiter = block.ratelimits.find((candidate) => candidate.name === BACKOFFICE_RATE_LIMITER);
     expect(limiter).toMatchObject({ namespace_id: BACKOFFICE_NAMESPACES[environment], simple: BACKOFFICE_LIMIT });
+  });
+
+  it.each(blockEntries)('the %s block limits operator keys to sixty calls a minute in its own namespace', (environment, block) => {
+    const limiter = block.ratelimits.find((candidate) => candidate.name === OPERATOR_KEY_RATE_LIMITER);
+    expect(limiter).toMatchObject({ namespace_id: OPERATOR_KEY_NAMESPACES[environment], simple: OPERATOR_KEY_LIMIT });
   });
 
   it('leaves no placeholder in any deployed block', () => {

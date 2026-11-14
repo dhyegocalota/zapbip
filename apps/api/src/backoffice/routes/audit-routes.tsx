@@ -6,7 +6,9 @@ import { signedInPageContext } from '../page-context';
 import { AuditPage, type AuditListRow } from '../views/audit';
 
 const LIST_AUDIT_STATEMENT =
-  'SELECT at, action, target_kind, target_id, outcome, client_address FROM backoffice_audit ORDER BY at DESC LIMIT ?';
+  'SELECT audit.at, audit.action, audit.target_kind, audit.target_id, audit.outcome, audit.client_address, ' +
+  'audit.actor_key_id, agent_key.label AS actor_key_label FROM backoffice_audit AS audit ' +
+  'LEFT JOIN backoffice_agent_keys AS agent_key ON agent_key.id = audit.actor_key_id ORDER BY audit.at DESC, audit.rowid DESC LIMIT ?';
 
 export const auditRoutes = new Hono<BackofficeEnv>();
 
