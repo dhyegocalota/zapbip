@@ -12,7 +12,7 @@
 - [x] `docker compose up --build` answers `/health` with `{"ok":true,"environment":"development"}` — evidence: run on this machine
 - [x] `docker compose exec zapbip pnpm --silent dev:seed ...` prints one `alpha zb_conn_...` line — evidence: run on this machine
 - [x] A restart keeps `secrets.env` byte for byte — evidence: `md5sum` before and after
-- [ ] The Mintlify build renders the new group — BLOCKED: needs the docs gate, run by `pnpm verify` on the docs class
+- [x] The Mintlify build renders the new group in ten languages — evidence: the docs gate, `broken-links` exit 0 and `test:walk` 1800 passed, 10800 skipped, exit 0
 
 ## Edge cases
 
