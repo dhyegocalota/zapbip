@@ -84,7 +84,7 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     liveText: 'v2.4 en ligne',
     deployCommand: 'déploie la v2.4',
     optionsLabel: 'options :',
-    waitingLabel: 'en attente de votre réponse',
+    waitingLabel: 'en attente de réponse',
     answeredLabel: 'le propriétaire a répondu :',
   },
   [OwnerLocale.Japanese]: {
