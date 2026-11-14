@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { GraphRequestError, type GraphClient } from '../adapters/whatsapp/graph-client';
 import { WhatsAppLanguageCode, WhatsAppTemplateName } from '../adapters/whatsapp/whatsapp-enums';
-import { OWNER_LOCALE_TO_LANGUAGE_CODE } from '../adapters/whatsapp/whatsapp-templates';
+import {
+  WHATSAPP_TEMPLATE_BODIES,
+  WHATSAPP_TEMPLATE_QUICK_REPLIES,
+  WHATSAPP_TEMPLATE_SAMPLES,
+} from '../adapters/whatsapp/whatsapp-templates';
 import { GraphErrorKind, graphErrorKindOf } from './graph-error-kind';
 
 export enum VerificationOutcome {
@@ -35,7 +39,14 @@ const NON_DIGITS_PATTERN = /\D/g;
 const APPROVED_STATUS = 'APPROVED';
 const PENDING_STATUSES = ['PENDING', 'IN_APPEAL'];
 const CHECKED_TEMPLATE_NAMES = Object.values(WhatsAppTemplateName);
-const CHECKED_LANGUAGES = [...new Set(Object.values(OWNER_LOCALE_TO_LANGUAGE_CODE))];
+const CHECKED_LANGUAGES = Object.values(WhatsAppLanguageCode);
+
+enum TemplateSubmission {
+  Category = 'UTILITY',
+  BodyComponent = 'BODY',
+  ButtonsComponent = 'BUTTONS',
+  QuickReplyButton = 'QUICK_REPLY',
+}
 
 const phoneResponseSchema = z.object({
   display_phone_number: z.string(),
@@ -78,6 +89,41 @@ function templateEntriesOf(input: { listed: z.infer<typeof templatesResponseSche
   );
 }
 
+function templateSubmissionOf(input: { entry: TemplateEntry }): unknown {
+  const { name, language } = input.entry;
+  return {
+    name,
+    language,
+    category: TemplateSubmission.Category,
+    components: [
+      {
+        type: TemplateSubmission.BodyComponent,
+        text: WHATSAPP_TEMPLATE_BODIES[name][language],
+        example: { body_text: [WHATSAPP_TEMPLATE_SAMPLES[name][language]] },
+      },
+      {
+        type: TemplateSubmission.ButtonsComponent,
+        buttons: [{ type: TemplateSubmission.QuickReplyButton, text: WHATSAPP_TEMPLATE_QUICK_REPLIES[name][language] }],
+      },
+    ],
+  };
+}
+
+async function submitMissingTemplates(input: { graph: GraphClient; wabaId: string; entries: TemplateEntry[] }): Promise<TemplateEntry[]> {
+  return Promise.all(
+    input.entries.map(async (entry) => {
+      if (entry.status !== TemplateStatus.Missing) return entry;
+      try {
+        await input.graph.post({ path: `/${input.wabaId}/message_templates`, body: templateSubmissionOf({ entry }) });
+        return { ...entry, status: TemplateStatus.Pending };
+      } catch (error) {
+        if (error instanceof GraphRequestError) return entry;
+        throw error;
+      }
+    }),
+  );
+}
+
 function failedSnapshot(input: { expectedDigits: string; errorKind: GraphErrorKind; checkedAt: number }): VerificationSnapshot {
   return {
     outcome: VerificationOutcome.Failed,
@@ -114,14 +160,17 @@ export async function verifyNumber(input: {
       await graph.get({ path: `/${wabaId}/message_templates?fields=name,language,status&limit=${TEMPLATE_LIMIT}` }),
     );
     const reportedDigits = digitsOf({ value: phone.display_phone_number });
+    const outcome = reportedDigits === expectedDigits ? VerificationOutcome.Verified : VerificationOutcome.Mismatch;
+    const listedEntries = templateEntriesOf({ listed: templates.data });
     return {
-      outcome: reportedDigits === expectedDigits ? VerificationOutcome.Verified : VerificationOutcome.Mismatch,
+      outcome,
       errorKind: null,
       expectedDigits,
       reportedDigits,
       verifiedName: phone.verified_name,
       qualityRating: phone.quality_rating,
-      templates: templateEntriesOf({ listed: templates.data }),
+      templates:
+        outcome === VerificationOutcome.Verified ? await submitMissingTemplates({ graph, wabaId, entries: listedEntries }) : listedEntries,
       checkedAt: now,
     };
   } catch (error) {

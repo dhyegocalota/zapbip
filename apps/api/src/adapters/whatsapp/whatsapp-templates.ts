@@ -49,6 +49,30 @@ export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Recor
     [WhatsAppLanguageCode.Arabic]: 'رد',
   },
 };
+export const WHATSAPP_TEMPLATE_SAMPLES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, readonly [string, string]>> = {
+  [WhatsAppTemplateName.AgentNotice]: {
+    [WhatsAppLanguageCode.PortugueseBrazil]: ['Agente de teste', 'Mensagem de exemplo'],
+    [WhatsAppLanguageCode.EnglishUs]: ['Test agent', 'Example message'],
+    [WhatsAppLanguageCode.Spanish]: ['Agente de prueba', 'Mensaje de ejemplo'],
+    [WhatsAppLanguageCode.German]: ['Test-Agent', 'Beispielnachricht'],
+    [WhatsAppLanguageCode.French]: ['Agent de test', 'Message d’exemple'],
+    [WhatsAppLanguageCode.Japanese]: ['テストエージェント', 'サンプルメッセージ'],
+    [WhatsAppLanguageCode.Korean]: ['테스트 에이전트', '예시 메시지'],
+    [WhatsAppLanguageCode.ChineseSimplified]: ['测试智能体', '示例消息'],
+    [WhatsAppLanguageCode.Arabic]: ['وكيل تجريبي', 'رسالة مثال'],
+  },
+  [WhatsAppTemplateName.AgentQuestion]: {
+    [WhatsAppLanguageCode.PortugueseBrazil]: ['Agente de teste', 'Pergunta de exemplo'],
+    [WhatsAppLanguageCode.EnglishUs]: ['Test agent', 'Example question'],
+    [WhatsAppLanguageCode.Spanish]: ['Agente de prueba', 'Pregunta de ejemplo'],
+    [WhatsAppLanguageCode.German]: ['Test-Agent', 'Beispielfrage'],
+    [WhatsAppLanguageCode.French]: ['Agent de test', 'Question d’exemple'],
+    [WhatsAppLanguageCode.Japanese]: ['テストエージェント', 'サンプルの質問'],
+    [WhatsAppLanguageCode.Korean]: ['테스트 에이전트', '예시 질문'],
+    [WhatsAppLanguageCode.ChineseSimplified]: ['测试智能体', '示例问题'],
+    [WhatsAppLanguageCode.Arabic]: ['وكيل تجريبي', 'سؤال مثال'],
+  },
+};
 // NB ADR 0051: a language sends the template of its row; the seven new languages send the English one until Meta approves theirs and the row is flipped.
 export const OWNER_LOCALE_TO_LANGUAGE_CODE: Record<OwnerLocale, WhatsAppLanguageCode> = {
   [OwnerLocale.PortugueseBrazil]: WhatsAppLanguageCode.PortugueseBrazil,

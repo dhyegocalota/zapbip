@@ -2,6 +2,7 @@ import { SECOND_MS } from '@zapbip/types';
 
 export const SCHEDULED_CRON = '*/30 * * * *';
 export const BUDGET_CHECK_MINUTE = 0;
+export const TEMPLATE_RECHECK_MINUTE = 30;
 export const MEDIA_RETENTION_HOUR = 3;
 export const MEDIA_RETENTION_MINUTE = 0;
 

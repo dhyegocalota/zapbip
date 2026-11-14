@@ -8,6 +8,7 @@ import {
   TEMPLATE_NAME_BY_KIND,
   WHATSAPP_TEMPLATE_BODIES,
   WHATSAPP_TEMPLATE_QUICK_REPLIES,
+  WHATSAPP_TEMPLATE_SAMPLES,
 } from '../../src/adapters/whatsapp/whatsapp-templates';
 import { assertTemplateBodyHasFixedWords } from '../../src/adapters/whatsapp/template-sanitiser';
 
@@ -18,9 +19,18 @@ describe('WhatsApp templates', () => {
     'lists %s in %s with its exact body and quick reply in the Meta runbook',
     (name, code) => {
       expect(RUNBOOK).toContain(`\`${name}\` | \`${code}\` | \`${WHATSAPP_TEMPLATE_BODIES[name][code]}\``);
-      expect(RUNBOOK).toContain(`\`${WHATSAPP_TEMPLATE_QUICK_REPLIES[name][code]}\` |`);
+      const [firstSample, secondSample] = WHATSAPP_TEMPLATE_SAMPLES[name][code];
+      expect(RUNBOOK).toContain(`\`${firstSample}\`, \`${secondSample}\` | \`${WHATSAPP_TEMPLATE_QUICK_REPLIES[name][code]}\` |`);
     },
   );
+
+  it.each(Object.values(WhatsAppTemplateName))('keeps two samples of %s for every language', (name) => {
+    expect(Object.keys(WHATSAPP_TEMPLATE_SAMPLES[name]).sort()).toEqual(Object.values(WhatsAppLanguageCode).sort());
+    Object.values(WHATSAPP_TEMPLATE_SAMPLES[name]).forEach((samples) => {
+      expect(samples).toHaveLength(2);
+      samples.forEach((sample) => expect(sample.length).toBeGreaterThan(0));
+    });
+  });
 
   it('AU-116 keeps the registered template bodies', () => {
     expect(WHATSAPP_TEMPLATE_BODIES[WhatsAppTemplateName.AgentNotice]).toMatchObject({
