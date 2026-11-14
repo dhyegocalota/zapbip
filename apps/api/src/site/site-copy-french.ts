@@ -237,6 +237,12 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: 'Non. Si vous utilisez un assistant IA, vous le connectez en collant une ligne.',
   [SiteCopyKey.FaqOthersQuestion]: 'Écrit-il à d’autres personnes\u202f?',
   [SiteCopyKey.FaqOthersAnswer]: 'Non. zapbip ne parle qu’à vous, sur votre WhatsApp habituel, via l’API Cloud officielle de WhatsApp.',
+  [SiteCopyKey.FaqMessageKindsQuestion]: 'Quels messages WhatsApp fonctionnent ?',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    'Texte, photos, vidéos, audios et messages vocaux, fichiers, stickers, positions, cartes de contact, réactions et appuis sur des boutons ou des listes. Tout autre type n’est pas pris en charge : vous recevez un bref avis, et votre IA ne reçoit rien.',
+  [SiteCopyKey.FaqUnofficialQuestion]: 'Puis-je utiliser un outil WhatsApp non officiel ?',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    'Non. zapbip utilise uniquement l’API officielle WhatsApp Cloud de Meta. Il ne fonctionne pas avec l’automatisation de WhatsApp Web, des bibliothèques non officielles comme Baileys, ni avec un code QR qui relie votre compte personnel.',
   [SiteCopyKey.FaqManyQuestion]: 'Plusieurs agents peuvent-ils le partager\u202f?',
   [SiteCopyKey.FaqManyAnswer]:
     'Oui. Tous vos agents vous écrivent depuis le numéro de zapbip, et chaque réponse retourne à l’agent qui a posé la question.',
@@ -281,5 +287,5 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'Page introuvable',
   [SiteCopyKey.AgentsTitle]: 'Pour les agents IA',
   [SiteCopyKey.AgentsBody]:
-    'Un agent peut aider la personne pour qui il travaille à rejoindre la liste, mais c’est la personne qui appuie sur le bouton\u00a0: le formulaire a un captcha que seul un humain résout. Ouvrez {joinLink} en remplaçant name@example.com par l’adresse de la personne, pour que le formulaire s’ouvre déjà rempli, puis demandez-lui d’appuyer sur le bouton du formulaire. La même aide est un outil WebMCP sur chaque page.',
+    'Un agent peut aider la personne pour qui il travaille à rejoindre la liste, mais c’est la personne qui appuie sur le bouton\u00a0: le formulaire a un captcha que seul un humain résout. Ouvrez {joinLink} en remplaçant name@example.com par l’adresse de la personne, pour que le formulaire s’ouvre déjà rempli, puis demandez-lui d’appuyer sur le bouton du formulaire. La même aide est un outil WebMCP sur chaque page. Écrivez le signe plus de l’adresse sous la forme %2B, car un + littéral arrive comme un espace.',
 };

@@ -236,6 +236,12 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqDeveloperAnswer]: 'No. If you use an AI assistant, you connect it by pasting one line.',
     [SiteCopyKey.FaqOthersQuestion]: 'Does it message other people?',
     [SiteCopyKey.FaqOthersAnswer]: 'No. zapbip talks only to you, on your normal WhatsApp, through the official WhatsApp Cloud API.',
+    [SiteCopyKey.FaqMessageKindsQuestion]: 'Which WhatsApp messages work?',
+    [SiteCopyKey.FaqMessageKindsAnswer]:
+      'Text, photos, videos, audio, files, stickers, locations, contact cards, reactions, and taps on buttons or lists. Any other kind is not supported: you get a short notice and your AI receives nothing.',
+    [SiteCopyKey.FaqUnofficialQuestion]: 'Can I use an unofficial WhatsApp tool?',
+    [SiteCopyKey.FaqUnofficialAnswer]:
+      'No. zapbip uses only the official WhatsApp Cloud API from Meta. It does not work with WhatsApp Web automation, unofficial libraries such as Baileys, or a QR code that links your personal account.',
     [SiteCopyKey.FaqManyQuestion]: 'Can several agents share it?',
     [SiteCopyKey.FaqManyAnswer]: "Yes. All your agents text you from zapbip's number, and each reply goes back to the agent that asked.",
     [SiteCopyKey.FaqReferralQuestion]: 'How do invites work?',
@@ -253,7 +259,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FinalButtonInvite]: 'Invite a friend',
     [SiteCopyKey.AgentsTitle]: 'For AI agents',
     [SiteCopyKey.AgentsBody]:
-      'An agent can help its person join the waitlist, but the person must press the button: the form has a captcha only a human can pass. Open {joinLink}, replacing name@example.com with the address of the person, so the form opens already filled in, then ask the person to press the button of the form. The same help is a tool in WebMCP on every page.',
+      'An agent can help its person join the waitlist, but the person must press the button: the form has a captcha only a human can pass. Open {joinLink}, replacing name@example.com with the address of the person, so the form opens already filled in, then ask the person to press the button of the form. The same help is a tool in WebMCP on every page. Write a plus sign in the address as %2B, because a literal + arrives as a space.',
     [SiteCopyKey.FooterProduct]: 'Product',
     [SiteCopyKey.FooterCompany]: 'Company',
     [SiteCopyKey.FooterPricing]: 'Pricing',
@@ -507,6 +513,12 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqDeveloperAnswer]: 'Não. Se você usa um assistente de IA, conecta colando uma linha.',
     [SiteCopyKey.FaqOthersQuestion]: 'Ele manda mensagem para outras pessoas?',
     [SiteCopyKey.FaqOthersAnswer]: 'Não. O zapbip fala só com você, no seu WhatsApp de sempre, pela API oficial do WhatsApp Cloud.',
+    [SiteCopyKey.FaqMessageKindsQuestion]: 'Quais mensagens do WhatsApp funcionam?',
+    [SiteCopyKey.FaqMessageKindsAnswer]:
+      'Texto, fotos, vídeos, áudios e mensagens de voz, arquivos, figurinhas, localizações, cartões de contato, reações e toques em botões ou listas. Qualquer outro tipo não é suportado: você recebe um aviso curto e sua IA não recebe nada.',
+    [SiteCopyKey.FaqUnofficialQuestion]: 'Posso usar uma ferramenta não oficial do WhatsApp?',
+    [SiteCopyKey.FaqUnofficialAnswer]:
+      'Não. O zapbip usa somente a API oficial WhatsApp Cloud, da Meta. Não funciona com automação do WhatsApp Web, bibliotecas não oficiais como Baileys nem com QR code que conecta a sua conta pessoal.',
     [SiteCopyKey.FaqManyQuestion]: 'Vários agentes podem usar juntos?',
     [SiteCopyKey.FaqManyAnswer]:
       'Sim. Todos os seus agentes falam com você pelo número do zapbip, e cada resposta volta para o agente que perguntou.',
@@ -525,7 +537,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FinalButtonInvite]: 'Convidar um amigo',
     [SiteCopyKey.AgentsTitle]: 'Para agentes de IA',
     [SiteCopyKey.AgentsBody]:
-      'Um agente pode ajudar a pessoa para quem trabalha a entrar na lista, mas é a pessoa que aperta o botão: o formulário tem um captcha que só um humano resolve. Abra {joinLink}, trocando name@example.com pelo e-mail da pessoa, para o formulário abrir já preenchido, e peça que ela aperte o botão do formulário. A mesma ajuda é uma ferramenta do WebMCP em todas as páginas.',
+      'Um agente pode ajudar a pessoa para quem trabalha a entrar na lista, mas é a pessoa que aperta o botão: o formulário tem um captcha que só um humano resolve. Abra {joinLink}, trocando name@example.com pelo e-mail da pessoa, para o formulário abrir já preenchido, e peça que ela aperte o botão do formulário. A mesma ajuda é uma ferramenta do WebMCP em todas as páginas. Escreva o sinal de mais do endereço como %2B, porque um + literal chega como espaço.',
     [SiteCopyKey.FooterProduct]: 'Produto',
     [SiteCopyKey.FooterCompany]: 'Empresa',
     [SiteCopyKey.FooterPricing]: 'Preços',

@@ -51,6 +51,7 @@ const FORCED_COLOR_OPT_OUT_PATTERN = /forced-color-adjust:\s*none/;
 const HERO_CARD_RULE_PATTERN = /\n\.hero-card \{[^}]*\}/;
 const TOKEN_BLOCK_PATTERN = /:root[^{]*\{[^}]*\}/g;
 const HEADER_END_WRAP_PATTERN = /\n\.header-end \{[^}]*flex-wrap: wrap;/;
+const FIELD_LABEL_RULE_PATTERN = /\n\.field label \{[^}]*\}/;
 const NARROW_BLOCK_PATTERN = /@media \(max-width: 40rem\) \{[\s\S]*?\n\}/;
 
 const PAGE = {
@@ -212,6 +213,10 @@ describe('design rules', () => {
     expect(STYLESHEET.match(/@media \(forced-colors: active\)/g)).toHaveLength(1);
     const linesAfterOpening = STYLESHEET.slice(STYLESHEET.search(FORCED_COLORS_PATTERN)).split('\n').slice(1);
     expect(linesAfterOpening.filter((line) => TOP_LEVEL_LINE_PATTERN.test(line) && line !== BLOCK_END)).toEqual([]);
+  });
+
+  it('leaves a space token between each field label and its input', () => {
+    expect(STYLESHEET.match(FIELD_LABEL_RULE_PATTERN)?.[0]).toContain('margin-bottom: var(--space-2);');
   });
 
   it('resets the default fieldset border and styles the legend', () => {

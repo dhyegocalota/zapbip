@@ -229,6 +229,12 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: 'No. Si usas un asistente de IA, lo conectas pegando una línea.',
   [SiteCopyKey.FaqOthersQuestion]: '¿Escribe a otras personas?',
   [SiteCopyKey.FaqOthersAnswer]: 'No. zapbip habla solo contigo, en tu WhatsApp de siempre, a través de la API Cloud oficial de WhatsApp.',
+  [SiteCopyKey.FaqMessageKindsQuestion]: '¿Qué mensajes de WhatsApp funcionan?',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    'Texto, fotos, videos, audios y notas de voz, archivos, stickers, ubicaciones, tarjetas de contacto, reacciones y toques en botones o listas. Cualquier otro tipo no es compatible: recibes un aviso breve y tu IA no recibe nada.',
+  [SiteCopyKey.FaqUnofficialQuestion]: '¿Puedo usar una herramienta no oficial de WhatsApp?',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    'No. zapbip usa solo la API oficial WhatsApp Cloud de Meta. No funciona con automatización de WhatsApp Web, con bibliotecas no oficiales como Baileys ni con un código QR que vincule tu cuenta personal.',
   [SiteCopyKey.FaqManyQuestion]: '¿Pueden compartirlo varios agentes?',
   [SiteCopyKey.FaqManyAnswer]:
     'Sí. Todos tus agentes te escriben desde el número de zapbip, y cada respuesta vuelve al agente que preguntó.',
@@ -273,5 +279,5 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'Página no encontrada',
   [SiteCopyKey.AgentsTitle]: 'Para agentes de IA',
   [SiteCopyKey.AgentsBody]:
-    'Un agente puede ayudar a la persona para la que trabaja a unirse a la lista, pero es la persona quien pulsa el botón: el formulario tiene un captcha que solo un humano resuelve. Abre {joinLink}, cambiando name@example.com por el correo de la persona, para que el formulario se abra ya relleno, y pídele que pulse el botón del formulario. La misma ayuda es una herramienta de WebMCP en cada página.',
+    'Un agente puede ayudar a la persona para la que trabaja a unirse a la lista, pero es la persona quien pulsa el botón: el formulario tiene un captcha que solo un humano resuelve. Abre {joinLink}, cambiando name@example.com por el correo de la persona, para que el formulario se abra ya relleno, y pídele que pulse el botón del formulario. La misma ayuda es una herramienta de WebMCP en cada página. Escribe el signo más de la dirección como %2B, porque un + literal llega como espacio.',
 };

@@ -11,6 +11,9 @@ import { LandingPage } from './views/landing-page';
 import { LegalPage } from './views/legal-page';
 import { NotFoundPage } from './views/not-found-page';
 
+const QUERY_SPACE = ' ';
+const EMAIL_PLUS = '+';
+
 export function pageModelOf(input: { context: Context<SiteEnv>; join: JoinView; starCount: number | null }): PageModel {
   const { context, join, starCount } = input;
   return {
@@ -31,7 +34,7 @@ export function pageModelOf(input: { context: Context<SiteEnv>; join: JoinView; 
 function prefilledEmailOf(input: { context: Context<SiteEnv> }): string {
   const value = input.context.req.query(SITE_EMAIL_PARAMETER);
   if (value === undefined) return '';
-  const email = normalizeEmail({ email: value });
+  const email = normalizeEmail({ email: value.replaceAll(QUERY_SPACE, EMAIL_PLUS) });
   if (email === null) return '';
   return email;
 }

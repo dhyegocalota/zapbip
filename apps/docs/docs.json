@@ -59,6 +59,7 @@
             "group": "Features",
             "pages": [
               "features/send-messages-and-media",
+              "features/supported-messages",
               "features/ask-with-buttons-and-lists",
               "features/owner-starts-conversations",
               "features/manage-your-agents",
@@ -157,6 +158,7 @@
             "group": "Funcionalidades",
             "pages": [
               "pt-br/features/send-messages-and-media",
+              "pt-br/features/supported-messages",
               "pt-br/features/ask-with-buttons-and-lists",
               "pt-br/features/owner-starts-conversations",
               "pt-br/features/manage-your-agents",
@@ -255,6 +257,7 @@
             "group": "Funciones",
             "pages": [
               "es/features/send-messages-and-media",
+              "es/features/supported-messages",
               "es/features/ask-with-buttons-and-lists",
               "es/features/owner-starts-conversations",
               "es/features/manage-your-agents",
@@ -353,6 +356,7 @@
             "group": "Funktionen",
             "pages": [
               "de/features/send-messages-and-media",
+              "de/features/supported-messages",
               "de/features/ask-with-buttons-and-lists",
               "de/features/owner-starts-conversations",
               "de/features/manage-your-agents",
@@ -451,6 +455,7 @@
             "group": "Fonctionnalités",
             "pages": [
               "fr/features/send-messages-and-media",
+              "fr/features/supported-messages",
               "fr/features/ask-with-buttons-and-lists",
               "fr/features/owner-starts-conversations",
               "fr/features/manage-your-agents",
@@ -549,6 +554,7 @@
             "group": "機能",
             "pages": [
               "ja/features/send-messages-and-media",
+              "ja/features/supported-messages",
               "ja/features/ask-with-buttons-and-lists",
               "ja/features/owner-starts-conversations",
               "ja/features/manage-your-agents",
@@ -647,6 +653,7 @@
             "group": "기능",
             "pages": [
               "ko/features/send-messages-and-media",
+              "ko/features/supported-messages",
               "ko/features/ask-with-buttons-and-lists",
               "ko/features/owner-starts-conversations",
               "ko/features/manage-your-agents",
@@ -745,6 +752,7 @@
             "group": "功能",
             "pages": [
               "zh/features/send-messages-and-media",
+              "zh/features/supported-messages",
               "zh/features/ask-with-buttons-and-lists",
               "zh/features/owner-starts-conversations",
               "zh/features/manage-your-agents",
@@ -843,6 +851,7 @@
             "group": "الميزات",
             "pages": [
               "ar/features/send-messages-and-media",
+              "ar/features/supported-messages",
               "ar/features/ask-with-buttons-and-lists",
               "ar/features/owner-starts-conversations",
               "ar/features/manage-your-agents",
@@ -941,6 +950,7 @@
             "group": "फ़ीचर",
             "pages": [
               "hi/features/send-messages-and-media",
+              "hi/features/supported-messages",
               "hi/features/ask-with-buttons-and-lists",
               "hi/features/owner-starts-conversations",
               "hi/features/manage-your-agents",

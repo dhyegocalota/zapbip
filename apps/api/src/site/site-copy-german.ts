@@ -232,6 +232,12 @@ export const GERMAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: 'Nein. Wenn du einen KI-Assistenten nutzt, verbindest du ihn, indem du eine Zeile einfügst.',
   [SiteCopyKey.FaqOthersQuestion]: 'Schreibt er anderen Leuten?',
   [SiteCopyKey.FaqOthersAnswer]: 'Nein. zapbip spricht nur mit dir, auf deinem normalen WhatsApp, über die offizielle WhatsApp Cloud API.',
+  [SiteCopyKey.FaqMessageKindsQuestion]: 'Welche WhatsApp-Nachrichten funktionieren?',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    'Text, Fotos, Videos, Audios und Sprachnachrichten, Dateien, Sticker, Standorte, Kontaktkarten, Reaktionen sowie Antippen von Buttons oder Listen. Jede andere Art wird nicht unterstützt: Du bekommst einen kurzen Hinweis, und deine KI erhält nichts.',
+  [SiteCopyKey.FaqUnofficialQuestion]: 'Kann ich ein inoffizielles WhatsApp-Tool benutzen?',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    'Nein. zapbip nutzt nur die offizielle WhatsApp Cloud API von Meta. Es funktioniert nicht mit WhatsApp-Web-Automatisierung, inoffiziellen Bibliotheken wie Baileys oder einem QR-Code, der dein persönliches Konto verbindet.',
   [SiteCopyKey.FaqManyQuestion]: 'Können sich mehrere Agenten das teilen?',
   [SiteCopyKey.FaqManyAnswer]:
     'Ja. Alle deine Agenten schreiben dir von der Nummer von zapbip, und jede Antwort geht an den Agenten, der gefragt hat.',
@@ -275,5 +281,5 @@ export const GERMAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'Seite nicht gefunden',
   [SiteCopyKey.AgentsTitle]: 'Für KI-Agenten',
   [SiteCopyKey.AgentsBody]:
-    'Ein Agent kann der Person, für die er arbeitet, beim Eintragen in die Warteliste helfen, aber die Person drückt den Knopf: Das Formular hat ein Captcha, das nur ein Mensch löst. Öffne {joinLink} und ersetze name@example.com durch die E-Mail-Adresse der Person, damit das Formular schon ausgefüllt öffnet, und bitte sie, den Knopf des Formulars zu drücken. Dieselbe Hilfe ist auf jeder Seite ein WebMCP-Werkzeug.',
+    'Ein Agent kann der Person, für die er arbeitet, beim Eintragen in die Warteliste helfen, aber die Person drückt den Knopf: Das Formular hat ein Captcha, das nur ein Mensch löst. Öffne {joinLink} und ersetze name@example.com durch die E-Mail-Adresse der Person, damit das Formular schon ausgefüllt öffnet, und bitte sie, den Knopf des Formulars zu drücken. Dieselbe Hilfe ist auf jeder Seite ein WebMCP-Werkzeug. Schreibe ein Pluszeichen der Adresse als %2B, denn ein wörtliches + kommt als Leerzeichen an.',
 };

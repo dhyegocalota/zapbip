@@ -16,7 +16,6 @@ export const SPANISH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'zapbip backoffice · {environment}',
   [BackofficeCopyKey.SignInTitle]: 'Iniciar sesión',
   [BackofficeCopyKey.SignInEyebrow]: 'Acceso de operador',
-  [BackofficeCopyKey.SignInLead]: 'Primero tu correo y tu contraseña, después el código de tu app de autenticación.',
   [BackofficeCopyKey.SignInEmailLabel]: 'Correo electrónico',
   [BackofficeCopyKey.SignInPasswordLabel]: 'Contraseña',
   [BackofficeCopyKey.SignInCodeLead]: 'Introduce el código de 6 dígitos de tu app de autenticación. Este paso caduca en 5 minutos.',
