@@ -56,6 +56,7 @@ function seedAudit(input: { at: number }): Promise<void> {
       targetKind: null,
       targetId: null,
       clientAddress: null,
+      actorKeyId: null,
     },
   });
 }

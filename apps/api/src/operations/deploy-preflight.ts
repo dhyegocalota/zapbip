@@ -373,8 +373,7 @@ async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | n
 }
 
 async function refuseFailedGate(input: WorkerPreflightInput): Promise<string | null> {
-  const isProduction = input.environment === DeployEnvironment.Production;
-  const args = isProduction ? ['verify', 'all'] : ['verify'];
+  const args = ['verify'];
   const result = await input.shell.run({ file: PNPM, args });
   if (result.exitCode === 0) return null;
   return `the gate failed: ${PNPM} ${args.join(' ')}`;

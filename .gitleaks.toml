@@ -3,6 +3,12 @@ title = "zapbip"
 [extend]
 useDefault = true
 
+[[rules]]
+id = "zapbip-operator-key"
+description = "A zapbip backoffice operator key, which opens the operator MCP endpoint"
+regex = '''zbo_[0-9a-f]{16}_[A-Za-z0-9_-]{43}'''
+keywords = ["zbo_"]
+
 [allowlist]
 description = "The exact placeholder strings the repository ships on purpose, each anchored to the whole secret"
 regexes = [

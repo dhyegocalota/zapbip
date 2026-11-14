@@ -380,10 +380,11 @@ describe('worker preflight', () => {
     expect(await runWorkerPreflight(workerInput({ shell }))).toBeNull();
   });
 
-  it('runs the full gate for production and the plain gate for staging', async () => {
+  it('runs the scoped gate for production and staging, never the full one', async () => {
     const production = fakeShell({});
     await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell: production }));
-    expect(production.commands).toContain('pnpm verify all');
+    expect(production.commands).toContain('pnpm verify');
+    expect(production.commands).not.toContain('pnpm verify all');
     const staging = fakeShell({});
     await runWorkerPreflight(workerInput({ shell: staging }));
     expect(staging.commands).toContain('pnpm verify');

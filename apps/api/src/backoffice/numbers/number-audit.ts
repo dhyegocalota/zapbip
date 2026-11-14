@@ -15,7 +15,7 @@ export async function auditNumberAction(input: {
   const { context, action, outcome, targetKind, targetId } = input;
   await writeAudit({
     database: context.env.CONNECTIONS,
-    entry: { now: Date.now(), action, outcome, targetKind, targetId, clientAddress: context.get('clientAddress') },
+    entry: { now: Date.now(), action, outcome, targetKind, targetId, clientAddress: context.get('clientAddress'), actorKeyId: null },
   });
   logEvent({ event: LogEvent.BackofficeNumberChanged, numberId: targetId });
 }
