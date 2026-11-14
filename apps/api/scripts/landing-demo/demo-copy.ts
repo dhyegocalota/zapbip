@@ -55,7 +55,7 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     deployCommand: 'publique a v2.4',
     optionsLabel: 'opções:',
     waitingLabel: 'esperando sua resposta',
-    answeredLabel: 'dono respondeu:',
+    answeredLabel: 'você respondeu:',
   },
   [OwnerLocale.Spanish]: {
     command: 'ejecuta las pruebas',
@@ -65,7 +65,7 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     deployCommand: 'despliega la v2.4',
     optionsLabel: 'opciones:',
     waitingLabel: 'esperando tu respuesta',
-    answeredLabel: 'el dueño respondió:',
+    answeredLabel: 'tú respondiste:',
   },
   [OwnerLocale.German]: {
     command: 'führe die Tests aus',
@@ -75,7 +75,7 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     deployCommand: 'v2.4 ausrollen',
     optionsLabel: 'Optionen:',
     waitingLabel: 'warte auf deine Antwort',
-    answeredLabel: 'Besitzer antwortete:',
+    answeredLabel: 'du hast geantwortet:',
   },
   [OwnerLocale.French]: {
     command: 'lance les tests',
@@ -95,17 +95,17 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     deployCommand: 'v2.4をデプロイして',
     optionsLabel: '選択肢：',
     waitingLabel: 'あなたの回答を待っています',
-    answeredLabel: 'オーナーの回答：',
+    answeredLabel: 'あなたの返信：',
   },
   [OwnerLocale.Korean]: {
     command: '테스트 실행해 줘',
     testsPassed: '테스트 128개 통과',
-    questionTemplate: `테스트를 통과했습니다. ${QUESTION_PLACEHOLDER}`,
+    questionTemplate: `테스트를 통과했어요. ${QUESTION_PLACEHOLDER}`,
     liveText: 'v2.4 라이브',
     deployCommand: 'v2.4 배포해 줘',
     optionsLabel: '선택지:',
     waitingLabel: '답변을 기다리는 중',
-    answeredLabel: '주인의 답변:',
+    answeredLabel: '내가 답했어요:',
   },
   [OwnerLocale.ChineseSimplified]: {
     command: '运行测试',
@@ -115,7 +115,7 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     deployCommand: '部署 v2.4',
     optionsLabel: '选项：',
     waitingLabel: '等待你的回复',
-    answeredLabel: '主人已回复：',
+    answeredLabel: '你已回复：',
   },
 };
 
