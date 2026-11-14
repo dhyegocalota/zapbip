@@ -32,7 +32,7 @@ Eight languages reach every surface, each as a row of a typed record. Arabic add
 
 ## Consequences
 
-A tenth right-to-left language (Hebrew, Persian) is a profile row and copy. The Chat component of the docs draws its inline styles with physical sides: the documentation mirrors through the platform's `dir` handling and the page CSS; a bubble that does not mirror is a defect to fix in `snippets/chat.jsx`.
+A tenth right-to-left language (Hebrew, Persian) is a profile row and copy. The Chat component of the docs draws its inline styles with logical sides (`inset-inline`, `border-inline`, logical radii), so a bubble mirrors with the page `dir`.
 
 ## Evidence
 
