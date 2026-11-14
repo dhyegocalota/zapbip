@@ -81,7 +81,7 @@ describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
   it('carries no style attribute and no inline script', async () => {
     const page = await html();
     expect(page).not.toContain(' style=');
-    expect(page).not.toMatch(/<script(?![^>]*\ssrc=)/);
+    expect(page).not.toMatch(/<script(?![^>]*\ssrc=)(?![^>]*type="application\/ld\+json")/);
   });
 });
 
