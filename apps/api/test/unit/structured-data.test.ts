@@ -37,7 +37,7 @@ describe.each(Object.values(OwnerLocale))('structured data of the home page in %
     expect(typesOf({ graph })).toEqual(['Organization', 'WebSite', 'WebApplication', 'FAQPage']);
   });
 
-  it('describes the organization with its name, address, logo and repository', () => {
+  it('describes the organization with its name, address and logo, and links no private repository', () => {
     const organization = nodeOf({ graph, type: 'Organization' });
     expect(organization).toMatchObject({
       '@id': `${MODEL_ORIGIN}/#organization`,
@@ -45,7 +45,7 @@ describe.each(Object.values(OwnerLocale))('structured data of the home page in %
       url: COMPANY.website,
       logo: `${MODEL_ORIGIN}/site/apple-touch-icon.png`,
     });
-    expect(organization.sameAs).toContain(REPOSITORY_URL);
+    expect(JSON.stringify(graph)).not.toContain(REPOSITORY_URL);
   });
 
   it('describes the website in the page language, published by the organization', () => {
