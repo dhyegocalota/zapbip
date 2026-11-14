@@ -1,0 +1,15 @@
+export enum WelcomeEmailCopyKey {
+  Subject = 'subject',
+  Preview = 'preview',
+  Heading = 'heading',
+  Intro = 'intro',
+  Waves = 'waves',
+  StartLead = 'start_lead',
+  StartAction = 'start_action',
+  DocsLead = 'docs_lead',
+  DocsAction = 'docs_action',
+  ReferralLead = 'referral_lead',
+  Signoff = 'signoff',
+  SignoffTeam = 'signoff_team',
+  Footer = 'footer',
+}
