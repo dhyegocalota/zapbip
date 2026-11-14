@@ -26,7 +26,7 @@ Red tests, enums and core copy, agents, web surfaces, media, docs, decision and 
 - [x] **Step 4:** red web tests (`a0650491`), then site, legal, app, backoffice, shell, flag, WhatsApp copy and templates (`dc9bee35`)
 - [x] **Step 5:** demo, posters and card (`04f0ba70`); `/hi` Playwright pin (`d36a02bd`)
 - [x] **Step 6:** the documentation and its tests (`0c9f5a4b`)
-- [ ] **Step 7:** ADR 0057, glossary, living docs, this folder
+- [x] **Step 7:** ADR 0057, glossary, living docs, this folder (`3beda0f5`)
 - [ ] **Step 8:** the docs Playwright walk against a Mintlify preview
 
 ## Failure modes
