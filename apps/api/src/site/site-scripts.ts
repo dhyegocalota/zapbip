@@ -223,11 +223,16 @@ const SCRIPT_SOURCE = `(function () {
     var menu = document.querySelector('.lang-menu');
     if (!menu) return;
     var trigger = menu.querySelector('.lang-trigger');
+    var list = menu.querySelector('.lang-list');
     var options = Array.prototype.slice.call(menu.querySelectorAll('.lang-option'));
     function close(shouldFocus) {
       menu.removeAttribute('open');
       if (shouldFocus) trigger.focus();
     }
+    menu.addEventListener('toggle', function () {
+      if (!menu.open) return;
+      list.scrollIntoView({ block: 'nearest' });
+    });
     document.addEventListener('click', function (event) {
       if (!menu.contains(event.target)) close(false);
     });
