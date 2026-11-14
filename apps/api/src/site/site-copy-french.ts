@@ -226,4 +226,7 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.MetaOgImageAlt]:
     'Un agent IA demande «\u202fDéployer la v2.4 en production\u202f?\u202f» sur WhatsApp, avec les boutons Ship it et Wait.',
   [SiteCopyKey.NotFoundMetaTitle]: 'Page introuvable',
+  [SiteCopyKey.AgentsTitle]: 'Pour les agents IA',
+  [SiteCopyKey.AgentsBody]:
+    'Un agent peut demander l’accès pour sa personne sans captcha\u00a0: envoyez un POST avec un corps JSON {"email", "language"} à {endpoint}. Les mêmes outils sont enregistrés via WebMCP sur chaque page.',
 };

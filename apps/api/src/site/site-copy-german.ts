@@ -220,4 +220,7 @@ export const GERMAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.MetaOgTitle]: 'zapbip: Deine KI-Agenten schreiben dir auf WhatsApp',
   [SiteCopyKey.MetaOgImageAlt]: 'Ein KI-Agent fragt auf WhatsApp „v2.4 in Produktion ausrollen?“, mit den Buttons Ship it und Wait.',
   [SiteCopyKey.NotFoundMetaTitle]: 'Seite nicht gefunden',
+  [SiteCopyKey.AgentsTitle]: 'Für KI-Agenten',
+  [SiteCopyKey.AgentsBody]:
+    'Ein Agent kann den Zugang für seine Person ohne Captcha anfragen: Sende einen POST mit einem JSON-Body {"email", "language"} an {endpoint}. Dieselben Werkzeuge werden auf jeder Seite über WebMCP registriert.',
 };

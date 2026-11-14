@@ -1,5 +1,7 @@
-import { HOUR_MS, MINUTE_MS } from '@zapbip/types';
+import { HOUR_MS, MINUTE_MS, OwnerLocale } from '@zapbip/types';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
+import { seedOperatorKey } from '../support/operator-keys';
 import { testEnv } from '../support/workers-env';
 import { requestBackoffice, resetBackoffice, SESSION_COOKIE, signIn } from './backoffice-auth-fixtures';
 
@@ -10,6 +12,10 @@ const PAGE_LIMIT = 200;
 const FIRST_AT = Date.now() + HOUR_MS;
 
 beforeEach(resetBackoffice);
+
+function copyHtml(input: { key: BackofficeCopyKey }): string {
+  return BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil][input.key];
+}
 
 function targetOf(input: { index: number }): string {
   return `T${String(input.index).padStart(4, '0')}`;
@@ -66,5 +72,23 @@ describe('audit page', () => {
     const response = await requestBackoffice({ path: '/audit' });
     expect(response.status).toBe(STATUS_SEE_OTHER);
     expect(response.headers.get('location')).toBe('/sign-in');
+  });
+
+  test('shows the agent key that acted, with its label and id, and nothing for a human row', async () => {
+    const { keyId } = await seedOperatorKey({ label: 'night agent', createdAt: FIRST_AT, expiresAt: FIRST_AT + HOUR_MS });
+    const insert = testEnv.CONNECTIONS.prepare(
+      'INSERT INTO backoffice_audit (id, at, action, target_kind, target_id, outcome, client_address, actor_key_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    );
+    await testEnv.CONNECTIONS.batch([
+      insert.bind('audit-agent', FIRST_AT, 'access.released', 'access', 'selected=1', 'succeeded', '203.0.113.7', keyId),
+      insert.bind('audit-human', FIRST_AT + MINUTE_MS, 'sign_out', null, 'HUMAN-ROW', 'succeeded', '203.0.113.7', null),
+    ]);
+    const { sessionToken } = await signIn({});
+    const html = await (await requestBackoffice({ path: '/audit', cookies: { [SESSION_COOKIE]: sessionToken } })).text();
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.AuditColumnAgentKey }));
+    expect(html).toContain('night agent');
+    expect(html).toContain(keyId);
+    const humanRow = html.slice(html.indexOf('HUMAN-ROW'), html.indexOf('</tr>', html.indexOf('HUMAN-ROW')));
+    expect(humanRow).not.toContain(keyId);
   });
 });

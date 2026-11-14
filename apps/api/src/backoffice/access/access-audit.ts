@@ -6,39 +6,42 @@ import { auditTargetOf, failedBatchCounts, type BatchCounts } from './access-bat
 
 const TARGET_KIND = BackofficeAuditTargetKind.Access;
 
-async function auditBatch(input: {
-  context: Context<BackofficeEnv>;
+export type BatchAuditRecorder = (input: {
   action: BackofficeAuditAction;
   outcome: BackofficeAuditOutcome;
   counts: BatchCounts;
-}): Promise<void> {
-  const { context, action, outcome, counts } = input;
-  await writeAudit({
-    database: context.env.CONNECTIONS,
-    entry: {
-      now: Date.now(),
-      action,
-      outcome,
-      targetKind: TARGET_KIND,
-      targetId: auditTargetOf({ counts }),
-      clientAddress: context.get('clientAddress'),
-    },
-  });
+}) => Promise<void>;
+
+export function contextAuditRecorder(input: { context: Context<BackofficeEnv> }): BatchAuditRecorder {
+  const { context } = input;
+  return ({ action, outcome, counts }) =>
+    writeAudit({
+      database: context.env.CONNECTIONS,
+      entry: {
+        now: Date.now(),
+        action,
+        outcome,
+        targetKind: TARGET_KIND,
+        targetId: auditTargetOf({ counts }),
+        clientAddress: context.get('clientAddress'),
+        actorKeyId: null,
+      },
+    });
 }
 
 type RunBatch<Result> = () => Promise<Result>;
 
 export async function auditedBatch<Result extends { counts: BatchCounts }>(input: {
-  context: Context<BackofficeEnv>;
+  record: BatchAuditRecorder;
   action: BackofficeAuditAction;
   selected: number;
   run: RunBatch<Result>;
 }): Promise<Result> {
-  const { context, action, selected, run } = input;
+  const { record, action, selected, run } = input;
   const done = await run().catch(async (error: unknown) => {
-    await auditBatch({ context, action, outcome: BackofficeAuditOutcome.Failed, counts: failedBatchCounts({ selected }) });
+    await record({ action, outcome: BackofficeAuditOutcome.Failed, counts: failedBatchCounts({ selected }) });
     throw error;
   });
-  await auditBatch({ context, action, outcome: BackofficeAuditOutcome.Succeeded, counts: done.counts });
+  await record({ action, outcome: BackofficeAuditOutcome.Succeeded, counts: done.counts });
   return done;
 }

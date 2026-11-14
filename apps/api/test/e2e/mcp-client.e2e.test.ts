@@ -2,14 +2,25 @@ import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { formatRouteOptionId, INLINE_IMAGE_MAX_BYTES, NOTICE_QUICK_REPLY_ID, renderCopy, STICKER_MAX_BYTES, WINDOW_MS } from '@zapbip/core';
-import { InboxCopyKey, InboxStatus, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import {
+  ApprovalChoice,
+  approvalTitlesOf,
+  formatRouteOptionId,
+  INLINE_IMAGE_MAX_BYTES,
+  NOTICE_QUICK_REPLY_ID,
+  RATE_LIMIT_PERIOD_MS,
+  renderCopy,
+  STICKER_MAX_BYTES,
+  WINDOW_MS,
+} from '@zapbip/core';
+import { AgentChangeStatus, InboxCopyKey, InboxStatus, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import {
   advanceClock,
   callTool,
   historyOf,
+  lastQuestion,
   tapLastQuestion,
   type ToolResult,
   connectAgent,
@@ -27,6 +38,7 @@ const TEXT_LIMIT = 4096;
 const SHORT_WAIT_SECONDS = 1;
 const TAP_DELAY_MS = SECOND_MS;
 const HELD_CALL_TIMEOUT_MS = 55 * SECOND_MS;
+const APPROVAL_TEST_TIMEOUT_MS = HELD_CALL_TIMEOUT_MS + RATE_LIMIT_PERIOD_MS;
 const SMALL_IMAGE_BYTES = 100_000;
 const OVERSIZED_IMAGE_BYTES = INLINE_IMAGE_MAX_BYTES + 100_000;
 const PNG_TYPE = 'image/png';
@@ -36,6 +48,11 @@ const UNKNOWN_SECRET = `zb_conn_${'A'.repeat(43)}`;
 const YES_TITLE = 'Sim';
 const NO_TITLE = 'Não';
 const JSON_LINE_PREFIX = '{';
+const NEW_AGENT = 'helper';
+const APPROVAL_WAIT_MS = 10 * SECOND_MS;
+const INSTALL_LINK_MARKER = '/i/zb_inst_';
+const ALLOW_OPTION_INDEX = 0;
+const REVOKE_DENY_OPTION_INDEX = 1;
 
 let alpha: Client;
 let beta: Client;
@@ -70,6 +87,18 @@ async function uploadAndSend(input: { mimeType: string; sizeBytes: number; kindA
     name: McpToolName.SendMedia,
     arguments: { ...input.kindArguments, upload_id: upload.structured?.upload_id },
   });
+}
+
+async function openWindow(): Promise<void> {
+  await postOwner({ body: { kind: MessageKind.Choice, option_id: NOTICE_QUICK_REPLY_ID, title: 'Abrir' } });
+}
+
+async function heldApproval(input: { client: Client }): Promise<void> {
+  const allowTitle = approvalTitlesOf({ locale: OwnerLocale.PortugueseBrazil })[ApprovalChoice.Allow];
+  await vi.waitFor(async () => {
+    const question = await lastQuestion({ client: input.client });
+    if (question === null || question.options[0]?.title !== allowTitle) throw new Error('the approval question is not on the screen yet');
+  }, APPROVAL_WAIT_MS);
 }
 
 function listOf(input: { result: ToolResult; key: string }): Record<string, unknown>[] {
@@ -356,6 +385,41 @@ describe('MCP client against wrangler dev', () => {
     const inbox = await callTool({ client: alpha, name: McpToolName.CheckInbox, arguments: {} });
     expect(inbox.structured).toMatchObject({ status: InboxStatus.Empty });
   });
+
+  test(
+    'E2E-24 connect_agent asks on the screen, an Allow tap connects the agent and the install link reaches the owner, not the result',
+    async () => {
+      await delay(RATE_LIMIT_PERIOD_MS);
+      await openWindow();
+      const held = callTool({ client: alpha, name: McpToolName.ConnectAgent, arguments: { name: NEW_AGENT } });
+      await heldApproval({ client: alpha });
+      const question = await lastQuestion({ client: alpha });
+      const titles = approvalTitlesOf({ locale: OwnerLocale.PortugueseBrazil });
+      expect(question?.options.map((option) => option.title)).toEqual(
+        [ApprovalChoice.Allow, ApprovalChoice.AllowAndSend, ApprovalChoice.Deny].map((choice) => titles[choice]),
+      );
+      await tapLastQuestion({ client: alpha, optionIndex: ALLOW_OPTION_INDEX });
+      const result = await held;
+      const listed = await callTool({ client: alpha, name: McpToolName.ListAgents, arguments: {} });
+      expect(result.structured).toEqual({ status: AgentChangeStatus.Applied, agent: NEW_AGENT, reason: null, install_prompt: null });
+      expect((await readScreen()).some((entry) => entry.text.includes(INSTALL_LINK_MARKER))).toBe(true);
+      expect(listOf({ result: listed, key: 'agents' }).map((agent) => agent.name)).toContain(NEW_AGENT);
+    },
+    APPROVAL_TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'E2E-25 a Deny tap on revoke_agent leaves the agent connected',
+    async () => {
+      await openWindow();
+      const held = callTool({ client: alpha, name: McpToolName.RevokeAgent, arguments: { name: SECOND_AGENT } });
+      await heldApproval({ client: alpha });
+      await tapLastQuestion({ client: alpha, optionIndex: REVOKE_DENY_OPTION_INDEX });
+      expect((await held).structured).toMatchObject({ status: AgentChangeStatus.Denied, agent: SECOND_AGENT });
+      expect((await callTool({ client: beta, name: McpToolName.CheckInbox, arguments: {} })).isError).toBe(false);
+    },
+    HELD_CALL_TIMEOUT_MS,
+  );
 
   test('SEC-7 no connection secret appears in the worker log lines', async () => {
     const output = await readFile(stack().logFile, 'utf8');

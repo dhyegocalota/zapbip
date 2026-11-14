@@ -24,6 +24,7 @@ const FORM_NOTICES: Partial<Record<JoinFormState, { variant: NoticeVariant; copy
   [JoinState.Unavailable]: { variant: NoticeVariant.Warning, copyKey: SiteCopyKey.JoinUnavailable },
 };
 const EMAIL_ERROR_ID = 'join-email-error';
+const FORM_NOTICE_ID = 'join-notice';
 const CLIENT_NOTICES: { id: string; variant: NoticeVariant; copyKey: SiteCopyKey }[] = [
   { id: 'notice-captcha', variant: NoticeVariant.Error, copyKey: SiteCopyKey.JoinCaptchaFailed },
   { id: 'notice-offline', variant: NoticeVariant.Warning, copyKey: SiteCopyKey.JoinOffline },
@@ -39,12 +40,12 @@ function PrivacyNote(props: { locale: WebLocale }) {
   );
 }
 
-function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: string }) {
-  const { model, state, emailValue } = props;
+function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: string; describedBy: string | undefined }) {
+  const { model, state, emailValue, describedBy } = props;
   const translate = copyOf({ locale: model.locale });
   const isInvalid = state === JoinState.InvalidEmail;
   return (
-    <form class="join-form" method="post" action={SitePath.Join}>
+    <form class="join-form" method="post" action={SitePath.Join} aria-label={translate(SiteCopyKey.JoinSubmit)}>
       <label class="visually-hidden" for="join-email">
         {translate(SiteCopyKey.JoinEmailLabel)}
       </label>
@@ -65,7 +66,7 @@ function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: s
           autocapitalize="off"
           autofocus={isInvalid}
           aria-invalid={isInvalid ? 'true' : undefined}
-          aria-describedby={isInvalid ? EMAIL_ERROR_ID : undefined}
+          aria-describedby={isInvalid ? EMAIL_ERROR_ID : describedBy}
           required
         />
         <button
@@ -114,9 +115,9 @@ function FormBlock(props: { model: PageModel; state: JoinFormState; emailValue: 
   return (
     <div class="join-block">
       {notice === undefined ? null : (
-        <Notice variant={notice.variant} locale={model.locale} title={null} message={translate(notice.copyKey)} />
+        <Notice id={FORM_NOTICE_ID} variant={notice.variant} locale={model.locale} title={null} message={translate(notice.copyKey)} />
       )}
-      <JoinForm {...props} />
+      <JoinForm {...props} describedBy={notice === undefined ? undefined : FORM_NOTICE_ID} />
       <PrivacyNote locale={model.locale} />
     </div>
   );

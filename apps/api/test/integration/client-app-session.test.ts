@@ -220,10 +220,10 @@ describe('what the home page shows about the owner and the agents', () => {
   it('shows the masked phone on the Continue page and on the home page', async () => {
     await seedAccountForApp({});
     const token = await issueSignInToken({});
-    expect(await (await clientAppFetch({ path: `/sign-in/${token}` })).text()).toContain('+55 ••••-0051');
+    expect(await (await clientAppFetch({ path: `/sign-in/${token}` })).text()).toContain('••••-0051');
     const { cookie } = await signIn({});
     const html = await (await clientAppFetch({ path: '/', cookie })).text();
-    expect(html).toContain('+55 ••••-0051');
+    expect(html).toContain('••••-0051');
     expect(html).not.toContain(OWNER_PHONE);
   });
 

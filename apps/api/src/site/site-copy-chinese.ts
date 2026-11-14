@@ -208,4 +208,7 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.MetaOgTitle]: 'zapbip：你的 AI 智能体会在 WhatsApp 上给你发消息',
   [SiteCopyKey.MetaOgImageAlt]: '一个 AI 智能体在 WhatsApp 上问“要把 v2.4 部署到生产环境吗？”，带有 Ship it 和 Wait 两个按钮。',
   [SiteCopyKey.NotFoundMetaTitle]: '找不到页面',
+  [SiteCopyKey.AgentsTitle]: '面向 AI 智能体',
+  [SiteCopyKey.AgentsBody]:
+    '智能体可以不经验证码，替它的主人申请使用：向 {endpoint} 发送一个 POST，请求体为 JSON {"email", "language"}。同样的工具也通过 WebMCP 注册在每个页面上。',
 };

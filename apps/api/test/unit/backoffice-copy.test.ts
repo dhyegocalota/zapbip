@@ -63,6 +63,11 @@ const SHARED_WITH_ENGLISH = [
   [WebLocale.French, BackofficeCopyKey.AuditColumnAction],
   [WebLocale.French, BackofficeCopyKey.NoticeLabelInfo],
   [WebLocale.French, BackofficeCopyKey.MetricsAccessColumnTotal],
+  [WebLocale.German, BackofficeCopyKey.SourceAgent],
+  [WebLocale.German, BackofficeCopyKey.AgentKeysColumnStatus],
+  [WebLocale.French, BackofficeCopyKey.SourceAgent],
+  [WebLocale.French, BackofficeCopyKey.AgentKeysColumnActions],
+  [WebLocale.French, BackofficeCopyKey.AgentKeysStatusActive],
 ].map(([locale, key]) => `${locale}:${key}`);
 const SIGN_IN_KEYS = ['SignInLead', 'SignInEmailLabel', 'SignInPasswordLabel', 'SignInSubmit', 'SignInCodeLead', 'SignInCodeSubmit'];
 const REMOVED_KEYS = ['SignInKeyLabel', 'SignInKeyHelp'];

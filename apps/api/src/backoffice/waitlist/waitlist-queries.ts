@@ -3,7 +3,7 @@ import type { WaitlistListRow } from './waitlist-csv';
 export const NO_ROW_LIMIT = -1;
 
 const COUNT_STATEMENT = 'SELECT COUNT(*) AS total FROM landing_waitlist';
-const LIST_STATEMENT = `SELECT me.email AS email, me.created_at AS joinedAt, referrer.email AS referredByEmail,
+const LIST_STATEMENT = `SELECT me.email AS email, me.created_at AS joinedAt, referrer.email AS referredByEmail, me.source AS source,
   (SELECT COUNT(*) FROM landing_waitlist WHERE referred_by = me.referral_code AND credited = 1) AS creditedCount
 FROM landing_waitlist AS me LEFT JOIN landing_waitlist AS referrer ON referrer.referral_code = me.referred_by
 ORDER BY creditedCount DESC, me.created_at ASC, me.rowid ASC LIMIT ?`;

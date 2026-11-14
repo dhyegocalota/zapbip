@@ -41,3 +41,10 @@ pnpm --filter @zapbip/api test:client-app
 - The documentation link of the six new languages is the English documentation.
 - The WhatsApp replies in the six languages are English until phase C.
 - Translations are written by the developer, not reviewed by native speakers.
+
+## After merging the agentic lanes
+
+- The Markdown twins, `llms.txt` and `llms-full.txt` per language path, the `/api/*` answers, the request-access `language` field and the well-known documents follow `WebLocale`: `site-agentic-languages.test.ts` pins the six new languages (green when it landed, since those modules iterate the enum).
+- 44 keys added by the agentic lanes (the agents section, the agent keys page, the audit agent-key column, the access and waitlist source columns) are translated into the six languages.
+- `localeOfLanguageValue` now accepts every `WebLocale` value and language tag, so `?lang=ja` and `"language": "ja"` work.
+- `docsPath` of the six new languages stays the English documentation until `feat/languages-docs` is merged.

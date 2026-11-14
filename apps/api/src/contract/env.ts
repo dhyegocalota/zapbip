@@ -14,6 +14,7 @@ export type Bindings = {
   OWNER_RATE_LIMITER: RateLimit;
   OUTBOUND_RATE_LIMITER: RateLimit;
   ACCOUNT_OUTBOUND_RATE_LIMITER: RateLimit;
+  ACCOUNT_CHANGE_RATE_LIMITER: RateLimit;
   INSTALL_PAGE_LIMITER: RateLimit;
   WHATSAPP_VERIFY_TOKEN?: string;
   META_APP_SECRET?: string;
@@ -26,6 +27,7 @@ export type Bindings = {
   BACKOFFICE_PASSWORD_PEPPER: string;
   BACKOFFICE_ORIGIN: string;
   BACKOFFICE_RATE_LIMITER: RateLimit;
+  OPERATOR_KEY_RATE_LIMITER: RateLimit;
   SITE_ORIGIN: string;
   APP_ORIGIN: string;
   TURNSTILE_SITE_KEY: string;

@@ -219,4 +219,7 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.MetaOgImageAlt]:
     'AIエージェントがWhatsAppで「v2.4を本番環境にデプロイしますか？」と質問している画面。Ship itとWaitのボタン付き。',
   [SiteCopyKey.NotFoundMetaTitle]: 'ページが見つかりません',
+  [SiteCopyKey.AgentsTitle]: 'AIエージェント向け',
+  [SiteCopyKey.AgentsBody]:
+    'エージェントは、キャプチャなしで本人のアクセスをリクエストできます。JSONボディ {"email", "language"} を {endpoint} にPOSTしてください。同じツールは、すべてのページでWebMCP経由でも登録されています。',
 };

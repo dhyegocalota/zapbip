@@ -5,3 +5,4 @@ export const UPLOAD_PATH_PREFIX = '/u';
 export const BASE64_ENCODING = 'base64';
 export const TEXT_CONTENT_TYPE = 'text';
 export const OUTBOUND_RATE_LIMITED_MESSAGE = 'rate_limited: too many messages in a minute, try again shortly';
+export const ACCOUNT_CHANGE_RATE_LIMITED_MESSAGE = 'rate_limited: too many account changes in a minute, try again shortly';

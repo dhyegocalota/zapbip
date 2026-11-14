@@ -8,6 +8,7 @@ const NAVIGATION_ITEMS: { path: BackofficePath; label: BackofficeCopyKey }[] = [
   { path: BackofficePath.Metrics, label: BackofficeCopyKey.NavigationMetrics },
   { path: BackofficePath.Waitlist, label: BackofficeCopyKey.NavigationWaitlist },
   { path: BackofficePath.Access, label: BackofficeCopyKey.NavigationAccess },
+  { path: BackofficePath.AgentKeys, label: BackofficeCopyKey.NavigationAgentKeys },
   { path: BackofficePath.Audit, label: BackofficeCopyKey.NavigationAudit },
 ];
 

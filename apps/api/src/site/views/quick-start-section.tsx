@@ -1,17 +1,16 @@
 import type { InstallClient } from '@zapbip/agents/install';
 import type { WebLocale } from '@zapbip/types';
 import { CodeTokenKind, highlightCode } from '../code-tokens';
-import { initialsOf, siteAgents, SiteStartTab, siteQuickStartOf } from '../site-agents';
+import { initialsOf, SiteStartTab } from '../site-agents';
+import { quickStartEntriesOf } from '../quick-start-entries';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { agentPathOf, joinPathOf, startPathOf } from '../site-links';
-import { SITE_EXAMPLE_CONNECTION_LINK } from '../site-constants';
 import { logoPathOf } from '../site-paths';
 
 const ANY_BADGE = '+';
 const LOGO_SIZE = 20;
 const LINE_BREAK = '\n';
-const ANY_PATH_KEYS = [SiteCopyKey.StartAnyStepOpen, SiteCopyKey.StartAnyStepAdd, SiteCopyKey.StartAnyStepPaste];
 const HIGHLIGHTED_KINDS = [
   CodeTokenKind.Command,
   CodeTokenKind.Flag,
@@ -78,30 +77,11 @@ function TabLogo(props: { tab: Tab }) {
 export function QuickStartSection(props: { locale: WebLocale; referralCode: string | null; startTab: InstallClient | SiteStartTab }) {
   const { locale, referralCode, startTab } = props;
   const translate = copyOf({ locale });
-  const agentTabs: Tab[] = siteAgents().map((agent) => {
-    const quickStart = siteQuickStartOf({ id: agent.id, locale, connectionLink: SITE_EXAMPLE_CONNECTION_LINK });
-    return {
-      id: agent.id,
-      agent: agent.id,
-      name: agent.name,
-      logoId: agent.logo,
-      initials: initialsOf({ name: agent.name }),
-      ...quickStart,
-      pickedLabel: translate(SiteCopyKey.AgentCardPicked, { agent: agent.name }),
-    };
-  });
-  const anyTab: Tab = {
-    id: SiteStartTab.AnyMcp,
-    agent: null,
-    name: translate(SiteCopyKey.ClientsAnyMcpName),
-    logoId: null,
-    initials: ANY_BADGE,
-    hint: translate(SiteCopyKey.StartAnyHint),
-    path: ANY_PATH_KEYS.map((key) => translate(key)),
-    code: SITE_EXAMPLE_CONNECTION_LINK,
-    pickedLabel: null,
-  };
-  const tabs = [...agentTabs, anyTab];
+  const tabs: Tab[] = quickStartEntriesOf({ locale }).map((entry) => ({
+    ...entry,
+    initials: entry.agent === null ? ANY_BADGE : initialsOf({ name: entry.name }),
+    pickedLabel: entry.agent === null ? null : translate(SiteCopyKey.AgentCardPicked, { agent: entry.name }),
+  }));
   return (
     <section class="block" id="start" aria-labelledby="start-title">
       <div class="container">

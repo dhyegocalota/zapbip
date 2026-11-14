@@ -118,6 +118,7 @@ export async function attemptCodeSignIn(input: {
       targetKind: null,
       targetId: null,
       clientAddress,
+      actorKeyId: null,
     },
   });
   return { outcome: SignInOutcome.Succeeded, sessionToken: await createSession({ database, now }) };

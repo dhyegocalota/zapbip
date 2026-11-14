@@ -215,4 +215,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.MetaOgTitle]: 'zapbip: AI 에이전트가 WhatsApp으로 말을 겁니다',
   [SiteCopyKey.MetaOgImageAlt]: 'AI 에이전트가 WhatsApp에서 “v2.4를 프로덕션에 배포할까요?”라고 묻는 화면. Ship it과 Wait 버튼이 있습니다.',
   [SiteCopyKey.NotFoundMetaTitle]: '페이지를 찾을 수 없습니다',
+  [SiteCopyKey.AgentsTitle]: 'AI 에이전트용',
+  [SiteCopyKey.AgentsBody]:
+    '에이전트는 캡차 없이 자신의 사용자를 위해 이용을 신청할 수 있습니다. JSON 본문 {"email", "language"}을 {endpoint}로 POST하세요. 같은 도구가 모든 페이지에서 WebMCP로도 등록됩니다.',
 };

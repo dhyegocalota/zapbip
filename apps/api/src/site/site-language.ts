@@ -1,15 +1,16 @@
-import { DocsLanguage, OwnerLocale, WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
+import { WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
+import { LOCALE_PROFILES } from '../web-shell/locale-profiles';
 import { SitePath } from './site-paths';
 
 const PATHS_BY_LOCALE = Object.fromEntries(
   Object.values(WebLocale).map((locale) => [locale, WEB_LOCALE_PATH_PREFIXES[locale] || SitePath.Home]),
 ) as Record<WebLocale, string>;
-const LOCALES_BY_VALUE: Record<string, WebLocale> = {
-  [DocsLanguage.English]: WebLocale.EnglishUs,
-  [WebLocale.EnglishUs]: WebLocale.EnglishUs,
-  [DocsLanguage.PortugueseBrazil]: WebLocale.PortugueseBrazil,
-  [WebLocale.PortugueseBrazil]: WebLocale.PortugueseBrazil,
-};
+const LOCALES_BY_VALUE: Record<string, WebLocale> = Object.fromEntries(
+  Object.values(WebLocale).flatMap((locale) => [
+    [locale, locale],
+    [LOCALE_PROFILES[locale].languageTag, locale],
+  ]),
+);
 const LOCALE_VALUES: string[] = Object.values(WebLocale);
 const LOCALES_BY_PRIMARY_LANGUAGE: Record<string, WebLocale> = {
   en: WebLocale.EnglishUs,

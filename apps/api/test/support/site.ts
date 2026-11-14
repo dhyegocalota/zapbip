@@ -61,6 +61,7 @@ export type SiteRequest = {
   path: string;
   method?: string;
   form?: Record<string, string>;
+  body?: string;
   headers?: Record<string, string>;
   env?: Bindings;
   recording?: SiteFetchRecording;
@@ -82,6 +83,7 @@ export async function siteFetch(input: SiteRequest): Promise<Response> {
     path,
     method = 'GET',
     form,
+    body,
     headers = {},
     env = siteEnvironment({}),
     recording = acceptingTurnstile(),
@@ -91,7 +93,7 @@ export async function siteFetch(input: SiteRequest): Promise<Response> {
   const request = new Request(`${SITE_ORIGIN}${path}`, {
     method,
     headers: { ...addressHeaders, ...headers },
-    body: form === undefined ? undefined : new URLSearchParams(form),
+    body: form === undefined ? body : new URLSearchParams(form),
   });
   return createSiteApp({ fetchImplementation: recording.fetchImplementation }).fetch(request, env, createExecutionContext());
 }

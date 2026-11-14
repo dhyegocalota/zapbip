@@ -90,6 +90,8 @@ const PAGES: Record<string, string> = {
           target_id: null,
           outcome: BackofficeAuditOutcome.Succeeded,
           client_address: null,
+          actor_key_id: null,
+          actor_key_label: null,
         },
       ],
     }),

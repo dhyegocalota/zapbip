@@ -110,6 +110,15 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       'Seu acesso ao zapbip está aberto. Envie "novo agente <nome>" para criar seu primeiro agente ou abra {app_link}.',
     [OwnerLocale.EnglishUs]: 'Your zapbip access is open. Send "new agent <name>" to create your first agent or open {app_link}.',
   },
+  [AccountReplyIntent.WindowClosed]: {
+    [OwnerLocale.PortugueseBrazil]:
+      'Não posso enviar esse link agora porque a janela de 24 horas está fechada. Escreva para o zapbip e peça de novo.',
+    [OwnerLocale.EnglishUs]: 'I cannot send that link now because the 24-hour window is closed. Write to zapbip and ask again.',
+  },
+  [AccountReplyIntent.CoolingDown]: {
+    [OwnerLocale.PortugueseBrazil]: 'Esse pedido não foi aprovado há pouco e está em pausa por alguns minutos.',
+    [OwnerLocale.EnglishUs]: 'That request was not approved a moment ago and is paused for a few minutes.',
+  },
   [AccountReplyIntent.Unknown]: {
     [OwnerLocale.PortugueseBrazil]: 'Não entendi. Envie "ajuda" para ver os comandos.',
     [OwnerLocale.EnglishUs]: 'I did not understand. Send "help" to see the commands.',

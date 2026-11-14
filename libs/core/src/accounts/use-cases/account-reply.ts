@@ -23,3 +23,15 @@ export function buildResult(input: {
   const { replies, compensation = null, deletionConfirmed = false, connectionId = null } = input;
   return { replies, compensation, deletionConfirmed, connectionId: compensation === null ? connectionId : compensation.connectionId };
 }
+
+export function firstReplyOf(input: { result: AccountCommandResult }): AccountReply {
+  const [reply] = input.result.replies;
+  if (reply === undefined) throw new Error('the command produced no reply');
+  return reply;
+}
+
+export function parameterOf(input: { reply: AccountReply; name: AccountReplyParameter }): string | null {
+  const value = input.reply.parameters[input.name];
+  if (value === undefined) return null;
+  return value;
+}

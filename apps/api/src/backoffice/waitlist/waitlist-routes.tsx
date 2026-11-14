@@ -51,6 +51,7 @@ async function auditWaitlist(input: {
       targetKind: TARGET_KIND,
       targetId,
       clientAddress: context.get('clientAddress'),
+      actorKeyId: null,
     },
   });
 }

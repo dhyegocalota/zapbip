@@ -7,9 +7,9 @@ async function readAnswer(input: { dependencies: CoreDependencies; questionId: s
   const { repository } = input.dependencies;
   const question = await repository.findQuestion({ questionId: input.questionId });
   if (question === null || question.answer === null) return null;
-  const { answerMessageId, text } = question.answer;
+  const { answerMessageId, text, optionIndex } = question.answer;
   await repository.markRead({ messageIds: [answerMessageId] });
-  return { status: ReplyStatus.Answered, answer: text, messageId: answerMessageId };
+  return { status: ReplyStatus.Answered, answer: text, messageId: answerMessageId, optionIndex };
 }
 
 export async function holdForAnswer(input: {

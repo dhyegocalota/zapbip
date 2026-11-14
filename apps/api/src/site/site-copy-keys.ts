@@ -190,6 +190,8 @@ export enum SiteCopyKey {
   FinalBody = 'final_body',
   FinalButton = 'final_button',
   FinalButtonInvite = 'final_button_invite',
+  AgentsTitle = 'agents_title',
+  AgentsBody = 'agents_body',
   FooterProduct = 'footer_product',
   FooterCompany = 'footer_company',
   FooterPricing = 'footer_pricing',

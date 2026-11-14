@@ -36,11 +36,18 @@ describe('the legacy language values', () => {
     ['en_US', WebLocale.EnglishUs],
     ['pt-BR', WebLocale.PortugueseBrazil],
     ['pt_BR', WebLocale.PortugueseBrazil],
+    ['es', WebLocale.Spanish],
+    ['de', WebLocale.German],
+    ['fr', WebLocale.French],
+    ['ja', WebLocale.Japanese],
+    ['ko', WebLocale.Korean],
+    ['zh-CN', WebLocale.ChineseSimplified],
+    ['zh_CN', WebLocale.ChineseSimplified],
   ])('reads %s', (value, locale) => {
     expect(localeOfLanguageValue({ value })).toBe(locale);
   });
 
-  it.each([undefined, '', 'xx', 'PT-BR', 'pt', 'en-US'])('refuses %j', (value) => {
+  it.each([undefined, '', 'xx', 'PT-BR', 'pt', 'en-US', 'zh', 'ES'])('refuses %j', (value) => {
     expect(localeOfLanguageValue({ value })).toBeNull();
   });
 });
