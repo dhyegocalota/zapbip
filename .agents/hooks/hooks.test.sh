@@ -345,12 +345,13 @@ rm -rf "$repository"
 doctor_bin=$(mktemp -d)
 doctor_home=$(mktemp -d)
 stub() { printf '#!/bin/bash\n%s\n' "$2" > "$doctor_bin/$1"; chmod +x "$doctor_bin/$1"; }
+stub_gh() { stub gh "[[ \"\$1\" == --version ]] && { echo 'gh version ${2:-2.104.0} (2026-11-12)'; exit 0; }; $1"; }
 stub_all() {
   rm -f "$doctor_bin"/*
   stub node 'echo v24.7.0'
   stub pnpm 'echo 8.15.9'
   stub jq 'exit 0'
-  stub gh 'exit 0'
+  stub_gh 'exit 0'
   stub gitleaks 'exit 0'
   stub ffmpeg 'exit 0'
   stub brew 'exit 0'
@@ -394,9 +395,18 @@ expect_match "doctor: optional tools are counted apart" "$report" 'doctor: 0 mis
 expect_match "doctor: ffmpeg says what is lost" "$(doctor_line Darwin ffmpeg)" '^ffmpeg \| missing \| optional \| lost: the recorder.s mp4 and gif; a PR that touches UI cannot ship \| fix: brew install ffmpeg$'
 doctor_exit "doctor: missing optional tools exit 0" 0 Darwin
 
-stub_all; stub gh 'exit 1'
+stub_all; stub_gh 'exit 1'
 report=$(doctor Darwin)
 expect_match "doctor: gh without auth is missing with the human step" "$(doctor_line Darwin gh)" '^gh \| missing \| required \| lost: [^|]+ \| fix: gh auth login \(run it yourself; the agent cannot\)$'
+
+stub_all; stub_gh 'exit 0' 2.71.0
+expect_match "doctor: gh older than the attach flag is missing with the upgrade" "$(doctor_line Darwin gh)" '^gh \| missing \| required \| lost: [^|]+ \| fix: brew upgrade gh$'
+
+stub_all; stub_gh 'exit 0' 2.99.0
+expect_match "doctor: gh at the minimum version is ok" "$(doctor_line Darwin gh)" '^gh \| ok \| required '
+
+stub_all; stub_gh 'exit 0' 2.100.0
+expect_match "doctor: gh compares versions by number, not by text" "$(doctor_line Darwin gh)" '^gh \| ok \| required '
 
 stub_all; stub node 'echo v22.11.0'
 expect_match "doctor: node below .nvmrc is missing" "$(doctor_line Darwin node)" '^node \| missing \| required \| lost: everything \| fix: nvm install \(reads \.nvmrc\), or https://nodejs\.org/en/download$'

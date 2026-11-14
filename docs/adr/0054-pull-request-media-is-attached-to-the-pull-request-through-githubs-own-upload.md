@@ -1,6 +1,6 @@
 # 0054. Pull request media is attached to the pull request through GitHub's own upload
 
-- Status: Accepted
+- Status: Superseded by [0059](0059-pull-request-media-is-attached-with-the-github-cli.md)
 - Date: 2026-11-14
 - Deciders: Dhyego Calota (owner); Claude (advisor)
 - Inspired by: the owner's words of 2026-11-14 ("images and videos must not go there any more, but embedded straight in the PR"); the oss-polish feature, which moved media from Releases to the private repository `zapbip-pr-media`

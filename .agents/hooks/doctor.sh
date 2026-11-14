@@ -44,6 +44,8 @@ gh_install() {
   install_with gh "https://github.com/cli/cli#installation"
 }
 
+readonly MINIMUM_GH_VERSION="2.99.0"
+
 python_requirements_install() {
   local file commands=""
   for file in "$root"/apps/*-plugin/requirements-dev.txt; do
@@ -67,6 +69,7 @@ fix_for() {
     pnpm) echo "corepack enable && corepack prepare pnpm@$wanted_pnpm --activate" ;;
     jq) install_with jq "https://jqlang.github.io/jq/download/" ;;
     gh) gh_install ;;
+    gh-upgrade) [[ "$manager" == brew ]] && echo "brew upgrade gh" || echo "https://github.com/cli/cli#installation (gh $MINIMUM_GH_VERSION or newer, for gh pr edit --attach)" ;;
     gh-auth) echo "gh auth login (run it yourself; the agent cannot)" ;;
     chromium) chromium_install ;;
     skills) echo "ln -sfn ../.agents/skills .claude/skills" ;;
@@ -102,7 +105,12 @@ node_major() { run node -v 2>/dev/null | sed -nE '1s/^v([0-9]+).*/\1/p'; }
 check_node() { local installed_major; have node && installed_major=$(node_major) && [[ "$installed_major" =~ ^[0-9]+$ ]] && [[ "$installed_major" -ge "$wanted_node" ]]; }
 check_pnpm() { have pnpm && [[ "$(COREPACK_ENABLE_NETWORK=0 run pnpm -v 2>/dev/null)" == "$wanted_pnpm" ]]; }
 check_jq() { have jq; }
-check_gh() { have gh && run gh auth token >/dev/null 2>&1; }
+gh_version_is_enough() {
+  local installed
+  installed=$(run gh --version 2>/dev/null | sed -nE '1s/^gh version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p')
+  [[ -n "$installed" && "$(printf '%s\n%s\n' "$MINIMUM_GH_VERSION" "$installed" | sort -V | head -1)" == "$MINIMUM_GH_VERSION" ]]
+}
+check_gh() { have gh && gh_version_is_enough && run gh auth token >/dev/null 2>&1; }
 check_chromium() { ls -d "$(browsers_dir)"/chromium-* >/dev/null 2>&1; }
 check_skills() { [[ "$(cd "$root/.claude/skills" 2>/dev/null && pwd -P)" == "$(cd "$root/.agents/skills" && pwd -P)" ]]; }
 check_gitleaks() { have gitleaks; }
@@ -111,6 +119,7 @@ check_python() { have python3 && run python3 -c 'import sys, mypy, pytest; sys.e
 check_wrangler() { ! HOME=$home is_wrangler_logged_in; }
 
 fix_name_for() {
+  [[ "$1" == gh ]] && have gh && ! gh_version_is_enough && { echo gh-upgrade; return; }
   [[ "$1" == gh ]] && have gh && { echo gh-auth; return; }
   echo "$1"
 }
