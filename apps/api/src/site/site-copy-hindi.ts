@@ -197,7 +197,7 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: 'हर एजेंट का अपना सीक्रेट होता है। इनमें से किसी को भी WhatsApp से, कभी भी, रद्द करें।',
   [SiteCopyKey.PrivacyWaitlistTitle]: 'इस वेटलिस्ट के बारे में',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    'हम आपका ईमेल, भाषा और रेफ़रल डेटा सिर्फ़ आपको बुलाने के लिए रखते हैं। हम कोई IP पता सेव नहीं करते और कोई ट्रैकिंग कुकी नहीं लगाते; दो कुकीज़ आपकी भाषा और थीम याद रखती हैं। हटवाने के लिए {contactEmail} पर लिखें।',
+    'हम आपका ईमेल, भाषा और रेफ़रल डेटा सिर्फ़ आपका स्वागत करने, आपके एक्सेस की जानकारी देने और आपको बुलाने के लिए रखते हैं। हम कोई IP पता सेव नहीं करते और कोई ट्रैकिंग कुकी नहीं लगाते; दो कुकीज़ आपकी भाषा और थीम याद रखती हैं। हटवाने के लिए {contactEmail} पर लिखें।',
   [SiteCopyKey.FaqEyebrow]: 'आम सवाल',
   [SiteCopyKey.FaqTitle]: 'सवाल',
   [SiteCopyKey.FaqWhenQuestion]: 'मुझे एक्सेस कब मिलेगा?',

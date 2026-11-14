@@ -4,6 +4,7 @@ import { ARABIC_WELCOME_EMAIL_COPY } from './welcome-email-copy-arabic';
 import { CHINESE_WELCOME_EMAIL_COPY } from './welcome-email-copy-chinese';
 import { FRENCH_WELCOME_EMAIL_COPY } from './welcome-email-copy-french';
 import { GERMAN_WELCOME_EMAIL_COPY } from './welcome-email-copy-german';
+import { HINDI_WELCOME_EMAIL_COPY } from './welcome-email-copy-hindi';
 import { JAPANESE_WELCOME_EMAIL_COPY } from './welcome-email-copy-japanese';
 import { KOREAN_WELCOME_EMAIL_COPY } from './welcome-email-copy-korean';
 import { SPANISH_WELCOME_EMAIL_COPY } from './welcome-email-copy-spanish';
@@ -60,6 +61,7 @@ const WELCOME_EMAIL_COPY: Record<OwnerLocale, CopyEntries> = {
   [OwnerLocale.Korean]: KOREAN_WELCOME_EMAIL_COPY,
   [OwnerLocale.ChineseSimplified]: CHINESE_WELCOME_EMAIL_COPY,
   [OwnerLocale.Arabic]: ARABIC_WELCOME_EMAIL_COPY,
+  [OwnerLocale.Hindi]: HINDI_WELCOME_EMAIL_COPY,
 };
 
 export function renderWelcomeEmailCopy(input: { key: WelcomeEmailCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
