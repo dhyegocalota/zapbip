@@ -29,6 +29,7 @@ const LISTENER_TAILS: Partial<Record<DocsPageLanguage, string>> = {
   [DocsPageLanguage.Korean]: ' 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체해요.',
   [DocsPageLanguage.Chinese]: '，不要两者同时使用。第二个 listener 会替换第一个。',
   [DocsPageLanguage.Arabic]: '، وليس الاثنين معًا. المستمع الثاني يحل محل الأول.',
+  [DocsPageLanguage.Hindi]: ', दोनों कभी नहीं। दूसरा लिसनर पहले वाले की जगह ले लेता है।',
 };
 const PLUGIN: AgentPlugin = {
   packageFolder: 'apps/demo-plugin',
@@ -154,6 +155,7 @@ describe('pageRuleViolationsOf', () => {
     [DocsPageLanguage.Korean, '에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는'],
     [DocsPageLanguage.Chinese, '每个智能体只运行一个 listener：插件或'],
     [DocsPageLanguage.Arabic, 'شغّل مستمعًا واحدًا فقط لكل وكيل: المكوّن الإضافي أو'],
+    [DocsPageLanguage.Hindi, 'हर एजेंट के लिए सिर्फ़ एक लिसनर चलाएँ: प्लगइन या'],
   ])('accepts the one-listener sentence of a %s plugin page', (language, sentenceStart) => {
     const page = PLUGIN_PAGE.replace(
       INSTALL_SELF_TEST_TEXT[OwnerLocale.EnglishUs],

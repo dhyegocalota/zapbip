@@ -21,6 +21,8 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
     '例行任务的 Webhook 大约 16 秒就能唤醒 claude.ai；作为保险的计划任务最多每 60 分钟运行一次，这是平台的最低间隔。',
   [OwnerLocale.Arabic]:
     'يوقظ webhook الروتين claude.ai خلال نحو 16 ثانية؛ أما المهمة المجدولة الاحتياطية فتعمل مرة واحدة كل 60 دقيقة على الأكثر، وهذا حد أدنى تفرضه المنصة.',
+  [OwnerLocale.Hindi]:
+    'रूटीन का webhook claude.ai को करीब 16 सेकंड में जगाता है; सेफ़्टी नेट वाला शेड्यूल्ड टास्क ज़्यादा से ज़्यादा हर 60 मिनट में एक बार चलता है, जो प्लेटफ़ॉर्म की न्यूनतम सीमा है।',
 };
 
 describe('the claude.ai install section', () => {

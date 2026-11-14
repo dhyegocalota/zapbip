@@ -64,7 +64,7 @@ zapbip has one Meta app, `714836811568009`, for staging and production ([ADR 003
 
     If it fails: the privacy policy page must be public. The privacy page is part of the docs site: use `https://docs.zapbip.com/help/privacy` (English) or `https://docs.zapbip.com/pt-BR/help/privacy`, and open it in a browser before pasting it, which needs [mintlify-publish.md](mintlify-publish.md) done first. A rejected verification lists what to correct.
 
-11. **Check the English and Portuguese templates.** You submit nothing. When a number is verified in the backoffice, zapbip creates every template that is missing from its WhatsApp Business account, in all nine languages, with category Utility, the body, the two samples and the one Quick reply button of the tables below, and the Worker checks them again every hour until each is Approved. The tables are the reference of what is submitted. To have the production templates approved before the production number is connected, create the production WhatsApp Business account in WhatsApp Manager first and pick it in the Connect popup later.
+11. **Check the English and Portuguese templates.** You submit nothing. When a number is verified in the backoffice, zapbip creates every template that is missing from its WhatsApp Business account, in all ten languages, with category Utility, the body, the two samples and the one Quick reply button of the tables below, and the Worker checks them again every hour until each is Approved. The tables are the reference of what is submitted. To have the production templates approved before the production number is connected, create the production WhatsApp Business account in WhatsApp Manager first and pick it in the Connect popup later.
 
     | Name | Language | Body, exactly | Samples | Quick reply |
     |---|---|---|---|---|
@@ -73,11 +73,11 @@ zapbip has one Meta app, `714836811568009`, for staging and production ([ADR 003
     | `zapbip_agent_question` | `pt_BR` | `Pergunta de {{1}}: {{2}} — toque em Responder para ver as opções.` | `Agente de teste`, `Pergunta de exemplo` | `Responder` |
     | `zapbip_agent_question` | `en_US` | `Question from {{1}}: {{2}} — tap Reply to see the options.` | `Test agent`, `Example question` | `Reply` |
 
-    Expect: the number's verification page lists all eighteen templates, and each changes from Pending to Approved, usually within minutes to a day, with the category Utility.
+    Expect: the number's verification page lists all twenty templates, and each changes from Pending to Approved, usually within minutes to a day, with the category Utility.
 
     If it fails: if Meta recategorises one as Marketing, edit it to remove promotional wording or appeal in WhatsApp Manager; a Marketing template costs more and is not what the Worker sends. A template shown as Rejected is never submitted again: fix it or delete it in WhatsApp Manager, and the next verification submits it afresh. A template that stays rejected blocks production, because outside the 24-hour window zapbip can only reach the owner through these templates.
 
-12. **Switch a language to its own template (optional).** Until a language has approved templates, zapbip sends the English template to its owners outside the 24-hour window ([ADR 0051](../adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md)). The templates of the seven further languages are submitted for you like the first two ([ADR 0056](../adr/0056-templates-are-submitted-and-rechecked-automatically-for-every-number.md)). When both templates of a language show Approved on the verification page, change that language's row in `OWNER_LOCALE_TO_LANGUAGE_CODE` (`apps/api/src/adapters/whatsapp/whatsapp-templates.ts`) from `WhatsAppLanguageCode.EnglishUs` to its own code and deploy. Never flip a row before Approved: Meta refuses the send and the owner gets nothing.
+12. **Switch a language to its own template (optional).** Until a language has approved templates, zapbip sends the English template to its owners outside the 24-hour window ([ADR 0051](../adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md)). The templates of the eight further languages are submitted for you like the first two ([ADR 0056](../adr/0056-templates-are-submitted-and-rechecked-automatically-for-every-number.md)). When both templates of a language show Approved on the verification page, change that language's row in `OWNER_LOCALE_TO_LANGUAGE_CODE` (`apps/api/src/adapters/whatsapp/whatsapp-templates.ts`) from `WhatsAppLanguageCode.EnglishUs` to its own code and deploy. Never flip a row before Approved: Meta refuses the send and the owner gets nothing.
 
     | Name | Language | Body, exactly | Samples | Quick reply |
     |---|---|---|---|---|
@@ -95,6 +95,8 @@ zapbip has one Meta app, `714836811568009`, for staging and production ([ADR 003
     | `zapbip_agent_question` | `zh_CN` | `来自 {{1}} 的提问：{{2}} — 点击“回复”查看选项。` | `测试智能体`, `示例问题` | `回复` |
     | `zapbip_agent_notice` | `ar` | `رسالة من {{1}}: {{2}} — اضغط «فتح» لقراءتها.` | `وكيل تجريبي`, `رسالة مثال` | `فتح` |
     | `zapbip_agent_question` | `ar` | `سؤال من {{1}}: {{2}} — اضغط «رد» لعرض الخيارات.` | `وكيل تجريبي`, `سؤال مثال` | `رد` |
+    | `zapbip_agent_notice` | `hi` | `आपके लिए {{1}} का संदेश: {{2}} — पढ़ने के लिए "खोलें" पर टैप करें।` | `टेस्ट एजेंट`, `उदाहरण संदेश` | `खोलें` |
+    | `zapbip_agent_question` | `hi` | `आपके लिए {{1}} का सवाल: {{2}} — विकल्प देखने के लिए "जवाब दें" पर टैप करें।` | `टेस्ट एजेंट`, `उदाहरण सवाल` | `जवाब दें` |
 
     Expect: each translated template changes from Pending to Approved with the category Utility.
 

@@ -129,6 +129,16 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     waitingLabel: '等待你的回复',
     answeredLabel: '你已回复：',
   },
+  [OwnerLocale.Hindi]: {
+    command: 'टेस्ट चलाओ',
+    testsPassed: '128 टेस्ट पास हुए',
+    questionTemplate: `टेस्ट पास हो गए। ${QUESTION_PLACEHOLDER}`,
+    liveText: 'v2.4 लाइव है',
+    deployCommand: 'v2.4 डिप्लॉय करो',
+    optionsLabel: 'विकल्प:',
+    waitingLabel: 'आपके जवाब का इंतज़ार',
+    answeredLabel: 'आपका जवाब:',
+  },
 };
 
 export function demoScriptOf(input: { locale: OwnerLocale }): LocaleScript {

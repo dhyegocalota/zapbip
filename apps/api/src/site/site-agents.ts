@@ -18,6 +18,7 @@ const LIST_SEPARATORS: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '、',
   [OwnerLocale.ChineseSimplified]: '、',
   [OwnerLocale.Arabic]: '، ',
+  [OwnerLocale.Hindi]: ', ',
 };
 const FIRST_SENDER_INDEX = 0;
 const SECOND_SENDER_INDEX = 1;

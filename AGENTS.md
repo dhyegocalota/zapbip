@@ -39,7 +39,7 @@ Every workspace package has a `README.md` that states purpose only: no commands,
 
 ## Language
 
-Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are. The one exception is owner-facing product copy: it lives in `*-copy.ts` modules, in the nine `OwnerLocale` languages: `en_US`, `pt_BR`, `es`, `de`, `fr`, `ja`, `ko`, `zh_CN` and `ar` ([ADR 0051](docs/adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md), [ADR 0053](docs/adr/0053-arabic-is-the-ninth-language-and-the-first-that-reads-right-to-left.md)); repo prose and identifiers stay English.
+Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are. The one exception is owner-facing product copy: it lives in `*-copy.ts` modules, in the ten `OwnerLocale` languages: `en_US`, `pt_BR`, `es`, `de`, `fr`, `ja`, `ko`, `zh_CN`, `ar` and `hi` ([ADR 0051](docs/adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md), [ADR 0053](docs/adr/0053-arabic-is-the-ninth-language-and-the-first-that-reads-right-to-left.md), [ADR 0057](docs/adr/0057-hindi-is-the-tenth-language-and-india-keeps-english-for-a-new-owner.md)); repo prose and identifiers stay English.
 
 ## Code conventions
 

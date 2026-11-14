@@ -46,6 +46,10 @@ const GROK_BOT_TEXT: Record<OwnerLocale, GrokBotText> = {
     wakeNote: 'يوقظ webhook الروتين Grok Bot خلال نحو 9 ثوانٍ، دون حد زمني.',
     confirmServer: 'أضيف الآن خادم zapbip MCP إلى Grok Bot. أكّد ذلك عندما يطلب.',
   },
+  [OwnerLocale.Hindi]: {
+    wakeNote: 'रूटीन का webhook Grok Bot को करीब 9 सेकंड में जगाता है, बिना किसी समय-सीमा के।',
+    confirmServer: 'zapbip का MCP सर्वर Grok Bot में जोड़ा जा रहा है। पूछे जाने पर इसकी पुष्टि करें।',
+  },
 };
 
 export const GROK_BOT_COPY = localizeCopy({
@@ -80,6 +84,7 @@ const GROK_BOT_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'Grok Bot에서 이렇게 하세요',
   [OwnerLocale.ChineseSimplified]: '在 Grok Bot 中这样做',
   [OwnerLocale.Arabic]: 'افعل هذا في Grok Bot',
+  [OwnerLocale.Hindi]: 'यह Grok Bot में करें',
 };
 
 const GROK_BOT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
@@ -92,6 +97,7 @@ const GROK_BOT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Korean]: ['Grok Bot 열기', 'zapbip이라는 이름의 MCP 서버 추가', '이 주소 붙여넣기'],
   [OwnerLocale.ChineseSimplified]: ['打开 Grok Bot', '添加一个名为 zapbip 的 MCP 服务器', '粘贴这个地址'],
   [OwnerLocale.Arabic]: ['افتح Grok Bot', 'أضف خادم MCP باسم zapbip', 'الصق هذا العنوان'],
+  [OwnerLocale.Hindi]: ['Grok Bot खोलें', 'zapbip नाम का MCP सर्वर जोड़ें', 'यह पता पेस्ट करें'],
 };
 
 export const GROK_BOT_QUICK_START = quickStartOf({ hint: GROK_BOT_QUICK_START_HINT, path: GROK_BOT_QUICK_START_PATH, code: addressText });

@@ -72,6 +72,7 @@ const DAYS_WORDS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: '일',
   [DocsPageLanguage.Chinese]: '天',
   [DocsPageLanguage.Arabic]: 'أيام|يومًا',
+  [DocsPageLanguage.Hindi]: 'दिन',
 };
 const LANGUAGES = Object.values(DocsPageLanguage);
 const TRANSLATED_LANGUAGES = LANGUAGES.filter((language) => language !== DocsPageLanguage.English);

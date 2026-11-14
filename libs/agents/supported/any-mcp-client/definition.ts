@@ -16,6 +16,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Korean]: 'MCP(Model Context Protocol)를 지원하는 모든 앱',
       [DocsPageLanguage.Chinese]: '任何支持 MCP（Model Context Protocol）的应用',
       [DocsPageLanguage.Arabic]: 'أي تطبيق يدعم MCP (Model Context Protocol)',
+      [DocsPageLanguage.Hindi]: 'MCP (Model Context Protocol) वाला कोई भी ऐप',
     },
     linkName: {
       [DocsPageLanguage.English]: 'Any MCP app',
@@ -27,6 +28,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Korean]: '모든 MCP 앱',
       [DocsPageLanguage.Chinese]: '任何 MCP 应用',
       [DocsPageLanguage.Arabic]: 'أي تطبيق MCP',
+      [DocsPageLanguage.Hindi]: 'कोई भी MCP ऐप',
     },
     pageFacts: perLanguage({ valueOf: () => ['check_inbox', '/developers/any-mcp-client'] }),
     speakerNames: [],

@@ -77,3 +77,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0054](0054-pull-request-media-is-attached-to-the-pull-request-through-githubs-own-upload.md) | Pull request media is attached to the pull request through GitHub's own upload | Accepted | 2026-11-14 |
 | [0055](0055-contributions-come-under-a-contributor-license-agreement.md) | Contributions come under a contributor license agreement | Accepted | 2026-11-14 |
 | [0056](0056-templates-are-submitted-and-rechecked-automatically-for-every-number.md) | Templates are submitted and rechecked automatically for every number | Accepted | 2026-11-14 |
+| [0057](0057-hindi-is-the-tenth-language-and-india-keeps-english-for-a-new-owner.md) | Hindi is the tenth language, and India keeps English for a new owner | Accepted | 2026-11-14 |

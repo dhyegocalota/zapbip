@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'ओनर को लोकेशन का पिन भेजें।'
+---
+
+ओनर को लोकेशन का पिन भेजें।
+
+## इनपुट
+
+| फ़ील्ड      | टाइप             | नोट                        |
+| ----------- | ---------------- | -------------------------- |
+| `latitude`  | number           |                            |
+| `longitude` | number           |                            |
+| `name`      | string, वैकल्पिक |                            |
+| `address`   | string, वैकल्पिक |                            |
+| `reply_to`  | string, वैकल्पिक | कोट करने वाले संदेश की id। |
+
+## आउटपुट
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`। `queued` का मतलब है कि [24 घंटे की विंडो](/hi/concepts/24-hour-window) बंद है।
+
+## संदेशों के प्रकार
+
+import MessageKinds from '/snippets/hi/message-kinds.mdx';
+
+<MessageKinds />

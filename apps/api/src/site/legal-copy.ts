@@ -7,6 +7,7 @@ import { FRENCH_LEGAL_COPY } from './legal-copy-french';
 import { JAPANESE_LEGAL_COPY } from './legal-copy-japanese';
 import { KOREAN_LEGAL_COPY } from './legal-copy-korean';
 import { ARABIC_LEGAL_COPY } from './legal-copy-arabic';
+import { HINDI_LEGAL_COPY } from './legal-copy-hindi';
 import { CHINESE_LEGAL_COPY } from './legal-copy-chinese';
 import { formatCount } from './price-format';
 import { leadingAgentNames } from './site-agents';
@@ -228,6 +229,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
     [OwnerLocale.Korean]: KOREAN_LEGAL_COPY[LegalDocument.Terms],
     [OwnerLocale.ChineseSimplified]: CHINESE_LEGAL_COPY[LegalDocument.Terms],
     [OwnerLocale.Arabic]: ARABIC_LEGAL_COPY[LegalDocument.Terms],
+    [OwnerLocale.Hindi]: HINDI_LEGAL_COPY[LegalDocument.Terms],
   },
   [LegalDocument.Privacy]: {
     [OwnerLocale.EnglishUs]: {
@@ -467,6 +469,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
     [OwnerLocale.Korean]: KOREAN_LEGAL_COPY[LegalDocument.Privacy],
     [OwnerLocale.ChineseSimplified]: CHINESE_LEGAL_COPY[LegalDocument.Privacy],
     [OwnerLocale.Arabic]: ARABIC_LEGAL_COPY[LegalDocument.Privacy],
+    [OwnerLocale.Hindi]: HINDI_LEGAL_COPY[LegalDocument.Privacy],
   },
 };
 

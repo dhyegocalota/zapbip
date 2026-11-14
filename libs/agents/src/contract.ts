@@ -91,6 +91,7 @@ export enum AgentFacet {
   KoreanPage = 'page.ko.mdx',
   ChinesePage = 'page.zh.mdx',
   ArabicPage = 'page.ar.mdx',
+  HindiPage = 'page.hi.mdx',
   Install = 'install.ts',
   Connector = 'connector.ts',
   Plugin = 'plugin.ts',
@@ -107,4 +108,5 @@ export const PAGE_FACETS: Record<DocsPageLanguage, AgentFacet> = {
   [DocsPageLanguage.Korean]: AgentFacet.KoreanPage,
   [DocsPageLanguage.Chinese]: AgentFacet.ChinesePage,
   [DocsPageLanguage.Arabic]: AgentFacet.ArabicPage,
+  [DocsPageLanguage.Hindi]: AgentFacet.HindiPage,
 };

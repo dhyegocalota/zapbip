@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: 'इस अकाउंट की स्थिति और प्लान पढ़ें।'
+---
+
+वह अकाउंट पढ़ें जिसका यह कनेक्शन है। सिर्फ़ पढ़ने के लिए: इसे किसी मंज़ूरी की ज़रूरत नहीं और यह किसी सीमा में नहीं गिना जाता।
+
+## इनपुट
+
+कुछ नहीं।
+
+## आउटपुट
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`। फ़ोन नंबर कभी नतीजे का हिस्सा नहीं होता। `free_messages` वह संख्या है जो प्लान में शामिल है; zapbip यह नहीं बताता कि कितने बचे हैं।
+
+यही डेटा [वेब ऐप](/hi/features/web-app) पर भी है: लॉग इन सेशन के लिए होम पेज `Accept: application/json` पर `{ "state", "phone", "plan", "free_messages", "agents" }` देता है, जिसमें `phone` सिर्फ़ आखिरी चार अंक दिखाता है, और लॉग आउट होने पर `{ "error": "sign_in_required" }` के साथ `401`।

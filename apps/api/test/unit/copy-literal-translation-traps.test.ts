@@ -72,6 +72,13 @@ const LANGUAGES: LanguageTraps[] = [
     sourceFile: (path) => path.endsWith('-chinese.ts'),
     traps: /您|主人|自己设置|可流式传输|你来点选|点一下|点按作答|等你点按|你点按|需要你点|点按钮才算数|可点按/,
   },
+  {
+    name: 'hi',
+    docsFolder: 'hi',
+    pageSuffix: 'page.hi.mdx',
+    sourceFile: (path) => path.endsWith('-hindi.ts'),
+    traps: /आप टैप करते|आपका टैप|आपके टैप|टैप का इंतज़ार|एक टैप में|एक टैप से|टैप करके जवाब|अभिकर्ता|कड़ी/,
+  },
 ];
 
 function filesUnder({ root, accepts }: { root: string; accepts: (path: string) => boolean }): string[] {

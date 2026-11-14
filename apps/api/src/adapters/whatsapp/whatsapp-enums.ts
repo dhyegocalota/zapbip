@@ -71,6 +71,7 @@ export enum WhatsAppLanguageCode {
   Korean = 'ko',
   ChineseSimplified = 'zh_CN',
   Arabic = 'ar',
+  Hindi = 'hi',
 }
 
 export enum OperatorEvent {

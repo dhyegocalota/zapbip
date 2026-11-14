@@ -24,6 +24,7 @@ const WAKE_RUNG_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['커넥터', 'webhook', '예약', '받은편지함'],
   [DocsPageLanguage.Chinese]: ['连接器', 'webhook', '定时', '收件箱'],
   [DocsPageLanguage.Arabic]: ['موصّل', 'webhook', 'مجدول', 'صندوق الوارد'],
+  [DocsPageLanguage.Hindi]: ['कनेक्टर', 'webhook', 'शेड्यूल्ड', 'इनबॉक्स'],
 };
 const NOT_LISTENING_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'is not listening right now',
@@ -35,6 +36,7 @@ const NOT_LISTENING_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: '지금은 듣고 있지 않아요',
   [DocsPageLanguage.Chinese]: '现在没有在监听',
   [DocsPageLanguage.Arabic]: 'لا يستمع الآن',
+  [DocsPageLanguage.Hindi]: 'अभी नहीं सुन रहा है',
 };
 const COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
@@ -86,6 +88,15 @@ const COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['새 에이전트', '에이전트 목록', '폐기', '재발급', '도움말', '계정 삭제', '계정 영구 삭제'],
   [DocsPageLanguage.Chinese]: ['新建智能体', '智能体列表', '撤销', '轮换', '帮助', '删除账户', '永久删除账户'],
   [DocsPageLanguage.Arabic]: ['وكيل جديد', 'وكلائي', 'إبطال', 'تجديد رابط', 'مساعدة', 'حذف الحساب', 'حذف الحساب نهائيا'],
+  [DocsPageLanguage.Hindi]: [
+    'नया एजेंट',
+    'मेरे एजेंट',
+    'एजेंट हटाएँ',
+    'लिंक बदलें',
+    'मदद',
+    'अकाउंट डिलीट करें',
+    'अकाउंट हमेशा के लिए डिलीट करें',
+  ],
 };
 const OTHER_LANGUAGE_COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: COMMAND_WORDS[DocsPageLanguage.PortugueseBrazil],
@@ -97,6 +108,7 @@ const OTHER_LANGUAGE_COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: COMMAND_WORDS[DocsPageLanguage.English],
   [DocsPageLanguage.Chinese]: COMMAND_WORDS[DocsPageLanguage.English],
   [DocsPageLanguage.Arabic]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
+  [DocsPageLanguage.Hindi]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
 };
 const RESERVED_NAME_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'reserved',
@@ -108,6 +120,7 @@ const RESERVED_NAME_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: '예약',
   [DocsPageLanguage.Chinese]: '保留',
   [DocsPageLanguage.Arabic]: 'محجوزة',
+  [DocsPageLanguage.Hindi]: 'आरक्षित',
 };
 const FORWARDED_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'forwarded',
@@ -119,6 +132,7 @@ const FORWARDED_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: '전달',
   [DocsPageLanguage.Chinese]: '转发',
   [DocsPageLanguage.Arabic]: 'المعاد توجيهها',
+  [DocsPageLanguage.Hindi]: 'फ़ॉरवर्ड',
 };
 
 function urlOf(input: { path: string; language: DocsPageLanguage }): string {

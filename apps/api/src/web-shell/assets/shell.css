@@ -238,7 +238,13 @@ form.switch {
   --font-display: ui-rounded, 'Geeza Pro', 'Segoe UI', 'Noto Sans Arabic', Tahoma, sans-serif;
 }
 
-:root:lang(ar) :not(.footer-wordmark, .brand) {
+:root:lang(hi) {
+  --font-sans: system-ui, -apple-system, 'Kohinoor Devanagari', 'Devanagari Sangam MN', 'Nirmala UI', 'Noto Sans Devanagari', sans-serif;
+  --font-display: ui-rounded, 'Kohinoor Devanagari', 'Nirmala UI', 'Noto Sans Devanagari', sans-serif;
+}
+
+:root:lang(ar) :not(.footer-wordmark, .brand),
+:root:lang(hi) :not(.footer-wordmark, .brand) {
   letter-spacing: normal !important;
 }
 

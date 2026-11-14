@@ -109,6 +109,16 @@ const LOCALE_WORDS: Record<OwnerLocale, LocaleWords> = {
     confirmDeletion: 'حذف الحساب نهائيا',
     setLanguage: 'تغيير اللغة',
   },
+  [OwnerLocale.Hindi]: {
+    createAgent: 'नया एजेंट',
+    listAgents: 'मेरे एजेंट',
+    revokeAgent: 'एजेंट हटाएँ',
+    rotateAgent: 'लिंक बदलें',
+    help: ['मदद', 'मेनू'],
+    requestDeletion: 'अकाउंट डिलीट करें',
+    confirmDeletion: 'अकाउंट हमेशा के लिए डिलीट करें',
+    setLanguage: 'भाषा बदलें',
+  },
 };
 
 function wordsOf(input: { locale: OwnerLocale }): CommandWord[] {

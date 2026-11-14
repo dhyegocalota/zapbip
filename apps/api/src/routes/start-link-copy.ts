@@ -62,4 +62,10 @@ export const START_LINK_COPY: Record<OwnerLocale, StartLinkTexts> = {
     unavailableTitle: 'zapbip: سنعود قريبًا',
     unavailableBody: 'لا نستقبل تسجيلات جديدة الآن. حاول مرة أخرى بعد بضع دقائق.',
   },
+  [OwnerLocale.Hindi]: {
+    htmlLanguage: 'hi',
+    direction: 'ltr',
+    unavailableTitle: 'zapbip: जल्द वापस आएँगे',
+    unavailableBody: 'अभी हम नए साइन-अप नहीं ले रहे हैं। कृपया कुछ मिनट बाद फिर से कोशिश करें।',
+  },
 };

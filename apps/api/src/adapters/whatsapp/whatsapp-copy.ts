@@ -92,4 +92,13 @@ export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = 
     [OwnerCopyKey.NumberClosedToNewAccounts]: 'هذا الرقم لا يقبل حسابات جديدة حاليًا.',
     [OwnerCopyKey.AccountOnOtherNumber]: 'حسابك على zapbip موجود على الرقم {displayNumber}. راسله من هنا: {whatsAppLink}',
   },
+  [OwnerLocale.Hindi]: {
+    [OwnerCopyKey.UnsupportedKind]: 'इस तरह का संदेश अभी सपोर्ट नहीं होता। इसे टेक्स्ट या फ़ोटो के रूप में भेजें।',
+    [OwnerCopyKey.MediaUnavailable]: 'फ़ाइल डाउनलोड नहीं हो सकी। कृपया उसे फिर से भेजें।',
+    [OwnerCopyKey.ListButtonLabel]: 'विकल्प देखें',
+    [OwnerCopyKey.ListSectionTitle]: 'विकल्प',
+    [OwnerCopyKey.TemplatePreviewFallback]: 'एक संदेश',
+    [OwnerCopyKey.NumberClosedToNewAccounts]: 'यह नंबर अभी नए अकाउंट नहीं ले रहा है।',
+    [OwnerCopyKey.AccountOnOtherNumber]: 'आपका zapbip {displayNumber} पर है। वहाँ संदेश भेजें: {whatsAppLink}',
+  },
 };

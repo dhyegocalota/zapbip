@@ -67,6 +67,11 @@ const CURSOR_TEXT: Record<OwnerLocale, CursorText> = {
     confirmChange: 'سأضيف خادم zapbip إلى إعدادات MCP في Cursor. هل أستطيع ذلك؟',
     restart: 'أعد تشغيل محادثة Cursor لاستخدام zapbip.',
   },
+  [OwnerLocale.Hindi]: {
+    wakeNote: 'Cursor बैकग्राउंड टर्मिनल के ज़रिए सुनता है और उसके चलते रहने तक कुछ ही सेकंड में जवाब देता है, बिना किसी समय-सीमा के।',
+    confirmChange: 'zapbip सर्वर को Cursor की MCP सेटिंग्स में जोड़ना है। क्या मैं आगे बढ़ूँ?',
+    restart: 'zapbip इस्तेमाल करने के लिए Cursor चैट को फिर से शुरू करें।',
+  },
 };
 
 export const CURSOR_COPY = localizeCopy({
@@ -101,6 +106,7 @@ const CURSOR_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'Cursor에서 이렇게 하세요',
   [OwnerLocale.ChineseSimplified]: '在 Cursor 中这样做',
   [OwnerLocale.Arabic]: 'افعل هذا في Cursor',
+  [OwnerLocale.Hindi]: 'यह Cursor में करें',
 };
 
 const CURSOR_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
@@ -113,6 +119,7 @@ const CURSOR_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Korean]: ['Cursor 설정 열기', 'MCP로 이동', 'HTTP로 서버 추가', '이 주소 붙여넣기'],
   [OwnerLocale.ChineseSimplified]: ['打开 Cursor 设置', '前往 MCP', '通过 HTTP 添加服务器', '粘贴这个地址'],
   [OwnerLocale.Arabic]: ['افتح إعدادات Cursor', 'انتقل إلى MCP', 'أضف خادمًا عبر HTTP', 'الصق هذا العنوان'],
+  [OwnerLocale.Hindi]: ['Cursor Settings खोलें', 'MCP में जाएँ', 'HTTP पर एक सर्वर जोड़ें', 'यह पता पेस्ट करें'],
 };
 
 export const CURSOR_QUICK_START = quickStartOf({ hint: CURSOR_QUICK_START_HINT, path: CURSOR_QUICK_START_PATH, code: addressText });

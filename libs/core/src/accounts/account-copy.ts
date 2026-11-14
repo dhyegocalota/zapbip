@@ -26,6 +26,7 @@ export const COMPANY_LINE: LocalizedText = {
   [OwnerLocale.Korean]: `zapbip은 ${COMPANY.tradeName}의 제품이에요`,
   [OwnerLocale.ChineseSimplified]: `zapbip 是 ${COMPANY.tradeName} 的产品`,
   [OwnerLocale.Arabic]: `zapbip منتج من ${COMPANY.tradeName}`,
+  [OwnerLocale.Hindi]: `zapbip, ${COMPANY.tradeName} का प्रोडक्ट है`,
 };
 
 const COMPANY_LINE_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([
@@ -45,6 +46,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp이에요. 이용은 대기자 명단 순서로 제공되고, 이미 명단에 등록되어 있어요. 이용할 수 있게 되면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용할 수 있게 되면 "도움말"을 보내 주세요.`,
     [OwnerLocale.ChineseSimplified]: `zapbip 是你用来和 AI 智能体对话的专属 WhatsApp。使用资格通过候补名单开放，你已经在名单中：开放时我们会在这里通知你。想提前准备，可以看看如何连接你的智能体：${ONBOARDING_SETUP_LINKS[OwnerLocale.ChineseSimplified]}\n\n想早点进来？申请使用：${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.ChineseSimplified]}\n\n使用资格开放后，请发送“帮助”。`,
     [OwnerLocale.Arabic]: `zapbip هو WhatsApp الشخصي الخاص بك للتحدث مع وكلاء الذكاء الاصطناعي. الوصول عبر قائمة انتظار وأنت مسجَّل فيها بالفعل: سنخبرك هنا عندما يُفعَّل وصولك. وللاستعداد، تعرّف على طريقة ربط وكلائك:\n${ONBOARDING_SETUP_LINKS[OwnerLocale.Arabic]}\n\nتريد الدخول مبكرًا؟ اطلب الوصول:\n${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Arabic]}\n\nأرسل «مساعدة» عندما يُفعَّل وصولك.`,
+    [OwnerLocale.Hindi]: `zapbip आपका निजी WhatsApp है, जिस पर आप अपने AI एजेंटों से बात करते हैं। एक्सेस वेटलिस्ट से मिलता है और आप उसमें पहले से हैं: एक्सेस खुलते ही हम आपको यहीं बताएँगे। तैयारी के लिए देखें कि अपने एजेंट कैसे जोड़ें: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Hindi]}\n\nजल्दी शुरू करना है? एक्सेस का अनुरोध करें: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Hindi]}\n\nएक्सेस खुलने पर "मदद" भेजें।`,
   },
   [AccountReplyIntent.Suspended]: {
     [OwnerLocale.PortugueseBrazil]: 'Sua conta está suspensa.',
@@ -56,6 +58,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '계정이 정지되었어요.',
     [OwnerLocale.ChineseSimplified]: '你的账户已被暂停。',
     [OwnerLocale.Arabic]: 'حسابك موقوف.',
+    [OwnerLocale.Hindi]: 'आपका अकाउंट सस्पेंड कर दिया गया है।',
   },
   [AccountReplyIntent.Created]: {
     [OwnerLocale.PortugueseBrazil]:
@@ -76,6 +79,8 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       '智能体 {agent_name} 已创建。请把下面的内容粘贴到你的智能体中：\n\n{install_prompt}\n\n如果链接过期或已被使用，请发送“轮换 {agent_name}”。',
     [OwnerLocale.Arabic]:
       'تم إنشاء الوكيل {agent_name}. الصق هذا في وكيلك:\n\n{install_prompt}\n\nإذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد رابط {agent_name}».',
+    [OwnerLocale.Hindi]:
+      'एजेंट {agent_name} बन गया। इसे अपने एजेंट में पेस्ट करें:\n\n{install_prompt}\n\nअगर लिंक की समय-सीमा खत्म हो गई हो या वह इस्तेमाल हो चुका हो, तो "लिंक बदलें {agent_name}" भेजें।',
   },
   [AccountReplyIntent.InvalidName]: {
     [OwnerLocale.PortugueseBrazil]: 'Nome inválido. Use de 1 a 20 letras minúsculas, números ou hífens, começando por letra ou número.',
@@ -89,6 +94,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '올바르지 않은 이름이에요. 문자나 숫자로 시작하는 소문자, 숫자, 하이픈 1~20자를 사용하세요.',
     [OwnerLocale.ChineseSimplified]: '名称无效。请使用 1 到 20 个小写字母、数字或连字符，并以字母或数字开头。',
     [OwnerLocale.Arabic]: 'اسم غير صالح. استخدم من 1 إلى 20 حرفًا لاتينيًا صغيرًا أو أرقامًا أو شرطات، على أن يبدأ بحرف أو رقم.',
+    [OwnerLocale.Hindi]: 'नाम सही नहीं है। 1 से 20 तक छोटे अक्षर (a-z), अंक या हाइफ़न इस्तेमाल करें; नाम अक्षर या अंक से शुरू होना चाहिए।',
   },
   [AccountReplyIntent.ReservedName]: {
     [OwnerLocale.PortugueseBrazil]: 'Esse nome é reservado porque é o início de um comando. Escolha outro.',
@@ -100,6 +106,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '명령어의 시작으로 쓰이는 이름이라 예약되어 있어요. 다른 이름을 골라 주세요.',
     [OwnerLocale.ChineseSimplified]: '该名称因用于启动命令而被保留。请换一个。',
     [OwnerLocale.Arabic]: 'هذا الاسم محجوز لأنه يبدأ أمرًا. اختر اسمًا آخر.',
+    [OwnerLocale.Hindi]: 'यह नाम किसी कमांड का शुरुआती शब्द है, इसलिए इसे इस्तेमाल नहीं किया जा सकता। कोई दूसरा नाम चुनें।',
   },
   [AccountReplyIntent.NameTaken]: {
     [OwnerLocale.PortugueseBrazil]: 'Já existe um agente chamado {agent_name}.',
@@ -111,6 +118,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '{agent_name}이라는 에이전트가 이미 있어요.',
     [OwnerLocale.ChineseSimplified]: '已经有一个名为 {agent_name} 的智能体。',
     [OwnerLocale.Arabic]: 'يوجد بالفعل وكيل باسم {agent_name}.',
+    [OwnerLocale.Hindi]: '{agent_name} नाम का एजेंट पहले से मौजूद है।',
   },
   [AccountReplyIntent.LimitReached]: {
     [OwnerLocale.PortugueseBrazil]: 'Limite de {limit} agentes atingido. Envie "revogar <nome>" para liberar uma vaga.',
@@ -122,6 +130,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '에이전트 한도인 {limit}개에 도달했어요. "폐기 <이름>"을 보내 자리를 만드세요.',
     [OwnerLocale.ChineseSimplified]: '已达到 {limit} 个智能体的上限。发送“撤销 <名称>”可腾出名额。',
     [OwnerLocale.Arabic]: 'بلغت الحد الأقصى للوكلاء ({limit}). أرسل «إبطال <الاسم>» لتحرير مكان.',
+    [OwnerLocale.Hindi]: '{limit} एजेंटों की सीमा पूरी हो गई है। जगह खाली करने के लिए "एजेंट हटाएँ <नाम>" भेजें।',
   },
   [AccountReplyIntent.NotFound]: {
     [OwnerLocale.PortugueseBrazil]: 'Nenhum agente ativo tem esse nome.',
@@ -133,6 +142,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '그 이름의 활성 에이전트가 없어요.',
     [OwnerLocale.ChineseSimplified]: '没有叫这个名字的有效智能体。',
     [OwnerLocale.Arabic]: 'لا يوجد وكيل نشط بهذا الاسم.',
+    [OwnerLocale.Hindi]: 'इस नाम का कोई सक्रिय एजेंट नहीं है।',
   },
   [AccountReplyIntent.Revoked]: {
     [OwnerLocale.PortugueseBrazil]: 'Agente {agent_name} revogado. O link deixou de funcionar.',
@@ -144,6 +154,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '에이전트 {agent_name}을(를) 폐기했어요. 링크는 더 이상 작동하지 않아요.',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent_name} 已撤销。它的链接已失效。',
     [OwnerLocale.Arabic]: 'تم إبطال الوكيل {agent_name}. لم يعد رابطه يعمل.',
+    [OwnerLocale.Hindi]: 'एजेंट {agent_name} हटा दिया गया। उसका लिंक अब काम नहीं करता।',
   },
   [AccountReplyIntent.Rotated]: {
     [OwnerLocale.PortugueseBrazil]:
@@ -164,6 +175,8 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       '智能体 {agent_name} 的链接已更换。旧链接已失效。请把下面的内容粘贴到你的智能体中：\n\n{install_prompt}\n\n如果链接过期或已被使用，请发送“轮换 {agent_name}”。',
     [OwnerLocale.Arabic]:
       'تم استبدال رابط الوكيل {agent_name}. الرابط القديم لم يعد يعمل. الصق هذا في وكيلك:\n\n{install_prompt}\n\nإذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد رابط {agent_name}».',
+    [OwnerLocale.Hindi]:
+      'एजेंट {agent_name} का लिंक बदल दिया गया। पुराना लिंक अब काम नहीं करता। इसे अपने एजेंट में पेस्ट करें:\n\n{install_prompt}\n\nअगर लिंक की समय-सीमा खत्म हो गई हो या वह इस्तेमाल हो चुका हो, तो "लिंक बदलें {agent_name}" भेजें।',
   },
   [AccountReplyIntent.Listed]: {
     [OwnerLocale.PortugueseBrazil]: 'Seus agentes:\n{agents}',
@@ -175,6 +188,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '내 에이전트:\n{agents}',
     [OwnerLocale.ChineseSimplified]: '你的智能体：\n{agents}',
     [OwnerLocale.Arabic]: 'وكلاؤك:\n{agents}',
+    [OwnerLocale.Hindi]: 'आपके एजेंट:\n{agents}',
   },
   [AccountReplyIntent.EmptyList]: {
     [OwnerLocale.PortugueseBrazil]: 'Você ainda não tem agentes. Envie "novo agente <nome>" para criar um.',
@@ -186,6 +200,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '아직 에이전트가 없어요. "새 에이전트 <이름>"을 보내 만들어 보세요.',
     [OwnerLocale.ChineseSimplified]: '你还没有智能体。发送“新建智能体 <名称>”来创建一个。',
     [OwnerLocale.Arabic]: 'ليس لديك وكلاء بعد. أرسل «وكيل جديد <الاسم>» لإنشاء وكيل.',
+    [OwnerLocale.Hindi]: 'अभी आपका कोई एजेंट नहीं है। पहला एजेंट बनाने के लिए "नया एजेंट <नाम>" भेजें।',
   },
   [AccountReplyIntent.Usage]: {
     [OwnerLocale.PortugueseBrazil]: 'Use: {usage}',
@@ -197,6 +212,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '사용법: {usage}',
     [OwnerLocale.ChineseSimplified]: '用法：{usage}',
     [OwnerLocale.Arabic]: 'الاستخدام: {usage}',
+    [OwnerLocale.Hindi]: 'ऐसे लिखें: {usage}',
   },
   [AccountReplyIntent.Menu]: {
     [OwnerLocale.PortugueseBrazil]: 'O que você quer fazer?',
@@ -208,6 +224,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '무엇을 하시겠어요?',
     [OwnerLocale.ChineseSimplified]: '你想做什么？',
     [OwnerLocale.Arabic]: 'ماذا تريد أن تفعل؟',
+    [OwnerLocale.Hindi]: 'बताइए, क्या करना है?',
   },
   [AccountReplyIntent.DeletionRequest]: {
     [OwnerLocale.PortugueseBrazil]:
@@ -225,6 +242,8 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '계정, 모든 에이전트, 메시지, 파일이 삭제되며 되돌릴 수 없어요. 10분 안에 확인하려면 다음을 보내세요: {phrase}',
     [OwnerLocale.ChineseSimplified]: '这会删除你的账户、所有智能体、消息和文件，且无法恢复。要在 10 分钟内确认，请发送：{phrase}',
     [OwnerLocale.Arabic]: 'سيؤدي هذا إلى حذف حسابك وكل وكيل ورسالة وملف فيه، ولا يمكن التراجع عنه. للتأكيد خلال 10 دقائق، أرسل: {phrase}',
+    [OwnerLocale.Hindi]:
+      'इससे आपका अकाउंट डिलीट हो जाएगा, और उसके साथ हर एजेंट, संदेश और फ़ाइल भी। इसे वापस नहीं लाया जा सकता। 10 मिनट के अंदर पुष्टि करने के लिए यह भेजें: {phrase}',
   },
   [AccountReplyIntent.DeletionExpired]: {
     [OwnerLocale.PortugueseBrazil]: 'Não há pedido de exclusão válido. Envie "apagar conta" para começar de novo.',
@@ -236,6 +255,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '유효한 삭제 요청이 없어요. 처음부터 다시 하려면 "계정 삭제"를 보내세요.',
     [OwnerLocale.ChineseSimplified]: '没有有效的删除请求。发送“删除账户”可重新开始。',
     [OwnerLocale.Arabic]: 'لا يوجد طلب حذف صالح. أرسل «حذف الحساب» للبدء من جديد.',
+    [OwnerLocale.Hindi]: 'डिलीट करने का कोई मान्य अनुरोध नहीं है। फिर से शुरू करने के लिए "अकाउंट डिलीट करें" भेजें।',
   },
   [AccountReplyIntent.DeletionDone]: {
     [OwnerLocale.PortugueseBrazil]: 'Sua conta foi apagada. A próxima mensagem começa uma nova conta.',
@@ -247,6 +267,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '계정을 삭제했어요. 다음 메시지부터 새 계정이 시작돼요.',
     [OwnerLocale.ChineseSimplified]: '你的账户已删除。你的下一条消息会开启一个新账户。',
     [OwnerLocale.Arabic]: 'تم حذف حسابك. ستبدأ رسالتك التالية حسابًا جديدًا.',
+    [OwnerLocale.Hindi]: 'आपका अकाउंट डिलीट हो गया। आपके अगले संदेश से नया अकाउंट शुरू होगा।',
   },
   [AccountReplyIntent.SignInLink]: {
     [OwnerLocale.PortugueseBrazil]:
@@ -266,6 +287,8 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.ChineseSimplified]: '请在 10 分钟内打开此链接，登录 zapbip 应用：\n\n{sign_in_link}\n\n它只能使用一次。请勿分享。',
     [OwnerLocale.Arabic]:
       'افتح هذا الرابط خلال 10 دقائق لتسجيل الدخول إلى تطبيق zapbip:\n\n{sign_in_link}\n\nيعمل مرة واحدة فقط. لا تشاركه.',
+    [OwnerLocale.Hindi]:
+      'zapbip ऐप में लॉग इन करने के लिए 10 मिनट के अंदर यह लिंक खोलें:\n\n{sign_in_link}\n\nयह सिर्फ़ एक बार काम करता है। इसे किसी से शेयर न करें।',
   },
   [AccountReplyIntent.SendFailed]: {
     [OwnerLocale.PortugueseBrazil]: 'Não consegui entregar as instruções. Nada foi alterado; tente de novo.',
@@ -277,6 +300,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '안내를 전달하지 못했어요. 바뀐 것은 없으니 다시 시도해 주세요.',
     [OwnerLocale.ChineseSimplified]: '我没能送达说明。没有任何改动；请再试一次。',
     [OwnerLocale.Arabic]: 'تعذّر عليّ إرسال التعليمات. لم يتغيّر شيء؛ حاول مرة أخرى.',
+    [OwnerLocale.Hindi]: 'निर्देश नहीं भेजे जा सके। कुछ नहीं बदला; फिर से कोशिश करें।',
   },
   [AccountReplyIntent.AccessOpened]: {
     [OwnerLocale.PortugueseBrazil]:
@@ -293,6 +317,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       '이제 zapbip을 이용할 수 있어요. "새 에이전트 <이름>"을 보내 첫 에이전트를 만들거나 {app_link}을(를) 열어 보세요.',
     [OwnerLocale.ChineseSimplified]: '你的 zapbip 使用资格已开放。发送“新建智能体 <名称>”来创建你的第一个智能体，或打开 {app_link}。',
     [OwnerLocale.Arabic]: 'تم تفعيل وصولك إلى zapbip. أرسل «وكيل جديد <الاسم>» لإنشاء أول وكيل لك، أو افتح التطبيق:\n{app_link}',
+    [OwnerLocale.Hindi]: 'आपका zapbip एक्सेस खुल गया है। अपना पहला एजेंट बनाने के लिए "नया एजेंट <नाम>" भेजें या {app_link} खोलें।',
   },
   [AccountReplyIntent.WindowClosed]: {
     [OwnerLocale.PortugueseBrazil]:
@@ -309,6 +334,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '24시간 창이 닫혀 있어서 지금은 그 링크를 보낼 수 없어요. zapbip에 메시지를 보낸 뒤 다시 요청해 주세요.',
     [OwnerLocale.ChineseSimplified]: '24 小时窗口已关闭，现在无法发送该链接。请先给 zapbip 发条消息，再重新请求。',
     [OwnerLocale.Arabic]: 'لا أستطيع إرسال هذا الرابط الآن لأن نافذة الـ24 ساعة مغلقة. اكتب إلى zapbip واطلبه مرة أخرى.',
+    [OwnerLocale.Hindi]: 'यह लिंक अभी नहीं भेजा जा सकता, क्योंकि 24 घंटे की विंडो बंद है। zapbip को एक संदेश लिखें और फिर से माँगें।',
   },
   [AccountReplyIntent.CoolingDown]: {
     [OwnerLocale.PortugueseBrazil]: 'Esse pedido não foi aprovado há pouco e está em pausa por alguns minutos.',
@@ -320,6 +346,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '그 요청은 방금 승인되지 않아 몇 분 동안 중단되었어요.',
     [OwnerLocale.ChineseSimplified]: '该请求刚才未被批准，已暂停几分钟。',
     [OwnerLocale.Arabic]: 'لم تتم الموافقة على هذا الطلب قبل لحظات، وهو متوقف لبضع دقائق.',
+    [OwnerLocale.Hindi]: 'यह अनुरोध अभी-अभी मंज़ूर नहीं हुआ, इसलिए कुछ मिनट के लिए रोका गया है।',
   },
   [AccountReplyIntent.LanguageChanged]: {
     [OwnerLocale.PortugueseBrazil]: 'Idioma alterado para português. A partir de agora escrevo em português.',
@@ -331,19 +358,24 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '언어를 한국어로 바꿨어요. 지금부터 한국어로 말씀드릴게요.',
     [OwnerLocale.ChineseSimplified]: '语言已切换为中文。从现在起我会用中文给你发消息。',
     [OwnerLocale.Arabic]: 'تم ضبط اللغة على العربية. سأكتب لك بالعربية من الآن فصاعدًا.',
+    [OwnerLocale.Hindi]: 'भाषा हिंदी कर दी गई है। अब से आपको संदेश हिंदी में मिलेंगे।',
   },
   [AccountReplyIntent.LanguageUnknown]: {
-    [OwnerLocale.PortugueseBrazil]: 'Não conheço esse idioma. Envie "idioma <código>" com um destes: en, pt, es, de, fr, ja, ko, zh, ar.',
-    [OwnerLocale.EnglishUs]: 'I do not know that language. Send "language <code>" with one of: en, pt, es, de, fr, ja, ko, zh, ar.',
-    [OwnerLocale.Spanish]: 'No conozco ese idioma. Envía "cambiar idioma <código>" con uno de estos: en, pt, es, de, fr, ja, ko, zh, ar.',
-    [OwnerLocale.German]: 'Diese Sprache kenne ich nicht. Sende "sprache <code>" mit einem von: en, pt, es, de, fr, ja, ko, zh, ar.',
+    [OwnerLocale.PortugueseBrazil]:
+      'Não conheço esse idioma. Envie "idioma <código>" com um destes: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
+    [OwnerLocale.EnglishUs]: 'I do not know that language. Send "language <code>" with one of: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
+    [OwnerLocale.Spanish]:
+      'No conozco ese idioma. Envía "cambiar idioma <código>" con uno de estos: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
+    [OwnerLocale.German]: 'Diese Sprache kenne ich nicht. Sende "sprache <code>" mit einem von: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
     [OwnerLocale.French]:
-      'Je ne connais pas cette langue. Envoyez "langue <code>" avec l’un de ces codes\u00a0: en, pt, es, de, fr, ja, ko, zh, ar.',
+      'Je ne connais pas cette langue. Envoyez "langue <code>" avec l’un de ces codes\u00a0: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
     [OwnerLocale.Japanese]:
-      'その言語は分かりません。次のいずれかを指定して「言語 <コード>」と送信してください: en, pt, es, de, fr, ja, ko, zh, ar。',
-    [OwnerLocale.Korean]: '그 언어는 몰라요. 다음 중 하나를 넣어 "언어 <코드>"를 보내 주세요: en, pt, es, de, fr, ja, ko, zh, ar.',
-    [OwnerLocale.ChineseSimplified]: '我不认识这个语言。请发送“语言 <代码>”，代码可选：en, pt, es, de, fr, ja, ko, zh, ar。',
-    [OwnerLocale.Arabic]: 'لا أعرف هذه اللغة. أرسل «تغيير اللغة <الرمز>» مع أحد الرموز: en, pt, es, de, fr, ja, ko, zh, ar.',
+      'その言語は分かりません。次のいずれかを指定して「言語 <コード>」と送信してください: en, pt, es, de, fr, ja, ko, zh, ar, hi。',
+    [OwnerLocale.Korean]: '그 언어는 몰라요. 다음 중 하나를 넣어 "언어 <코드>"를 보내 주세요: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
+    [OwnerLocale.ChineseSimplified]: '我不认识这个语言。请发送“语言 <代码>”，代码可选：en, pt, es, de, fr, ja, ko, zh, ar, hi。',
+    [OwnerLocale.Arabic]: 'لا أعرف هذه اللغة. أرسل «تغيير اللغة <الرمز>» مع أحد الرموز: en, pt, es, de, fr, ja, ko, zh, ar, hi.',
+    [OwnerLocale.Hindi]:
+      'यह भाषा उपलब्ध नहीं है। "भाषा बदलें <कोड>" भेजें, जहाँ कोड इनमें से कोई एक हो: en, pt, es, de, fr, ja, ko, zh, ar, hi।',
   },
   [AccountReplyIntent.Unknown]: {
     [OwnerLocale.PortugueseBrazil]: 'Não entendi. Envie "ajuda" para ver os comandos.',
@@ -355,6 +387,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Korean]: '이해하지 못했어요. 명령어를 보려면 "도움말"을 보내 주세요.',
     [OwnerLocale.ChineseSimplified]: '我没听懂。发送“帮助”查看命令。',
     [OwnerLocale.Arabic]: 'لم أفهم. أرسل «مساعدة» لعرض الأوامر.',
+    [OwnerLocale.Hindi]: 'यह समझ नहीं आया। कमांड देखने के लिए "मदद" भेजें।',
   },
 };
 
@@ -379,6 +412,8 @@ const INSTALL_LINES: LocalizedText = {
     '请通过 zapbip 连接到我的 WhatsApp：阅读 {install_link} 并按说明操作。\n此链接 30 分钟内只能使用一次。请勿分享。',
   [OwnerLocale.Arabic]:
     'اتصل بحساب WhatsApp الخاص بي عبر zapbip: اقرأ {install_link} واتبع التعليمات.\nهذا الرابط صالح 30 دقيقة ويعمل مرة واحدة فقط. لا تشاركه.',
+  [OwnerLocale.Hindi]:
+    'zapbip के ज़रिए मेरे WhatsApp से जुड़ें: {install_link} पढ़ें और उसमें दिए निर्देशों का पालन करें।\nयह लिंक 30 मिनट तक सिर्फ़ एक बार काम करता है। इसे किसी से शेयर न करें।',
 };
 
 const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
@@ -392,6 +427,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '새 에이전트',
     [OwnerLocale.ChineseSimplified]: '新建智能体',
     [OwnerLocale.Arabic]: 'وكيل جديد',
+    [OwnerLocale.Hindi]: 'नया एजेंट',
   },
   [CommandKind.ListAgents]: {
     [OwnerLocale.PortugueseBrazil]: 'Meus agentes',
@@ -403,6 +439,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '내 에이전트',
     [OwnerLocale.ChineseSimplified]: '我的智能体',
     [OwnerLocale.Arabic]: 'وكلائي',
+    [OwnerLocale.Hindi]: 'मेरे एजेंट',
   },
   [CommandKind.RevokeAgent]: {
     [OwnerLocale.PortugueseBrazil]: 'Revogar agente',
@@ -414,6 +451,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '에이전트 폐기',
     [OwnerLocale.ChineseSimplified]: '撤销智能体',
     [OwnerLocale.Arabic]: 'إبطال وكيل',
+    [OwnerLocale.Hindi]: 'एजेंट हटाएँ',
   },
   [CommandKind.RotateAgent]: {
     [OwnerLocale.PortugueseBrazil]: 'Renovar link',
@@ -425,6 +463,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '링크 재발급',
     [OwnerLocale.ChineseSimplified]: '轮换链接',
     [OwnerLocale.Arabic]: 'تجديد الرابط',
+    [OwnerLocale.Hindi]: 'लिंक बदलें',
   },
   [CommandKind.Help]: {
     [OwnerLocale.PortugueseBrazil]: 'Ajuda',
@@ -436,6 +475,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '도움말',
     [OwnerLocale.ChineseSimplified]: '帮助',
     [OwnerLocale.Arabic]: 'مساعدة',
+    [OwnerLocale.Hindi]: 'मदद',
   },
   [CommandKind.SetLanguage]: {
     [OwnerLocale.PortugueseBrazil]: 'Idioma',
@@ -447,6 +487,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '언어',
     [OwnerLocale.ChineseSimplified]: '语言',
     [OwnerLocale.Arabic]: 'اللغة',
+    [OwnerLocale.Hindi]: 'भाषा',
   },
   [CommandKind.RequestDeletion]: {
     [OwnerLocale.PortugueseBrazil]: 'Apagar conta',
@@ -458,6 +499,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Korean]: '계정 삭제',
     [OwnerLocale.ChineseSimplified]: '删除账户',
     [OwnerLocale.Arabic]: 'حذف الحساب',
+    [OwnerLocale.Hindi]: 'अकाउंट डिलीट करें',
   },
 };
 
@@ -471,6 +513,7 @@ const MENU_BUTTON_TEXT: LocalizedText = {
   [OwnerLocale.Korean]: '명령어',
   [OwnerLocale.ChineseSimplified]: '命令',
   [OwnerLocale.Arabic]: 'الأوامر',
+  [OwnerLocale.Hindi]: 'कमांड',
 };
 
 export function renderAccountReply(input: { reply: AccountReply }): string {
@@ -494,6 +537,7 @@ export const UNKNOWN_CLIENT_LABEL: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '알 수 없는 앱',
   [OwnerLocale.ChineseSimplified]: '未知应用',
   [OwnerLocale.Arabic]: 'تطبيق غير معروف',
+  [OwnerLocale.Hindi]: 'अज्ञात ऐप',
 };
 
 export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {

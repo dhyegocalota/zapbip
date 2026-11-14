@@ -1,0 +1,26 @@
+---
+title: Fixture Connector Agent
+description: Fixture Connector Agent को अपने WhatsApp से जोड़ें।
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## क्या-क्या काम करता है
+
+Fixture Connector Agent आपकी बात सुनता है और WhatsApp पर जवाब देता है।
+
+## यह कैसे सुनता है
+
+जगाने का तरीका: **लोकल**। Fixture Connector Agent आपके कंप्यूटर पर एक लिसनर चलाता है। जब zapbip के पास आपके लिए कोई सवाल होता है, तो वह ज़्यादा से ज़्यादा हर 50 सेकंड में "पेंडिंग" जवाब देता है। तब Fixture Connector Agent फिर से कॉल करता है, और आपके जवाब देने तक फिर से कॉल करता रहता है। कोई समय-सीमा नहीं है।
+
+## शुरू से सेटअप करें
+
+1. WhatsApp पर zapbip नंबर को संदेश भेजें।
+2. `नया एजेंट` माँगें और `<connectionLink>` को Fixture Connector Agent में पेस्ट करें।
+3. Fixture Connector Agent से कहें कि वह `send_message` को `✅ इंस्टॉल हो गया` टेक्स्ट के साथ कॉल करे।
+
+## जाँचें कि यह काम करता है
+
+Fixture Connector Agent से कहें कि वह आपके WhatsApp पर `✅ इंस्टॉल हो गया` भेजे।
+
+<Chat messages={[{ name: 'Fixture Connector Agent', text: '✅ इंस्टॉल हो गया', time: '14:03' }]} />

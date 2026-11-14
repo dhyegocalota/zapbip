@@ -13,6 +13,7 @@ const FIXTURE_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '테스트에서 쓰는 에이전트',
   [OwnerLocale.ChineseSimplified]: '测试使用的智能体',
   [OwnerLocale.Arabic]: 'وكيل مخصّص للاختبار',
+  [OwnerLocale.Hindi]: 'टेस्ट के लिए बना एजेंट',
 };
 
 const FIXTURE_PATH: Record<OwnerLocale, string[]> = {
@@ -25,6 +26,7 @@ const FIXTURE_PATH: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Korean]: ['설정 열기', '이 주소 붙여넣기'],
   [OwnerLocale.ChineseSimplified]: ['打开设置', '粘贴这个地址'],
   [OwnerLocale.Arabic]: ['افتح الإعدادات', 'الصق هذا العنوان'],
+  [OwnerLocale.Hindi]: ['सेटिंग्स खोलें', 'यह पता पेस्ट करें'],
 };
 
 export const install: AgentInstall = {

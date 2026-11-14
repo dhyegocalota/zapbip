@@ -25,6 +25,7 @@ describe('sitemap.xml', () => {
     '/ko',
     '/zh',
     '/ar',
+    '/hi',
     '/terms',
     '/pt-br/termos',
     '/es/terms',
@@ -34,6 +35,7 @@ describe('sitemap.xml', () => {
     '/ko/terms',
     '/zh/terms',
     '/ar/terms',
+    '/hi/terms',
     '/privacy',
     '/pt-br/privacidade',
     '/es/privacy',
@@ -43,15 +45,16 @@ describe('sitemap.xml', () => {
     '/ko/privacy',
     '/zh/privacy',
     '/ar/privacy',
+    '/hi/privacy',
   ];
-  const HREFLANGS = ['en', 'pt-BR', 'es', 'de', 'fr', 'ja', 'ko', 'zh-CN', 'ar'];
+  const HREFLANGS = ['en', 'pt-BR', 'es', 'de', 'fr', 'ja', 'ko', 'zh-CN', 'ar', 'hi'];
 
   it('lists each language page and each legal page once', () => {
     expect(sitemapOf().match(/<loc>/g)).toHaveLength(PAGE_PATHS.length);
     PAGE_PATHS.forEach((path) => expect(sitemapOf().match(new RegExp(`<loc>https://zapbip.com${path}</loc>`, 'g'))).toHaveLength(1));
   });
 
-  it('lists the eight languages and the default as alternates of each page', () => {
+  it('lists every language and the default as alternates of each page', () => {
     HREFLANGS.forEach((hreflang) =>
       expect(sitemapOf().match(new RegExp(`hreflang="${hreflang}" href=`, 'g'))).toHaveLength(PAGE_PATHS.length),
     );

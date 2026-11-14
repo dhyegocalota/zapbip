@@ -1,0 +1,23 @@
+---
+title: 'react'
+description: 'किसी संदेश पर इमोजी से रिएक्ट करें।'
+---
+
+किसी संदेश पर इमोजी से रिएक्ट करें।
+
+## इनपुट
+
+| फ़ील्ड       | टाइप   | नोट                                        |
+| ------------ | ------ | ------------------------------------------ |
+| `message_id` | string | जिस संदेश पर रिएक्ट करना है।               |
+| `emoji`      | string | एक इमोजी। खाली string रिएक्शन हटा देती है। |
+
+## आउटपुट
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`। `queued` का मतलब है कि [24 घंटे की विंडो](/hi/concepts/24-hour-window) बंद है।
+
+## संदेशों के प्रकार
+
+import MessageKinds from '/snippets/hi/message-kinds.mdx';
+
+<MessageKinds />

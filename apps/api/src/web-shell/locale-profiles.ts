@@ -107,6 +107,16 @@ export const LOCALE_PROFILES: Record<OwnerLocale, LocaleProfile> = {
     nativeName: 'العربية',
     docsPath: '/ar',
   },
+  [OwnerLocale.Hindi]: {
+    languageTag: WebLanguageTag.Hindi,
+    formattingLocale: WebLanguageTag.Hindi,
+    textDirection: TextDirection.LeftToRight,
+    openGraphLocale: 'hi_IN',
+    turnstileLanguage: 'hi',
+    shortName: 'HI',
+    nativeName: 'हिन्दी',
+    docsPath: '/hi',
+  },
 };
 
 export const MENU_LOCALES = Object.keys(LOCALE_PROFILES) as OwnerLocale[];

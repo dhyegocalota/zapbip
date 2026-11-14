@@ -32,3 +32,22 @@ One word per product term per language. Docs and replies use the term in the sec
 | prompt (loanword) | موجّه (prompt) |
 
 Arabic keeps `WhatsApp`, `Meta`, `MCP` and product names in Latin script; numbers use Latin digits; the quotation marks are «…».
+
+## Hindi
+
+| Term | hi |
+| --- | --- |
+| agent | एजेंट |
+| your AI (docs) | आपका AI |
+| reply (what the person does) | जवाब देना |
+| button / list | बटन / लिस्ट |
+| owner (docs) | ओनर |
+| window | विंडो |
+| prompt (loanword) | prompt |
+| link | लिंक |
+| revoke / rotate | हटाना / लिंक बदलना |
+| message | संदेश |
+| sign in | लॉग इन (the command word is `लॉगिन`) |
+| expired | समय-सीमा खत्म |
+
+Hindi addresses the person with आप, keeps `WhatsApp`, `Meta`, `MCP`, `API key` and product names in Latin script, writes Latin digits, and never makes zapbip speak in a gendered first person ("भेजूँ?", passive voice instead of "भेजूँगा"). Legal pages use the formal register (उपयोग, खाता, प्रदान).

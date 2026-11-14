@@ -1,0 +1,40 @@
+---
+title: किसी भी MCP क्लाइंट को जोड़ें
+description: कनेक्शन URL, Bearer वाला विकल्प और टूल्स।
+---
+
+zapbip, streamable HTTP पर MCP बोलता है। जो भी क्लाइंट इसे सपोर्ट करता है, वह उस कनेक्शन URL से जुड़ सकता है जो zapbip आपके एजेंट को देता है।
+
+## कनेक्शन URL
+
+```text
+https://<zapbip-host>/c/<secret>/mcp
+```
+
+URL में मौजूद सीक्रेट ही कनेक्शन है। इसे निजी रखें।
+
+## Bearer वाला विकल्प
+
+जो क्लाइंट URL में सीक्रेट छिपा नहीं सकते, वे `/mcp` इस्तेमाल करें और सीक्रेट हेडर में भेजें:
+
+```text
+POST https://<zapbip-host>/mcp
+Authorization: Bearer <secret>
+```
+
+दोनों तरीके एक ही एजेंट तक पहुँचते हैं। सीक्रेट न हो या गलत हो, तो जवाब `401` आता है।
+
+## टूल्स
+
+| टूल                                                | क्या करता है                                       |
+| -------------------------------------------------- | -------------------------------------------------- |
+| [send_message](/hi/mcp-reference/send-message)     | टेक्स्ट भेजता है।                                  |
+| [send_media](/hi/mcp-reference/send-media)         | इमेज, वीडियो, ऑडियो, दस्तावेज़ या स्टिकर भेजता है। |
+| [send_location](/hi/mcp-reference/send-location)   | लोकेशन का पिन भेजता है।                            |
+| [send_contact](/hi/mcp-reference/send-contact)     | संपर्क कार्ड भेजता है।                             |
+| [react](/hi/mcp-reference/react)                   | इमोजी से रिएक्ट करता है।                           |
+| [ask](/hi/mcp-reference/ask)                       | बटन या लिस्ट से पूछता है और इंतज़ार करता है।       |
+| [wait_for_reply](/hi/mcp-reference/wait-for-reply) | जवाब या अगले संदेश का इंतज़ार करता है।             |
+| [get_messages](/hi/mcp-reference/get-messages)     | बिना पढ़े संदेश और हाल का इतिहास पढ़ता है।         |
+| [check_inbox](/hi/mcp-reference/check-inbox)       | देखता है कि कुछ नया इंतज़ार में है या नहीं।        |
+| [create_upload](/hi/mcp-reference/create-upload)   | लोकल बाइट्स के लिए एक अपलोड रिज़र्व करता है।       |

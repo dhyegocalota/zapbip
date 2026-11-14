@@ -82,11 +82,11 @@ describe('verifying a number', () => {
     );
   });
 
-  it('lists eighteen entries, nine languages of each name', async () => {
+  it('lists twenty entries, ten languages of each name', async () => {
     const snapshot = await verify({
       graph: graphAnswering({ phone: MATCHING_PHONE, templates: { data: [] }, post: recordingPost({ posted: [] }) }),
     });
-    expect(snapshot.templates).toHaveLength(18);
+    expect(snapshot.templates).toHaveLength(20);
   });
 
   it('submits every missing template with its exact body, sample and quick reply, and reports it pending', async () => {
