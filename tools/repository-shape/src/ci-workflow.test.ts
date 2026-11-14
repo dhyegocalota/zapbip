@@ -43,6 +43,7 @@ const INSTALL_ACTION = 'uses: ./.github/actions/install';
 const NEEDS_KEY = 'needs:';
 const TIMEOUT_PATTERN = /timeout-minutes: (\d+)/;
 const MAXIMUM_TIMEOUT_MINUTES = 20;
+const WORKFLOW_TRIGGERS = '\non:\n  workflow_dispatch:\n\npermissions:';
 const WORKFLOW_PERMISSIONS = '\npermissions:\n  contents: read\n';
 const JOBS_START = '\njobs:\n';
 const LINE_SEPARATOR = '\n';
@@ -91,6 +92,10 @@ describe('CI workflow', () => {
     const workflow = readRepositoryFile(WORKFLOW_FILE);
     expect(workflow).toContain(WORKFLOW_PERMISSIONS);
     expect(workflow.indexOf(WORKFLOW_PERMISSIONS)).toBeLessThan(workflow.indexOf(JOBS_START));
+  });
+
+  test('the workflow runs only when dispatched by hand, never on a push or pull request', () => {
+    expect(readRepositoryFile(WORKFLOW_FILE)).toContain(WORKFLOW_TRIGGERS);
   });
 
   test('the workflow runs exactly the checks, unit and security jobs', () => {
