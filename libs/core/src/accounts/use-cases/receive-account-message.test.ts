@@ -8,6 +8,7 @@ import {
   MessageKind,
   OwnerLocale,
   ReplyKind,
+  DAY_MS,
   MINUTE_MS,
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
@@ -168,12 +169,63 @@ describe('receiveAccountMessage rule 0', () => {
 });
 
 describe('receiveAccountMessage account states', () => {
-  test('a waitlisted account gets the waitlist reply and nothing is stored', async () => {
+  test('a waitlisted account gets the onboarding reply and nothing is stored', async () => {
     const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
     const result = await receiveAccountText({ ...fixture, text: 'oi' });
     expect(result.messageId).toBeNull();
-    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.Waitlisted })]);
+    expect(sessionTexts(fixture)).toHaveLength(1);
     expect(await storedOwnerMessages(fixture)).toEqual([]);
+  });
+
+  test('the onboarding reply carries the setup and request-access links of the owner language', async () => {
+    const portuguese = await createAccountFixture({ state: AccountState.Waitlisted, locale: OwnerLocale.PortugueseBrazil });
+    const english = await createAccountFixture({
+      state: AccountState.Waitlisted,
+      locale: OwnerLocale.EnglishUs,
+      waId: UNITED_STATES_WA_ID,
+    });
+    await receiveAccountText({ ...portuguese, text: 'oi' });
+    await receiveAccountText({ ...english, text: 'hi' });
+    const [portugueseText] = sessionTexts(portuguese);
+    const [englishText] = sessionTexts(english);
+    expect(portugueseText).toContain('https://docs.zapbip.com/pt-br/get-started/how-to-start');
+    expect(portugueseText).toContain('https://zapbip.com/pt-br');
+    expect(englishText).toContain('https://docs.zapbip.com/get-started/how-to-start');
+    expect(englishText).toContain('https://zapbip.com');
+    expect(englishText).not.toContain('/pt-br');
+  });
+
+  test('a second message inside the cooldown gets no second onboarding reply', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
+    await receiveAccountText({ ...fixture, text: 'oi' });
+    const result = await receiveAccountText({ ...fixture, text: 'tem alguém aí?' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toHaveLength(1);
+  });
+
+  test('a command inside the cooldown is still answered', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
+    await receiveAccountText({ ...fixture, text: 'oi' });
+    await receiveAccountText({ ...fixture, text: 'ajuda' });
+    expect(sessionTexts(fixture)).toHaveLength(2);
+  });
+
+  test('the onboarding reply comes again after the cooldown', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
+    await receiveAccountText({ ...fixture, text: 'oi' });
+    await fixture.environment.clock.advance({ ms: DAY_MS + MINUTE_MS });
+    await receiveAccountText({ ...fixture, text: 'oi de novo' });
+    expect(sessionTexts(fixture)).toHaveLength(2);
+  });
+
+  test('a redelivered message does not start the cooldown a second time', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
+    await receiveAccountText({ ...fixture, text: 'oi', channelMessageId: 'wamid.onboarding.same' });
+    await fixture.environment.clock.advance({ ms: DAY_MS - MINUTE_MS });
+    await receiveAccountText({ ...fixture, text: 'oi', channelMessageId: 'wamid.onboarding.same' });
+    await fixture.environment.clock.advance({ ms: 2 * MINUTE_MS });
+    await receiveAccountText({ ...fixture, text: 'oi de novo' });
+    expect(sessionTexts(fixture)).toHaveLength(2);
   });
 
   test('a suspended account gets the suspended reply on every message', async () => {
