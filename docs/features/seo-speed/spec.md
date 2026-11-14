@@ -62,7 +62,7 @@ Cloudflare compresses text responses with brotli at the edge; the Worker sets no
 
 ### Measured
 
-Before and after Lighthouse numbers are recorded in `tester-briefing.md` once the orchestrator runs `lighthouse-budget.ts`.
+After the change, `lighthouse-budget.ts` against the development Worker on a loaded machine (load average 5, `wrangler dev` beside it) read: mobile performance 0.65, LCP 2.8 s in one run and 1.7 s in another, CLS 0, TBT 3.5 s, 225 KB transferred; desktop performance 0.84, LCP 0.66 s, CLS 0.003, TBT 362 ms. The legal page, which has no demo, no widget and no reveal, read TBT 1.1 s and 0.77 on the same machine, so the host's contention dominates TBT and these numbers do not decide the budgets. No baseline from `main` was taken. The orchestrator re-runs the script against staging on an idle machine and records both runs here.
 
 ## Open questions → answers
 

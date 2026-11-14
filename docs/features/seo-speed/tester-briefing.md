@@ -49,7 +49,7 @@ Pins (green when they landed, written beside the change): `test/integration/site
 
 ## Known gaps
 
-- Lighthouse numbers (before and after) are not recorded yet; they need the orchestrator's clear to run.
+- Lighthouse budgets are not met in the one run I could take (see the spec, Measured): TBT is dominated by the loaded host, no baseline from `main` exists, the app host answered 500 on the development Worker (no seeded database), so the app was not measured. Re-run `lighthouse-budget.ts` on staging when idle.
 - `_headers` is applied by the Cloudflare assets binding on the deployed Worker; no local test proves the header is served, only that the file says it.
 - Brotli at the edge is documented, not tested.
 - CSS is not minified or split (decision in the spec); the stylesheet stays under its 60 KB budget.
