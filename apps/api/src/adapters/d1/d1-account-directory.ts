@@ -24,6 +24,7 @@ const REMOVE_STATEMENTS = [
   'DELETE FROM client_app_sessions WHERE account_id = ?',
   'DELETE FROM client_app_sign_in_tokens WHERE account_id = ?',
   'DELETE FROM message_index WHERE account_id = ?',
+  'DELETE FROM other_number_notices WHERE account_id = ?',
   'DELETE FROM owner_identities WHERE account_id = ?',
   'DELETE FROM connections WHERE account_id = ?',
   'DELETE FROM accounts WHERE id = ?',

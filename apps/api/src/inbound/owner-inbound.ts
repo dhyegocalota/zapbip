@@ -5,14 +5,24 @@ import {
   redactInviteCodes,
   redeemAccessInvite,
   ownerLocaleOf,
+  OTHER_NUMBER_NOTICE_COOLDOWN_MS,
   type AccountRecord,
   type ChannelInboundEntry,
   type OwnerAccountContext,
   type ReceiveResult,
 } from '@zapbip/core';
-import { AccountState, MessageKind, ChannelInboundKind, SenderVerdict, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
+import {
+  AccountState,
+  MessageKind,
+  ChannelInboundKind,
+  SenderVerdict,
+  WHATSAPP_LINK_ORIGIN,
+  WhatsAppNumberState,
+  type OwnerLocale,
+} from '@zapbip/types';
 import { lifecycleDependenciesOf, inboxPurgeOf } from '../accounts/deletion-sweep';
 import { D1AccessInvites } from '../adapters/d1/d1-access-invites';
+import { D1OtherNumberNotices } from '../adapters/d1/d1-other-number-notices';
 import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { createSenderGuard } from '../adapters/guard/sender-guard';
 import { OperatorEvent } from '../adapters/whatsapp/whatsapp-enums';
@@ -25,6 +35,7 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { sendNumberNotice } from '../numbers/number-notice';
+import { digitsOf } from '../numbers/number-verification';
 import type { RegisteredNumber } from '../numbers/number-registry';
 import { accountInboxOf } from '../routes/account-inbox-stub';
 
@@ -116,11 +127,20 @@ async function refuseOtherNumber(input: { bindings: Bindings; number: Registered
   }
   const home = await registry.findNumber({ numberId: account.homeNumberId });
   if (home === null) throw new Error(`account ${account.accountId} has no home number`);
+  const notices = new D1OtherNumberNotices({ database: bindings.CONNECTIONS });
+  const { accountId } = account;
+  const isCoolingDown = await notices.isCoolingDown({
+    accountId,
+    now: createPlatformClock().now(),
+    cooldownMs: OTHER_NUMBER_NOTICE_COOLDOWN_MS,
+  });
+  if (isCoolingDown) return DROPPED_RESULT;
   const text = fillCopyTokens({
     text: WHATSAPP_COPY[account.locale][OwnerCopyKey.AccountOnOtherNumber],
-    values: { displayNumber: home.displayNumber },
+    values: { displayNumber: home.displayNumber, whatsAppLink: `${WHATSAPP_LINK_ORIGIN}/${digitsOf({ value: home.displayNumber })}` },
   });
   await sendNumberNotice({ bindings, registry, numberId: number.numberId, waId: account.waId, text });
+  await notices.record({ accountId, noticedAt: createPlatformClock().now() });
   return DROPPED_RESULT;
 }
 

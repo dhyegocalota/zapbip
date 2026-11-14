@@ -14,6 +14,7 @@ export const APPROVAL_COOLDOWN_MS = 10 * MINUTE_MS;
 export const NEW_ACCOUNTS_PER_DAY_LIMIT = 50;
 export const NEW_ACCOUNTS_WINDOW_MS = DAY_MS;
 export const ONBOARDING_REPLY_COOLDOWN_MS = DAY_MS;
+export const OTHER_NUMBER_NOTICE_COOLDOWN_MS = DAY_MS;
 export const ONBOARDING_COOLDOWN_KEY = 'onboarding_reply';
 export const DELETION_CONFIRM_TTL_MS = 10 * MINUTE_MS;
 export const CONNECTION_LINK_PATH_PREFIX = '/c/';

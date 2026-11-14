@@ -1,4 +1,4 @@
-import { WhatsAppNumberState } from '@zapbip/types';
+import { WHATSAPP_LINK_ORIGIN, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
@@ -101,10 +101,9 @@ describe('account binding to a number', () => {
     expect(posts[0]?.url).toContain(`/${SECOND.phoneNumberId}/messages`);
     expect(posts[0]?.authorization).toBe(`Bearer ${SECOND.accessToken}`);
     expect(posts[0]?.body.to).toBe(account.phone);
-    const expectedText = WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.AccountOnOtherNumber].replace(
-      '{displayNumber}',
-      TEST_DISPLAY_NUMBER,
-    );
+    const expectedText = WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.AccountOnOtherNumber]
+      .replace('{displayNumber}', TEST_DISPLAY_NUMBER)
+      .replace('{whatsAppLink}', `${WHATSAPP_LINK_ORIGIN}/${TEST_DISPLAY_NUMBER}`);
     expect(posts[0]?.body.text.body).toBe(expectedText);
     expect(JSON.stringify(spies.flatMap((spy) => spy.mock.calls))).toContain(OperatorEvent.InboundAccountOnOtherNumber);
   });
