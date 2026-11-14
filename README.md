@@ -32,7 +32,7 @@ zapbip is a personal WhatsApp channel for AI agents. Connect Claude Code, Codex,
 
 It uses only Meta's official WhatsApp Cloud API, it talks only to you, and it deletes each message after a fixed time.
 
-zapbip is a product of Logic Bit, made in Belo Horizonte, Brazil: [logicbit.com.br](https://logicbit.com.br)
+zapbip is a product of Logic Bit, made in Brazil: [logicbit.com.br](https://logicbit.com.br)
 
 ## ✨ Features
 

@@ -12,7 +12,7 @@ const FOOTER_LABEL = 'zapbip · Logic Bit';
 const FOOTER_HREF = '/help/about';
 const README_PRODUCT_LINE = 'zapbip is a product of Logic Bit';
 const README_FILE = 'README.md';
-const COMPANY_FACT_COUNT = 6;
+const COMPANY_FACT_COUNT = 5;
 const TABLE_ROW_PREFIX = '|';
 const TABLE_HEADER_ROW_COUNT = 2;
 const LINE_SEPARATOR = '\n';
@@ -21,7 +21,6 @@ const PUBLISHED_COMPANY_FACTS = {
   tradeName: 'Logic Bit',
   legalName: 'Logic Bit AI Software Boutique Ltda',
   cnpj: '32.555.315/0001-91',
-  address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
   website: 'https://logicbit.com.br',
   contactEmail: 'support@zapbip.com',
 };
@@ -35,7 +34,7 @@ function tableRowCount(snippet: string): number {
 }
 
 describe('company docs', () => {
-  test('the constant declares six facts and always sets the trade name', () => {
+  test('the constant declares five facts and always sets the trade name', () => {
     expect(Object.keys(COMPANY)).toHaveLength(COMPANY_FACT_COUNT);
     expect(COMPANY.tradeName).not.toBe(COMPANY_FACT_UNSET);
   });

@@ -11,9 +11,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: 'Qui nous sommes',
-        paragraphs: [
-          'zapbip est un service de {tradeName}, nom commercial de {legalName}, CNPJ {cnpj}, {address}. Contact\u00a0: {contactEmail}.',
-        ],
+        paragraphs: ['zapbip est un service de {tradeName}, nom commercial de {legalName}, CNPJ {cnpj}. Contact\u00a0: {contactEmail}.'],
         items: [],
       },
       {
@@ -92,7 +90,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Droit applicable et tribunaux',
         paragraphs: [
-          'Ces conditions sont régies par le droit brésilien. Les litiges relèvent des tribunaux de Belo Horizonte, Minas Gerais, sauf si la loi vous permet, en tant que consommateur, de saisir les tribunaux de votre lieu de résidence. Ces conditions sont rédigées en portugais et traduites en français\u202f; en cas de divergence entre les deux versions, la version portugaise prévaut.',
+          'Ces conditions sont régies par le droit brésilien. Les litiges relèvent des tribunaux du Brésil, sauf si la loi vous permet, en tant que consommateur, de saisir les tribunaux de votre lieu de résidence. Ces conditions sont rédigées en portugais et traduites en français\u202f; en cas de divergence entre les deux versions, la version portugaise prévaut.',
         ],
         items: [],
       },
@@ -110,7 +108,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Qui est responsable',
         paragraphs: [
-          '{tradeName} ({legalName}, CNPJ {cnpj}, {address}) est le responsable du traitement de vos données personnelles. Notre délégué à la protection des données est joignable à l’adresse {contactEmail}.',
+          '{tradeName} ({legalName}, CNPJ {cnpj}) est le responsable du traitement de vos données personnelles. Notre délégué à la protection des données est joignable à l’adresse {contactEmail}.',
         ],
         items: [],
       },

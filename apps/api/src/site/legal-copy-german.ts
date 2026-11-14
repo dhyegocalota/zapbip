@@ -11,9 +11,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: 'Wer wir sind',
-        paragraphs: [
-          'zapbip ist ein Dienst von {tradeName}, dem Handelsnamen von {legalName}, CNPJ {cnpj}, {address}. Kontakt: {contactEmail}.',
-        ],
+        paragraphs: ['zapbip ist ein Dienst von {tradeName}, dem Handelsnamen von {legalName}, CNPJ {cnpj}. Kontakt: {contactEmail}.'],
         items: [],
       },
       {
@@ -92,7 +90,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Recht und Gerichte',
         paragraphs: [
-          'Diese Bedingungen unterliegen brasilianischem Recht. Streitigkeiten gehören vor die Gerichte in Belo Horizonte, Minas Gerais, es sei denn, das Gesetz erlaubt dir als Verbraucher, die Gerichte an deinem Wohnort anzurufen. Diese Bedingungen sind auf Portugiesisch verfasst und ins Deutsche übersetzt; weichen beide Fassungen voneinander ab, gilt die portugiesische Fassung.',
+          'Diese Bedingungen unterliegen brasilianischem Recht. Streitigkeiten gehören vor die Gerichte in Brasilien, es sei denn, das Gesetz erlaubt dir als Verbraucher, die Gerichte an deinem Wohnort anzurufen. Diese Bedingungen sind auf Portugiesisch verfasst und ins Deutsche übersetzt; weichen beide Fassungen voneinander ab, gilt die portugiesische Fassung.',
         ],
         items: [],
       },
@@ -109,7 +107,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Wer verantwortlich ist',
         paragraphs: [
-          '{tradeName} ({legalName}, CNPJ {cnpj}, {address}) ist Verantwortlicher für deine personenbezogenen Daten. Unseren Datenschutzbeauftragten erreichst du unter {contactEmail}.',
+          '{tradeName} ({legalName}, CNPJ {cnpj}) ist Verantwortlicher für deine personenbezogenen Daten. Unseren Datenschutzbeauftragten erreichst du unter {contactEmail}.',
         ],
         items: [],
       },

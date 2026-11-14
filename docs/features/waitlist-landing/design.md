@@ -662,7 +662,7 @@ The FAQ never shows the cap number, so `GET /` needs no database read.
 | `FinalBody` | Join the waitlist. It takes ten seconds. | Entre na lista. Leva dez segundos. |
 | `FinalButton` | Join the waitlist | Entrar na lista |
 | `FinalButtonInvite` | Invite a friend | Convidar um amigo |
-| `FooterMaker` | zapbip is made by Logic Bit in Belo Horizonte, Brazil. | O zapbip é feito pela Logic Bit em Belo Horizonte. |
+| `FooterMaker` | zapbip is made by Logic Bit in Brazil. | O zapbip é feito pela Logic Bit no Brasil. |
 | `FooterTrademarks` | WhatsApp is a trademark of Meta. Agent names are trademarks of their owners. | WhatsApp é marca da Meta. Os nomes dos agentes são marcas dos seus donos. |
 
 ### 11.11 Meta and social

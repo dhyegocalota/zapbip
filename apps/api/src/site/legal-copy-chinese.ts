@@ -10,9 +10,7 @@ export const CHINESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: '我们是谁',
-        paragraphs: [
-          'zapbip 是 {tradeName} 提供的服务，{tradeName} 是 {legalName} 的商号，CNPJ {cnpj}，{address}。联系方式：{contactEmail}。',
-        ],
+        paragraphs: ['zapbip 是 {tradeName} 提供的服务，{tradeName} 是 {legalName} 的商号，CNPJ {cnpj}。联系方式：{contactEmail}。'],
         items: [],
       },
       {
@@ -105,9 +103,7 @@ export const CHINESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     sections: [
       {
         heading: '谁负责',
-        paragraphs: [
-          '{tradeName}（{legalName}，CNPJ {cnpj}，{address}）是你个人数据的控制者。你可以通过 {contactEmail} 联系我们的数据保护官。',
-        ],
+        paragraphs: ['{tradeName}（{legalName}，CNPJ {cnpj}）是你个人数据的控制者。你可以通过 {contactEmail} 联系我们的数据保护官。'],
         items: [],
       },
       {

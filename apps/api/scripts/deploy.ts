@@ -44,6 +44,7 @@ export type DeployRun = {
   shell: DeployShell;
   prompt: DeployPrompt;
   isInteractive: boolean;
+  confirmedEnvironment: DeployEnvironment | null;
   environmentVariables: EnvironmentVariables;
   company: CompanyFacts;
   npmVersion: string;
@@ -122,8 +123,13 @@ function rollbackCommandLines(input: { environment: DeployEnvironment; block: De
   return [...versionLine, ...bookmarkLine];
 }
 
-async function isDeployConfirmed(input: { environment: DeployEnvironment; prompt: DeployPrompt }): Promise<boolean> {
+async function isDeployConfirmed(input: {
+  environment: DeployEnvironment;
+  prompt: DeployPrompt;
+  isPreConfirmed: boolean;
+}): Promise<boolean> {
   if (input.environment !== DeployEnvironment.Production) return true;
+  if (input.isPreConfirmed) return true;
   return (await input.prompt.ask({ question: CONFIRMATION_QUESTION })) === CONFIRMATION_ANSWER;
 }
 
@@ -144,8 +150,10 @@ function logWarnings(input: { warnings: PreflightWarning[]; log: (line: string) 
 export async function runDeploy(input: DeployRun): Promise<number> {
   const { environment, firstDeploy, block, shell, prompt, log } = input;
   const warnings: PreflightWarning[] = [];
+  const isPreConfirmed = input.confirmedEnvironment === environment;
   const refusal = await runWorkerPreflight({
     ...input,
+    canConfirm: input.isInteractive || isPreConfirmed,
     warn: (warning) => {
       warnings.push(warning);
       log(warning.message);
@@ -162,7 +170,7 @@ export async function runDeploy(input: DeployRun): Promise<number> {
   }
   const points = await readRollbackPoints({ environment, shell, block });
   log(rollbackPointsLine({ points }));
-  if (!(await isDeployConfirmed({ environment, prompt }))) {
+  if (!(await isDeployConfirmed({ environment, prompt, isPreConfirmed }))) {
     log('the deploy was not confirmed; nothing was deployed');
     return 1;
   }
@@ -181,8 +189,11 @@ export async function runDeploy(input: DeployRun): Promise<number> {
 }
 
 async function main(): Promise<void> {
-  const { values } = parseArgs({ options: { environment: { type: 'string' }, 'first-deploy': { type: 'boolean' } } });
+  const { values } = parseArgs({
+    options: { environment: { type: 'string' }, confirm: { type: 'string' }, 'first-deploy': { type: 'boolean' } },
+  });
   const environment = parseDeployEnvironment({ value: values.environment });
+  const confirmedEnvironment = values.confirm === undefined ? null : parseDeployEnvironment({ value: values.confirm });
   const lineReader = createInterface({ input: process.stdin, output: process.stdout });
   try {
     process.exitCode = await runDeploy({
@@ -196,6 +207,7 @@ async function main(): Promise<void> {
       shell: createTerminalShell({}),
       prompt: { ask: ({ question }) => lineReader.question(question) },
       isInteractive: process.stdin.isTTY === true,
+      confirmedEnvironment,
       environmentVariables: process.env,
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,

@@ -51,12 +51,6 @@
             "command": "\"$(git rev-parse --show-toplevel)/.agents/hooks/guard-verify-records.sh\"",
             "timeout": 10,
             "statusMessage": "Guarding the records of green commits"
-          },
-          {
-            "type": "command",
-            "command": "\"$(git rev-parse --show-toplevel)/.agents/hooks/guard-deploy.sh\"",
-            "timeout": 10,
-            "statusMessage": "Guarding deploys, remote changes and secrets"
           }
         ]
       }

@@ -29,7 +29,6 @@ const UNSET_COMPANY: CompanyFacts = {
   legalName: COMPANY_FACT_UNSET,
   tradeName: COMPANY_FACT_UNSET,
   cnpj: COMPANY_FACT_UNSET,
-  address: COMPANY_FACT_UNSET,
   website: COMPANY_FACT_UNSET,
   contactEmail: COMPANY_FACT_UNSET,
 };
@@ -85,6 +84,7 @@ async function refusalOf(input: {
     shell,
     prompt: { ask: async () => DeployEnvironment.Production },
     isInteractive: true,
+    confirmedEnvironment: null,
     environmentVariables: { ...COMPLETE_VARIABLES, SMOKE_BASE_URL: 'https://mcp.zapbip.com' },
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,
