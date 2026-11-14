@@ -1,13 +1,12 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { describe, expect, it } from 'vitest';
 
 const LOGOS_ROOT = join(import.meta.dirname, '../../site-public/site/logos');
 const NOTICE_FILE = 'NOTICE.md';
 const LOGO_LIMIT_BYTES = 4_000;
 const FORBIDDEN_MARKS = ['grok', 'xai'];
-const INITIALS_ONLY_CLIENTS = [InstallClient.GrokBot, InstallClient.GrokWeb];
 const NOTICE_DATE_PATTERN = /\d{4}-\d{2}-\d{2}/;
 const STEMS = [
   ...new Set(Object.values(AGENT_INSTALLS).flatMap((install) => (install.officialLogo === null ? [] : [install.officialLogo]))),
@@ -46,7 +45,10 @@ describe('the official logos', () => {
   });
 
   it('shows initials for the agents whose vendor offers no lawful copy of its mark', () => {
-    expect(INITIALS_ONLY_CLIENTS.filter((client) => AGENT_INSTALLS[client].officialLogo !== null)).toEqual([]);
+    const markedWithLogo = Object.entries(AGENT_INSTALLS)
+      .filter(([client, install]) => FORBIDDEN_MARKS.some((mark) => client.includes(mark)) && install.officialLogo !== null)
+      .map(([client]) => client);
+    expect(markedWithLogo).toEqual([]);
   });
 
   it('ships no mark its owner has not allowed, and no file that is not an svg or the notice', () => {
