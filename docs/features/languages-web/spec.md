@@ -1,6 +1,6 @@
 # Languages (web)
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-13 (owner delegated; the request is his word: "translate everything to Spanish, Chinese, German, French, Japanese and Korean", phase A of three)
 **ADRs:** [0047](../../adr/0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md)
