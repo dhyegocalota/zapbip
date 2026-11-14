@@ -85,6 +85,7 @@ async function refusalOf(input: {
     prompt: { ask: async () => DeployEnvironment.Production },
     isInteractive: true,
     confirmedEnvironment: null,
+    skipSmoke: false,
     environmentVariables: { ...COMPLETE_VARIABLES, SMOKE_BASE_URL: 'https://mcp.zapbip.com' },
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,

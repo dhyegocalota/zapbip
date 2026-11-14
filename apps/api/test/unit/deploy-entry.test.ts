@@ -51,6 +51,7 @@ async function deploy(input: {
   answers?: string[];
   isInteractive?: boolean;
   confirmedEnvironment?: DeployEnvironment | null;
+  skipSmoke?: boolean;
   firstDeploy?: boolean;
 }) {
   const {
@@ -59,6 +60,7 @@ async function deploy(input: {
     answers = [],
     isInteractive = true,
     confirmedEnvironment = null,
+    skipSmoke = false,
     firstDeploy = false,
   } = input;
   const prompt = fakePrompt({ answers });
@@ -72,6 +74,7 @@ async function deploy(input: {
     prompt,
     isInteractive,
     confirmedEnvironment,
+    skipSmoke,
     environmentVariables: COMPLETE_VARIABLES,
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
@@ -137,6 +140,19 @@ describe('deploy entry', () => {
     });
     expect(exitCode).toBe(1);
     expect(shell.commands).toEqual([]);
+  });
+
+  it('deploys without running the smoke test when it is skipped on request', async () => {
+    const { exitCode, shell, output } = await deploy({
+      environment: DeployEnvironment.Production,
+      isInteractive: false,
+      confirmedEnvironment: DeployEnvironment.Production,
+      skipSmoke: true,
+    });
+    expect(exitCode).toBe(0);
+    expect(shell.commands).toContain(`${WRANGLER} deploy`);
+    expect(shell.commands.some((command) => command.includes('smoke.ts'))).toBe(false);
+    expect(output).toContain('smoke test was skipped');
   });
 
   it('refuses development', async () => {

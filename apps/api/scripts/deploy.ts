@@ -45,6 +45,7 @@ export type DeployRun = {
   prompt: DeployPrompt;
   isInteractive: boolean;
   confirmedEnvironment: DeployEnvironment | null;
+  skipSmoke: boolean;
   environmentVariables: EnvironmentVariables;
   company: CompanyFacts;
   npmVersion: string;
@@ -154,6 +155,7 @@ export async function runDeploy(input: DeployRun): Promise<number> {
   const refusal = await runWorkerPreflight({
     ...input,
     canConfirm: input.isInteractive || isPreConfirmed,
+    skipSmoke: input.skipSmoke,
     warn: (warning) => {
       warnings.push(warning);
       log(warning.message);
@@ -179,6 +181,11 @@ export async function runDeploy(input: DeployRun): Promise<number> {
     log('the deploy failed');
     return 1;
   }
+  if (input.skipSmoke) {
+    log('the smoke test was skipped on request; run it yourself before trusting the deploy');
+    logWarnings({ warnings, log });
+    return 0;
+  }
   const smoke = await shell.run(smokeCommand({ environment, firstDeploy }));
   if (smoke.exitCode !== 0) {
     log('the smoke test failed; to roll back, run:');
@@ -190,7 +197,12 @@ export async function runDeploy(input: DeployRun): Promise<number> {
 
 async function main(): Promise<void> {
   const { values } = parseArgs({
-    options: { environment: { type: 'string' }, confirm: { type: 'string' }, 'first-deploy': { type: 'boolean' } },
+    options: {
+      environment: { type: 'string' },
+      confirm: { type: 'string' },
+      'first-deploy': { type: 'boolean' },
+      'skip-smoke': { type: 'boolean' },
+    },
   });
   const environment = parseDeployEnvironment({ value: values.environment });
   const confirmedEnvironment = values.confirm === undefined ? null : parseDeployEnvironment({ value: values.confirm });
@@ -208,6 +220,7 @@ async function main(): Promise<void> {
       prompt: { ask: ({ question }) => lineReader.question(question) },
       isInteractive: process.stdin.isTTY === true,
       confirmedEnvironment,
+      skipSmoke: values['skip-smoke'] === true,
       environmentVariables: process.env,
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,

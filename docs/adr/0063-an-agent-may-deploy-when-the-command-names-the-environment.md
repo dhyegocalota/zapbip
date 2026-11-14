@@ -14,7 +14,8 @@ ADR 0027 made a production deploy the owner's act alone: the script needed an in
 1. `deploy.ts` takes `--confirm <environment>`. When it names the environment being deployed, the production question is not asked and no terminal is needed; any other value, or none, keeps the old rule (a terminal and the typed word). The preflight, the dry run, the secrets check, the migrations check and the smoke test still run and still stop the deploy.
 2. The `guard-deploy.sh` hook, its wiring in `.claude/settings.json` and `.codex/hooks.json` and its tests are removed. `guard-secrets.sh` stays: agents never edit `.env*`.
 3. Points 1 and 3 of ADR 0027 stand: the credential is a scoped `CLOUDFLARE_API_TOKEN` of the machine's owner, and no workflow deploys or stores a Cloudflare or Meta credential in GitHub.
-4. `backoffice:enroll` keeps its interactive terminal: it reads a password and a code that no agent may see.
+4. `--skip-smoke` removes the smoke inputs check and the smoke step for a deploy the owner will verify by hand; the log says the smoke test was skipped (owner's request of 2026-11-14).
+5. `backoffice:enroll` keeps its interactive terminal: it reads a password and a code that no agent may see.
 
 ## Alternatives considered
 
