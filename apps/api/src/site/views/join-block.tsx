@@ -3,7 +3,7 @@ import { ShellTheme } from '../../web-shell/shell-theme';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { type JoinFormState, JoinState, type PageModel } from '../page-model';
 import { siteAgentNameOf } from '../site-agents';
-import { REFERRAL_SHARING_OPEN, TURNSTILE_RESPONSE_FIELD } from '../site-constants';
+import { REFERRAL_SHARING_OPEN, TURNSTILE_FAILED_CALLBACK, TURNSTILE_PASSED_CALLBACK, TURNSTILE_RESPONSE_FIELD } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { LegalDocument, legalPathOf } from '../legal-links';
@@ -94,6 +94,8 @@ function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: s
           data-size="flexible"
           data-appearance="always"
           data-response-field-name={TURNSTILE_RESPONSE_FIELD}
+          data-callback={TURNSTILE_PASSED_CALLBACK}
+          data-error-callback={TURNSTILE_FAILED_CALLBACK}
         />
       </div>
       <noscript>

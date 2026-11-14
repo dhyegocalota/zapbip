@@ -32,10 +32,9 @@ export function SignInPage(props: SignInPageProps) {
       theme={props.theme}
       returnPath={BackofficePath.SignIn}
     >
-      <section class="card form-card" aria-labelledby="sign-in-title">
+      <section class="card form-card hero-card" aria-labelledby="sign-in-title">
         <p class="eyebrow">{translate(BackofficeCopyKey.SignInEyebrow)}</p>
         <h1 id="sign-in-title">{translate(BackofficeCopyKey.SignInTitle)}</h1>
-        <p class="lead">{translate(BackofficeCopyKey.SignInLead)}</p>
         <form method="post" action={BackofficePath.SignIn}>
           <input type="hidden" name="csrf" value={props.csrfToken} />
           <Field

@@ -22,7 +22,6 @@ const REQUIRED_KEYS = [
 ];
 const POLISH_KEYS = [
   'SignInEyebrow',
-  'SignInLead',
   'HomeMetricsBody',
   'HomeAuditBody',
   'HomeNumbersUnit',
@@ -70,7 +69,7 @@ const SHARED_WITH_ENGLISH = [
   [OwnerLocale.French, BackofficeCopyKey.AgentKeysColumnActions],
   [OwnerLocale.French, BackofficeCopyKey.AgentKeysStatusActive],
 ].map(([locale, key]) => `${locale}:${key}`);
-const SIGN_IN_KEYS = ['SignInLead', 'SignInEmailLabel', 'SignInPasswordLabel', 'SignInSubmit', 'SignInCodeLead', 'SignInCodeSubmit'];
+const SIGN_IN_KEYS = ['SignInEmailLabel', 'SignInPasswordLabel', 'SignInSubmit', 'SignInCodeLead', 'SignInCodeSubmit'];
 const REMOVED_KEYS = ['SignInKeyLabel', 'SignInKeyHelp'];
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;

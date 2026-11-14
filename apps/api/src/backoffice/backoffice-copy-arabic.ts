@@ -16,7 +16,6 @@ export const ARABIC_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'لوحة إدارة zapbip · {environment}',
   [BackofficeCopyKey.SignInTitle]: 'تسجيل الدخول',
   [BackofficeCopyKey.SignInEyebrow]: 'دخول المشغّل',
-  [BackofficeCopyKey.SignInLead]: 'بريدك الإلكتروني وكلمة المرور أولًا، ثم الرمز من تطبيق المصادقة.',
   [BackofficeCopyKey.SignInEmailLabel]: 'البريد الإلكتروني',
   [BackofficeCopyKey.SignInPasswordLabel]: 'كلمة المرور',
   [BackofficeCopyKey.SignInCodeLead]: 'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة. تنتهي هذه الخطوة خلال 5 دقائق.',

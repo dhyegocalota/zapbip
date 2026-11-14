@@ -1,4 +1,5 @@
 import { DEFAULT_WAITLIST_REFERRAL_CAP } from '@zapbip/types';
+import { TURNSTILE_FAILED_CALLBACK, TURNSTILE_PASSED_CALLBACK } from '../../src/site/site-constants';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { expect, joinThroughApi, test } from './fixtures';
 import { rowOf, waitlistRows } from './support/landing-database';
@@ -6,6 +7,8 @@ import { siteCopy } from './support/site-copy';
 
 const MARIA = 'maria@example.com';
 const CLEAR_TOKEN_SCRIPT = "document.querySelector('input[name=\"cf-turnstile-response\"]').value = ''";
+const FAIL_CHECK_SCRIPT = `window['${TURNSTILE_FAILED_CALLBACK}']()`;
+const PASS_CHECK_SCRIPT = `document.querySelector('input[name="cf-turnstile-response"]').value = 'passed'; window['${TURNSTILE_PASSED_CALLBACK}']()`;
 const SKIP_NATIVE_VALIDATION_SCRIPT = "document.querySelector('.join-form').setAttribute('novalidate', '')";
 
 const THANKS_PATTERN = /<div class="thanks[\s\S]*?<\/p>/;
@@ -25,15 +28,32 @@ test('join with the test widget', async ({ page }) => {
   expect(rowOf({ email: MARIA })).toMatchObject({ credited: 0 });
 });
 
-test('a missing token shows the captcha notice on the page and writes nothing', async ({ page }) => {
+test('a failed check shows the captcha notice on the page and writes nothing', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel(siteCopy({ key: SiteCopyKey.JoinEmailLabel })).fill(MARIA);
   await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue('');
   await page.evaluate(CLEAR_TOKEN_SCRIPT);
   await page.route('**/join', (route) => route.abort());
-  await page.getByRole('button', { name: siteCopy({ key: SiteCopyKey.JoinSubmit }) }).click();
+  const submit = page.getByRole('button', { name: siteCopy({ key: SiteCopyKey.JoinSubmit }) });
+  await submit.click();
+  await expect(page.locator('.join-submit')).toHaveAttribute('aria-busy', 'true');
+  await page.evaluate(FAIL_CHECK_SCRIPT);
   await expect(page.getByText(siteCopy({ key: SiteCopyKey.JoinCaptchaFailed }))).toBeVisible();
+  await expect(page.locator('.join-submit')).not.toHaveAttribute('aria-busy', 'true');
   expect(waitlistRows()).toEqual([]);
+});
+
+test('a click before the check is solved waits and sends the form by itself once it passes', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel(siteCopy({ key: SiteCopyKey.JoinEmailLabel })).fill(MARIA);
+  await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue('');
+  await page.evaluate(CLEAR_TOKEN_SCRIPT);
+  await page.getByRole('button', { name: siteCopy({ key: SiteCopyKey.JoinSubmit }) }).click();
+  await expect(page.locator('.join-submit')).toHaveAttribute('aria-busy', 'true');
+  expect(waitlistRows()).toEqual([]);
+  await page.evaluate(PASS_CHECK_SCRIPT);
+  await expect(page.getByRole('heading', { name: siteCopy({ key: SiteCopyKey.ThanksTitle }) })).toBeVisible();
+  expect(rowOf({ email: MARIA })).toBeDefined();
 });
 
 test('rejected input keeps the typed value and shows the field error', async ({ page }) => {
