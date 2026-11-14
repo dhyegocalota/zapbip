@@ -4,7 +4,7 @@ import type { OwnerInboundContent } from '../../inbox/use-cases/types';
 import type { AccountCommandResult, OwnerAccountContext } from '../account-types';
 import { NO_INSTALL_CODE } from '../constants';
 import { receiveAccountMessage } from '../use-cases/receive-account-message';
-import type { OwnerAccountInput, ReceiveAccountMessageResult } from '../use-cases/types';
+import type { AgentRequestInput, OwnerAccountInput, ReceiveAccountMessageResult } from '../use-cases/types';
 import {
   createInMemoryAccountDependencies,
   IN_MEMORY_APP_ORIGIN,
@@ -46,6 +46,16 @@ export async function createAccountFixture(
 
 export function ownerInputOf(input: AccountFixture): OwnerAccountInput {
   return { dependencies: input.environment.dependencies, account: input.account, publicOrigin: PUBLIC_ORIGIN, appOrigin: APP_ORIGIN };
+}
+
+export function agentRequestOf(input: AccountFixture & { agent?: AgentName }): AgentRequestInput {
+  const { environment, account, agent = 'claude' } = input;
+  return {
+    dependencies: environment.dependencies,
+    connection: { accountId: account.accountId, agent, ownerLocale: account.locale },
+    publicOrigin: PUBLIC_ORIGIN,
+    appOrigin: APP_ORIGIN,
+  };
 }
 
 export function receiveAccount(

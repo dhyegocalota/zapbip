@@ -1,10 +1,10 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { Flag } from './flags';
 import { LOCALE_PROFILES, MENU_LOCALES, languageOf } from './locale-profiles';
 import { ShellCopyKey, renderShellCopy } from './shell-copy';
 import type { ShellHiddenField } from './shell-fields';
 
-export function LanguageMenu(props: { locale: OwnerLocale; action: string; hiddenFields: ShellHiddenField[] }) {
+export function LanguageMenu(props: { locale: WebLocale; action: string; hiddenFields: ShellHiddenField[] }) {
   const { locale } = props;
   const label = renderShellCopy({ key: ShellCopyKey.LocaleLabel, locale });
   return (

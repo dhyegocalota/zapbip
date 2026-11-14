@@ -16,6 +16,7 @@ import { NO_INSTALL_CODE } from '../constants';
 import { isInviteLive } from '../invite-code';
 import type {
   AccessDependencies,
+  ApprovalCooldowns,
   AccessInvites,
   AccountDependencies,
   AccountDirectory,
@@ -387,6 +388,19 @@ function createFirstMessageClaim(): FirstMessageClaim {
   };
 }
 
+function createApprovalCooldowns(): ApprovalCooldowns {
+  const cooldowns = new Map<string, number>();
+  return {
+    isCoolingDown: async ({ key, now }) => {
+      const until = cooldowns.get(key);
+      return until !== undefined && until > now;
+    },
+    start: async ({ key, until }) => {
+      cooldowns.set(key, until);
+    },
+  };
+}
+
 function createDeletionRequests(): DeletionRequests {
   let requestedAt: number | null = null;
   return {
@@ -422,6 +436,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     deletionRequests: createDeletionRequests(),
     installLinkRedaction,
     signInLinks,
+    approvalCooldowns: createApprovalCooldowns(),
   };
 
   async function openAccount(

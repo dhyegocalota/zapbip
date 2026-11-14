@@ -1,6 +1,7 @@
 import { contentHashOf } from '../backoffice/assets/stylesheet';
 import { JOIN_FRAGMENT, THEME_SWITCH_ID } from './site-constants';
 import { SitePath } from './site-paths';
+import { WEBMCP_SOURCE } from './site-webmcp-script';
 
 const SCRIPT_SOURCE = `(function () {
   var DEMO_STEP_BOUNDARIES_SECONDS = [5.6, 7.4];
@@ -345,6 +346,7 @@ const SCRIPT_SOURCE = `(function () {
     if (document.readyState !== 'complete') window.addEventListener('load', start);
   }
 
+${WEBMCP_SOURCE}
   setupJoinForm();
   setupJoinLinks();
   setupAgentPicks();
@@ -356,6 +358,7 @@ const SCRIPT_SOURCE = `(function () {
   setupReveal();
   setupThanks();
   setupDemo();
+  setupModelContext();
 })();
 `;
 

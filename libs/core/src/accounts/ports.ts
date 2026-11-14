@@ -95,6 +95,11 @@ export interface SignInLinks {
   issue(input: { accountId: string; issuedAt: number; expiresAt: number }): Promise<string>;
 }
 
+export interface ApprovalCooldowns {
+  isCoolingDown(input: { key: string; now: number }): Promise<boolean>;
+  start(input: { key: string; until: number }): Promise<void>;
+}
+
 export interface DeletionRequests {
   save(input: { requestedAt: number }): Promise<void>;
   find(): Promise<number | null>;
@@ -115,6 +120,7 @@ export type AccountDependencies = CoreDependencies & {
   deletionRequests: DeletionRequests;
   installLinkRedaction: InstallLinkRedaction;
   signInLinks: SignInLinks;
+  approvalCooldowns: ApprovalCooldowns;
 };
 
 export type AccessDependencies = { accounts: AccountDirectory; invites: AccessInvites };

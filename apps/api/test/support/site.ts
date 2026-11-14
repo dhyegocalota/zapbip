@@ -1,5 +1,5 @@
 import { createExecutionContext } from 'cloudflare:test';
-import { OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
+import { WebLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import type { Bindings } from '../../src/contract/env';
 import { renderShellCopy, type ShellCopyKey } from '../../src/web-shell/shell-copy';
@@ -61,14 +61,15 @@ export type SiteRequest = {
   path: string;
   method?: string;
   form?: Record<string, string>;
+  body?: string;
   headers?: Record<string, string>;
   env?: Bindings;
   recording?: SiteFetchRecording;
   withClientAddress?: boolean;
 };
 
-export function joinForm(input: { email: string; referralCode?: string; locale?: OwnerLocale; token?: string }): Record<string, string> {
-  const { email, referralCode, locale = OwnerLocale.EnglishUs, token = WIDGET_TOKEN } = input;
+export function joinForm(input: { email: string; referralCode?: string; locale?: WebLocale; token?: string }): Record<string, string> {
+  const { email, referralCode, locale = WebLocale.EnglishUs, token = WIDGET_TOKEN } = input;
   return {
     email,
     locale,
@@ -82,6 +83,7 @@ export async function siteFetch(input: SiteRequest): Promise<Response> {
     path,
     method = 'GET',
     form,
+    body,
     headers = {},
     env = siteEnvironment({}),
     recording = acceptingTurnstile(),
@@ -91,7 +93,7 @@ export async function siteFetch(input: SiteRequest): Promise<Response> {
   const request = new Request(`${SITE_ORIGIN}${path}`, {
     method,
     headers: { ...addressHeaders, ...headers },
-    body: form === undefined ? undefined : new URLSearchParams(form),
+    body: form === undefined ? body : new URLSearchParams(form),
   });
   return createSiteApp({ fetchImplementation: recording.fetchImplementation }).fetch(request, env, createExecutionContext());
 }
@@ -102,10 +104,10 @@ export function escapedHtml(input: { text: string }): string {
   return input.text.replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]!);
 }
 
-export function shellCopyHtml(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
+export function shellCopyHtml(input: { key: ShellCopyKey; locale: WebLocale }): string {
   return escapedHtml({ text: renderShellCopy(input) });
 }
 
-export function copyHtml(input: { key: SiteCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
+export function copyHtml(input: { key: SiteCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
   return escapedHtml({ text: renderSiteCopy(input) });
 }

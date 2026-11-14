@@ -31,7 +31,7 @@ describe('waitForReply with a question', () => {
     const environment = await createEnvironment();
     const { question, answerMessageId } = await answeredQuestion({ environment });
     const reply = await waiting({ environment, questionId: question.questionId });
-    expect(reply).toEqual({ status: ReplyStatus.Answered, answer: 'Sim', messageId: answerMessageId });
+    expect(reply).toEqual({ status: ReplyStatus.Answered, answer: 'Sim', messageId: answerMessageId, optionIndex: 0 });
     expect(await environment.repository.findMessage({ messageId: answerMessageId! })).toMatchObject({ readByAgent: true });
   });
 
@@ -65,7 +65,7 @@ describe('waitForReply with a question', () => {
     const holding = waiting({ environment, questionId: question.questionId });
     await environment.clock.advance({ ms: SECOND_MS });
     const answer = await receiveText({ environment, text: 'sim' });
-    expect(await holding).toEqual({ status: ReplyStatus.Answered, answer: 'sim', messageId: answer.messageId });
+    expect(await holding).toEqual({ status: ReplyStatus.Answered, answer: 'sim', messageId: answer.messageId, optionIndex: null });
   });
 
   test('times out when the question stays open', async () => {

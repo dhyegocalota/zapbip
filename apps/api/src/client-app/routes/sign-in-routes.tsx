@@ -18,7 +18,7 @@ import { csrfTokenOf } from '../csrf';
 import { respondMessage } from '../respond';
 import { isSubmissionTrusted, refuseSubmission } from '../session-guards';
 import { createSession, findSession } from '../sessions';
-import { maskedPhoneOf } from '../masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { consumeSignInToken, findSignInTokenOwner } from '../sign-in-tokens';
 import { ContinuePage } from '../views/continue-page';
 

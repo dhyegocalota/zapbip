@@ -737,6 +737,10 @@ select[aria-invalid='true'] {
   font-family: var(--font-mono);
 }
 
+.agent-key-endpoint {
+  overflow-wrap: anywhere;
+}
+
 .code-input {
   max-width: var(--measure-code);
   font-size: 1.25rem;

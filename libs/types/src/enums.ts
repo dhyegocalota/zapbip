@@ -47,6 +47,28 @@ export enum OwnerLocale {
   EnglishUs = 'en_US',
 }
 
+export enum WebLocale {
+  EnglishUs = 'en_US',
+  PortugueseBrazil = 'pt_BR',
+  Spanish = 'es',
+  German = 'de',
+  French = 'fr',
+  Japanese = 'ja',
+  Korean = 'ko',
+  ChineseSimplified = 'zh_CN',
+}
+
+export enum WebLanguageTag {
+  English = 'en',
+  PortugueseBrazil = 'pt-BR',
+  Spanish = 'es',
+  German = 'de',
+  French = 'fr',
+  Japanese = 'ja',
+  Korean = 'ko',
+  ChineseSimplified = 'zh-CN',
+}
+
 export enum InboxCopyKey {
   RoutingPrompt = 'routing_prompt',
   RoutingListExpired = 'routing_list_expired',
@@ -284,6 +306,8 @@ export enum AccountReplyIntent {
   SignInLink = 'sign_in_link',
   SendFailed = 'send_failed',
   AccessOpened = 'access_opened',
+  WindowClosed = 'window_closed',
+  CoolingDown = 'cooling_down',
   Unknown = 'unknown',
 }
 
@@ -329,6 +353,7 @@ export enum HttpStatus {
   Unauthorized = 401,
   Forbidden = 403,
   NotFound = 404,
+  MethodNotAllowed = 405,
   Conflict = 409,
   Gone = 410,
   LengthRequired = 411,
@@ -376,6 +401,27 @@ export enum McpToolName {
   CheckInbox = 'check_inbox',
   CreateUpload = 'create_upload',
   SetWake = 'set_wake',
+  ListAgents = 'list_agents',
+  AccountStatus = 'account_status',
+  ConnectAgent = 'connect_agent',
+  RevokeAgent = 'revoke_agent',
+  SignInLink = 'sign_in_link',
+}
+
+export enum AgentChangeStatus {
+  Applied = 'applied',
+  Denied = 'denied',
+  TimedOut = 'timed_out',
+  Refused = 'refused',
+}
+
+export enum AgentCommandRecipient {
+  Owner = 'owner',
+  Agent = 'agent',
+}
+
+export enum AccountPlan {
+  Free = 'free',
 }
 
 export enum WhatsAppNumberState {
@@ -396,6 +442,11 @@ export enum WaitlistJoinOutcome {
   CaptchaFailed = 'captcha_failed',
   InvalidEmail = 'invalid_email',
   RateLimited = 'rate_limited',
+}
+
+export enum WaitlistSource {
+  Form = 'form',
+  Agent = 'agent',
 }
 
 export enum PricingCurrency {

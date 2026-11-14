@@ -27,6 +27,8 @@ import type {
   WakeTransport,
 } from '@zapbip/core';
 import {
+  AgentCommandRecipient,
+  CommandKind,
   CONNECTOR_INBOX_LIMIT,
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
@@ -103,6 +105,7 @@ import {
   TOMBSTONE_STORAGE_KEY,
   UNREPLYABLE_CLOSE_CODES,
 } from './constants';
+import { createStorageApprovalCooldowns } from './approval-cooldowns';
 import { createSqliteDeletionRequests } from './deletion-requests';
 import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { redactInstallCodes } from './install-code-redaction';
@@ -139,6 +142,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   protected wake!: WakeDependencies;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   protected accountId!: string;
+  protected approvalTimeoutMs: number = inbox.AGENT_CHANGE_APPROVAL_TIMEOUT_MS;
   private dependencies!: CoreDependencies;
   private accountDependencies!: AccountDependencies;
   private isTombstoned = false;
@@ -220,6 +224,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
       installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
       signInLinks: new D1SignInLinks({ database: this.env.CONNECTIONS }),
+      approvalCooldowns: createStorageApprovalCooldowns({ storage: this.ctx.storage, now: () => this.clock.now() }),
     };
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(
@@ -545,6 +550,45 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   applyWebCommand(input: ApplyWebCommandRequest): Promise<CallOutcome<inbox.AccountCommandResult>> {
     return this.outcome({
       run: () => inbox.applyOwnerCommand({ ...input, dependencies: this.accountDependencies, isRequestLive: false }),
+    });
+  }
+
+  describeAccount(input: Parameters<AccountInboxRpc['describeAccount']>[0]): Promise<CallOutcome<inbox.AccountOverview>> {
+    return this.outcome({
+      connection: input.connection,
+      run: () => inbox.describeAccount({ ...input, dependencies: this.accountDependencies }),
+    });
+  }
+
+  requestAccountChange(input: Parameters<AccountInboxRpc['requestAccountChange']>[0]): Promise<CallOutcome<inbox.AgentChangeResult>> {
+    return this.outcome({
+      connection: input.connection,
+      run: () =>
+        inbox.requestAccountChange({
+          ...input,
+          dependencies: this.accountDependencies,
+          publicOrigin: this.env.PUBLIC_ORIGIN,
+          appOrigin: this.env.APP_ORIGIN,
+          timeoutMs: this.approvalTimeoutMs,
+        }),
+      describe: (value) => ({ event: LogEvent.AgentChange, agent: input.connection.agent, kind: value.status }),
+    });
+  }
+
+  sendSignInLink(input: Parameters<AccountInboxRpc['sendSignInLink']>[0]): Promise<CallOutcome<inbox.AgentCommandResult>> {
+    const { connection } = input;
+    return this.outcome({
+      connection,
+      run: () =>
+        inbox.applyAgentCommand({
+          dependencies: this.accountDependencies,
+          connection,
+          command: { kind: CommandKind.Login, rawName: null, locale: connection.ownerLocale },
+          recipient: AgentCommandRecipient.Owner,
+          publicOrigin: this.env.PUBLIC_ORIGIN,
+          appOrigin: this.env.APP_ORIGIN,
+        }),
+      describe: (value) => ({ event: LogEvent.AgentChange, agent: connection.agent, kind: value.intent }),
     });
   }
 

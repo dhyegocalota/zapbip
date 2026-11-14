@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
@@ -12,8 +12,8 @@ const THEME_BUTTONS = [
 
 describe('the theme switch', () => {
   it.each([
-    ['/', OwnerLocale.EnglishUs],
-    ['/pt-br', OwnerLocale.PortugueseBrazil],
+    ['/', WebLocale.EnglishUs],
+    ['/pt-br', WebLocale.PortugueseBrazil],
   ])('shows one small icon per theme on %s, named by its label', async (path, locale) => {
     const html = await (await siteFetch({ path })).text();
     THEME_BUTTONS.forEach(([theme, label]) => {

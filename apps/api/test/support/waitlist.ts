@@ -1,4 +1,4 @@
-import { OwnerLocale, WaitlistJoinOutcome } from '@zapbip/types';
+import { WebLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import { joinWaitlist, type WaitlistJoinResult } from '../../src/site/join-waitlist';
 import { SEED_CREATED_AT } from './seed';
 import { testEnv } from './workers-env';
@@ -10,16 +10,26 @@ export type WaitlistRow = {
   referred_by: string | null;
   credited: number;
   created_at: number;
+  source: WaitlistSource;
 };
 
 export async function join(input: {
   email: string;
   referralCode?: string | null;
-  locale?: OwnerLocale;
+  locale?: WebLocale;
+  source?: WaitlistSource;
   generateReferralCode?: () => string;
 }): Promise<WaitlistJoinResult> {
-  const { email, referralCode = null, locale = OwnerLocale.EnglishUs, generateReferralCode } = input;
-  return joinWaitlist({ database: testEnv.CONNECTIONS, email, locale, referralCode, now: SEED_CREATED_AT, generateReferralCode });
+  const { email, referralCode = null, locale = WebLocale.EnglishUs, source = WaitlistSource.Form, generateReferralCode } = input;
+  return joinWaitlist({
+    database: testEnv.CONNECTIONS,
+    email,
+    locale,
+    referralCode,
+    source,
+    now: SEED_CREATED_AT,
+    generateReferralCode,
+  });
 }
 
 export async function joinedCodeOf(input: { email: string; referralCode?: string | null }): Promise<string> {
@@ -50,13 +60,14 @@ export async function seedWaitlistRow(input: {
   referralCode: string;
   referredBy?: string | null;
   credited?: number;
+  source?: WaitlistSource;
   createdAt: number;
 }): Promise<void> {
-  const { email, referralCode, referredBy = null, credited = 0, createdAt } = input;
+  const { email, referralCode, referredBy = null, credited = 0, source = WaitlistSource.Form, createdAt } = input;
   await testEnv.CONNECTIONS.prepare(
-    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
   )
-    .bind(email, OwnerLocale.EnglishUs, referralCode, referredBy, credited, createdAt)
+    .bind(email, WebLocale.EnglishUs, referralCode, referredBy, credited, createdAt, source)
     .run();
 }
 
@@ -67,4 +78,20 @@ export async function resetWaitlist(): Promise<void> {
     testEnv.CONNECTIONS.prepare('DELETE FROM site_settings'),
     testEnv.CONNECTIONS.prepare("INSERT INTO site_settings (key, value, updated_at) VALUES ('waitlist_referral_cap', '5', 1794441600000)"),
   ]);
+}
+
+const SEEDED_CODE_LENGTH = 12;
+
+function uniqueToken(): string {
+  return crypto.randomUUID().replaceAll('-', '');
+}
+
+export async function seedSourceRows(input: { source: WaitlistSource; count: number; createdAt: number }): Promise<void> {
+  const { source, count, createdAt } = input;
+  const statements = Array.from({ length: count }, () =>
+    testEnv.CONNECTIONS.prepare(
+      'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at, source) VALUES (?, ?, ?, NULL, 0, ?, ?)',
+    ).bind(`${uniqueToken()}@example.com`, WebLocale.EnglishUs, uniqueToken().slice(0, SEEDED_CODE_LENGTH), createdAt, source),
+  );
+  await testEnv.CONNECTIONS.batch(statements);
 }

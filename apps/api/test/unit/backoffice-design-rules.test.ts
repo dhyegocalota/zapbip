@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { HttpStatus, WebLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
@@ -54,7 +54,7 @@ const HEADER_END_WRAP_PATTERN = /\n\.header-end \{[^}]*flex-wrap: wrap;/;
 const NARROW_BLOCK_PATTERN = /@media \(max-width: 40rem\) \{[\s\S]*?\n\}/;
 
 const PAGE = {
-  locale: OwnerLocale.EnglishUs,
+  locale: WebLocale.EnglishUs,
   theme: ShellTheme.System,
   environment: DeployEnvironment.Production,
   stylesheetHref: '/assets/backoffice.css?v=1',
@@ -90,6 +90,8 @@ const PAGES: Record<string, string> = {
           target_id: null,
           outcome: BackofficeAuditOutcome.Succeeded,
           client_address: null,
+          actor_key_id: null,
+          actor_key_label: null,
         },
       ],
     }),
@@ -104,7 +106,7 @@ const PAGES: Record<string, string> = {
   detailDisabled: detailPage({ state: WhatsAppNumberState.Disabled }),
   metricsEmpty: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: EMPTY_REPORT, now: NOW })),
   metricsData: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW })),
-  notFound: String(ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, theme: ShellTheme.System, environment: null })),
+  notFound: String(ErrorPage({ status: HttpStatus.NotFound, locale: WebLocale.EnglishUs, theme: ShellTheme.System, environment: null })),
 };
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {

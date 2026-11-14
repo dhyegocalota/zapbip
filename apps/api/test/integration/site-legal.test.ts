@@ -1,24 +1,20 @@
-import { COMPANY, HttpStatus, OwnerLocale } from '@zapbip/types';
+import { COMPANY, HttpStatus, WebLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { LegalDocument, legalPathOf } from '../../src/site/legal-links';
+import { localePathOf } from '../../src/site/site-language';
+import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
 import { legalTextOf } from '../../src/site/legal-copy';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { copyHtml, escapedHtml, shellCopyHtml, SITE_ORIGIN, siteFetch } from '../support/site';
 
 const SEE_OTHER = 303;
-const LEGAL_PAGES = [
-  ['/terms', LegalDocument.Terms, OwnerLocale.EnglishUs, 'en'],
-  ['/privacy', LegalDocument.Privacy, OwnerLocale.EnglishUs, 'en'],
-  ['/pt-br/termos', LegalDocument.Terms, OwnerLocale.PortugueseBrazil, 'pt-BR'],
-  ['/pt-br/privacidade', LegalDocument.Privacy, OwnerLocale.PortugueseBrazil, 'pt-BR'],
-] as const;
-const TWINS: Record<string, string> = {
-  '/terms': '/pt-br/termos',
-  '/privacy': '/pt-br/privacidade',
-  '/pt-br/termos': '/terms',
-  '/pt-br/privacidade': '/privacy',
-};
+const LOCALES = Object.values(WebLocale);
+const LEGAL_PAGES = Object.values(LegalDocument).flatMap((document) =>
+  LOCALES.map((locale) => [legalPathOf({ document, locale }), document, locale, LOCALE_PROFILES[locale].languageTag] as const),
+);
+const LEGAL_PATHS = LEGAL_PAGES.map(([path]) => path);
+const PORTUGUESE_PATHS = ['/pt-br/termos', '/pt-br/privacidade'];
 
 async function htmlOf(input: { path: string }): Promise<string> {
   return (await siteFetch({ path: input.path })).text();
@@ -56,14 +52,15 @@ describe('the legal pages', () => {
     expect(unfilled).toEqual([]);
   });
 
-  it.each(LEGAL_PAGES)('%s points its canonical and alternates at the twin page', async (path, _document, locale) => {
+  it.each(LEGAL_PAGES)('%s points its canonical and the alternates of every language at its twins', async (path, document) => {
     const html = await htmlOf({ path });
-    const english = locale === OwnerLocale.EnglishUs ? path : TWINS[path]!;
-    const portuguese = locale === OwnerLocale.PortugueseBrazil ? path : TWINS[path]!;
     expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}${path}"/>`);
-    expect(html).toContain(`hreflang="en" href="${SITE_ORIGIN}${english}"`);
-    expect(html).toContain(`hreflang="pt-BR" href="${SITE_ORIGIN}${portuguese}"`);
-    expect(html).toContain(`hreflang="x-default" href="${SITE_ORIGIN}${english}"`);
+    LOCALES.forEach((twinLocale) =>
+      expect(html).toContain(
+        `hreflang="${LOCALE_PROFILES[twinLocale].languageTag}" href="${SITE_ORIGIN}${legalPathOf({ document, locale: twinLocale })}"`,
+      ),
+    );
+    expect(html).toContain(`hreflang="x-default" href="${SITE_ORIGIN}${legalPathOf({ document, locale: WebLocale.EnglishUs })}"`);
     expect(html).toContain(`<meta property="og:url" content="${SITE_ORIGIN}${path}"/>`);
   });
 
@@ -76,39 +73,38 @@ describe('the legal pages', () => {
     const html = await htmlOf({ path });
     expect(html).not.toContain('challenges.cloudflare.com');
     expect(html).not.toContain('rel="preload"');
-    const home = locale === OwnerLocale.EnglishUs ? '/' : '/pt-br';
+    const home = localePathOf({ locale });
     expect(html).toContain(`class="button button-primary header-join" href="${home}#join"`);
     expect(html).toContain(`href="#content" class="skip-link">${copyHtml({ key: SiteCopyKey.SkipToContent, locale })}<`);
   });
 
-  it.each(Object.keys(TWINS))('POST /locale from %s lands on the twin page', async (path) => {
-    const locale = path.startsWith('/pt-br') ? OwnerLocale.EnglishUs : OwnerLocale.PortugueseBrazil;
-    const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale, returnTo: path } });
-    expect(response.status).toBe(SEE_OTHER);
-    expect(response.headers.get('Location')).toBe(TWINS[path]);
+  it.each(LEGAL_PAGES)('POST /locale from %s lands on the twin page of every other language', async (path, document) => {
+    const landings = await Promise.all(
+      LOCALES.map(async (locale) => {
+        const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale, returnTo: path } });
+        return [response.status, response.headers.get('Location')];
+      }),
+    );
+    expect(landings).toEqual(LOCALES.map((locale) => [SEE_OTHER, legalPathOf({ document, locale })]));
   });
 
-  it.each(Object.keys(TWINS))('POST /theme from %s returns to it', async (path) => {
+  it.each(LEGAL_PATHS)('POST /theme from %s returns to it', async (path) => {
     const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'light', returnTo: path } });
     expect(response.headers.get('Location')).toBe(`${path}#theme`);
   });
 
-  it('refuses a legal path with a query as a return target', async () => {
-    const response = await siteFetch({
-      path: '/locale',
-      method: 'POST',
-      form: { locale: OwnerLocale.PortugueseBrazil, returnTo: '/terms?x=1' },
-    });
-    expect(response.headers.get('Location')).toBe('/pt-br');
-  });
+  it.each([WebLocale.PortugueseBrazil, WebLocale.Japanese])(
+    'refuses a legal path with a query as a return target for %s',
+    async (locale) => {
+      const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale, returnTo: '/terms?x=1' } });
+      expect(response.headers.get('Location')).toBe(localePathOf({ locale }));
+    },
+  );
 });
 
 describe('the links to the legal pages', () => {
-  it.each([
-    ['/', OwnerLocale.EnglishUs],
-    ['/pt-br', OwnerLocale.PortugueseBrazil],
-  ])('the footer of %s links both documents in its language', async (path, locale) => {
-    const html = await htmlOf({ path });
+  it.each(LOCALES)('the footer of the %s home links both documents in its language', async (locale) => {
+    const html = await htmlOf({ path: localePathOf({ locale }) });
     const footer = /<footer class="site-footer">([\s\S]*?)<\/footer>/.exec(html)![1]!;
     expect(footer).toContain(
       `href="${legalPathOf({ document: LegalDocument.Terms, locale })}">${shellCopyHtml({ key: ShellCopyKey.FooterTerms, locale })}<`,
@@ -118,18 +114,24 @@ describe('the links to the legal pages', () => {
     );
   });
 
-  it.each([
-    ['/', '/privacy'],
-    ['/pt-br', '/pt-br/privacidade'],
-  ])('the waitlist note of %s links the privacy policy', async (path, privacyPath) => {
-    const html = await htmlOf({ path });
+  it.each(LOCALES)('the waitlist note of the %s home links the privacy policy', async (locale) => {
+    const html = await htmlOf({ path: localePathOf({ locale }) });
+    const privacyPath = legalPathOf({ document: LegalDocument.Privacy, locale });
     expect(html).toMatch(new RegExp(`<p class="privacy-note">[^<]*<a href="${privacyPath}">`));
   });
 
-  it('the sitemap lists both documents in both languages with their alternates', async () => {
+  it('keeps the Portuguese slugs and gives every other language the English slugs under its prefix', () => {
+    expect(PORTUGUESE_PATHS).toEqual(
+      Object.values(LegalDocument).map((document) => legalPathOf({ document, locale: WebLocale.PortugueseBrazil })),
+    );
+    expect(legalPathOf({ document: LegalDocument.Terms, locale: WebLocale.Japanese })).toBe('/ja/terms');
+    expect(legalPathOf({ document: LegalDocument.Privacy, locale: WebLocale.ChineseSimplified })).toBe('/zh/privacy');
+  });
+
+  it('the sitemap lists every document in every language with its alternates', async () => {
     const xml = await (await siteFetch({ path: '/sitemap.xml' })).text();
-    Object.keys(TWINS).forEach((path) => expect(xml).toContain(`<loc>${SITE_ORIGIN}${path}</loc>`));
-    expect(xml.match(new RegExp(`hreflang="pt-BR" href="${SITE_ORIGIN}/pt-br/termos"`, 'g'))).toHaveLength(2);
-    expect(xml.match(new RegExp(`hreflang="x-default" href="${SITE_ORIGIN}/privacy"`, 'g'))).toHaveLength(2);
+    LEGAL_PAGES.forEach(([path]) => expect(xml).toContain(`<loc>${SITE_ORIGIN}${path}</loc>`));
+    expect(xml.match(new RegExp(`hreflang="pt-BR" href="${SITE_ORIGIN}/pt-br/termos"`, 'g'))).toHaveLength(LOCALES.length);
+    expect(xml.match(new RegExp(`hreflang="x-default" href="${SITE_ORIGIN}/privacy"`, 'g'))).toHaveLength(LOCALES.length);
   });
 });

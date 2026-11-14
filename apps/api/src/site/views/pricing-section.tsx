@@ -1,19 +1,12 @@
-import { PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type OwnerLocale } from '@zapbip/types';
+import { PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type WebLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { JOIN_FRAGMENT } from '../site-constants';
+import { FREE_FEATURE_KEYS } from '../pricing-features';
 import { formatPrice, pricingValuesOf } from '../price-format';
 
 const CHECK_GLYPH = '✓';
-const FREE_FEATURE_KEYS = [
-  SiteCopyKey.PricingFreePhone,
-  SiteCopyKey.PricingFreeAgents,
-  SiteCopyKey.PricingFreeAsk,
-  SiteCopyKey.PricingFreeRouting,
-  SiteCopyKey.PricingFreeWake,
-];
-
-export function PricingSection(props: { locale: OwnerLocale }) {
+export function PricingSection(props: { locale: WebLocale }) {
   const translate = copyOf({ locale: props.locale });
   const values = pricingValuesOf({ locale: props.locale });
   const freePrice = formatPrice({ cents: PRICING_FREE_CENTS, currency: PRICING_CURRENCY_BY_LOCALE[props.locale], locale: props.locale });

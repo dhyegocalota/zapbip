@@ -1,6 +1,7 @@
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import type { PageModel } from '../page-model';
+import { AgentsSection } from './agents-section';
 import { CapabilitiesSection } from './capabilities-section';
 import { FaqSection } from './faq-section';
 import { FinalCall } from './final-call';
@@ -24,6 +25,7 @@ export function LandingPage(props: { model: PageModel }) {
       <PricingSection locale={model.locale} />
       <PrivacyBand locale={model.locale} />
       <FaqSection locale={model.locale} />
+      <AgentsSection locale={model.locale} siteOrigin={model.siteOrigin} />
       <FinalCall model={model} />
     </SiteLayout>
   );

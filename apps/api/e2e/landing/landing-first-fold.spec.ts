@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { leadingAgentNames } from '../../src/site/site-agents';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { expect, test } from './fixtures';
@@ -7,7 +7,7 @@ import { siteCopy } from './support/site-copy';
 const REFERRAL_CODE = 'abcdefgh2345';
 const BROWSER_VIEWPORT_HEIGHT_CLEARANCE = 0;
 
-async function expectFirstFold(input: { page: import('@playwright/test').Page; locale: OwnerLocale }) {
+async function expectFirstFold(input: { page: import('@playwright/test').Page; locale: WebLocale }) {
   const { page, locale } = input;
   const copy = (key: SiteCopyKey): string => siteCopy({ key, locale });
   await expect(page.getByRole('heading', { level: 1 })).toContainText(copy(SiteCopyKey.HeroTitleLead));
@@ -24,7 +24,7 @@ async function expectFirstFold(input: { page: import('@playwright/test').Page; l
 test('above the fold in en_US', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await expectFirstFold({ page, locale: OwnerLocale.EnglishUs });
+  await expectFirstFold({ page, locale: WebLocale.EnglishUs });
 });
 
 test.describe('pt-BR browser', () => {
@@ -33,6 +33,6 @@ test.describe('pt-BR browser', () => {
   test('above the fold in pt_BR', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
-    await expectFirstFold({ page, locale: OwnerLocale.PortugueseBrazil });
+    await expectFirstFold({ page, locale: WebLocale.PortugueseBrazil });
   });
 });

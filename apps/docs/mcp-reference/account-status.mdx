@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: 'Read the state and the plan of this account.'
+---
+
+Read the account this connection belongs to. Read only: it needs no approval and it counts against no limit.
+
+## Input
+
+None.
+
+## Output
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`. The phone number is never part of the result. `free_messages` is the allowance the plan includes; zapbip does not report how much is left.
+
+The same data is on the [web app](/features/web-app): the home page answers `Accept: application/json` for a signed-in session with `{ "state", "phone", "plan", "free_messages", "agents" }`, where `phone` shows only the last four digits, and `401` with `{ "error": "sign_in_required" }` when signed out.

@@ -1,10 +1,10 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 
 const SUCCESS_MARK = '✓';
 
-export function ThanksPanel(props: { locale: OwnerLocale }) {
+export function ThanksPanel(props: { locale: WebLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <div class="thanks hero-card" role="status">

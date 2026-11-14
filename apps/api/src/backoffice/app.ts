@@ -15,6 +15,8 @@ import { metricsRoutes } from './metrics/metrics-routes';
 import { numbersRoutes } from './numbers/numbers-routes';
 import { waitlistRoutes } from './waitlist/waitlist-routes';
 import { accessRoutes } from './access/access-routes';
+import { agentKeysRoutes } from './operator-mcp/agent-keys-routes';
+import { operatorMcpRoutes } from './operator-mcp/operator-mcp-routes';
 import { requestContext } from './request-context';
 import { signInRoutes } from './routes/sign-in-routes';
 import { handleBackofficeError, securityHeaders } from './security-headers';
@@ -33,6 +35,8 @@ const PROTECTED_PATHS = [
   BackofficePath.AccessRelease,
   BackofficePath.AccessInvite,
   BackofficePath.AccessInvitesCsv,
+  BackofficePath.AgentKeys,
+  BackofficePath.AgentKeysRevoke,
 ];
 
 const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.SignInCode, BackofficePath.Locale, BackofficePath.Theme, ...PROTECTED_PATHS];
@@ -48,6 +52,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   const app = createBaseApp();
   app.use('*', requireConfigured);
   app.route('/', assetRoutes);
+  app.route('/', operatorMcpRoutes);
   app.use('*', requestContext);
   PROTECTED_PATHS.forEach((path) => app.use(path, requireSession));
   FORM_PATHS.forEach((path) => app.use(path, csrfGuard));
@@ -60,6 +65,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   app.route('/', numbersRoutes);
   app.route('/', waitlistRoutes);
   app.route('/', accessRoutes);
+  app.route('/', agentKeysRoutes);
   app.notFound((context) => errorResponse({ context, status: HttpStatus.NotFound }));
   return app;
 }

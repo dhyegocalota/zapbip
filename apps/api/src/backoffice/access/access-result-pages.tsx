@@ -1,4 +1,4 @@
-import { maskedPhoneOf } from '../../client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
 import { NumberFormField } from '../numbers/number-form-fields';

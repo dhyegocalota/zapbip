@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import type { DeployEnvironment } from '../../contract/deploy-environment';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import type { BackofficeNotice } from '../backoffice-notice';
@@ -8,7 +8,7 @@ import { Field } from '../components/fields';
 import { Layout } from '../layout';
 
 export type SignInPageProps = {
-  locale: OwnerLocale;
+  locale: WebLocale;
   theme: ShellTheme;
   environment: DeployEnvironment;
   csrfToken: string;

@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { expect, test } from './fixtures';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { siteCopy } from './support/site-copy';
@@ -27,7 +27,7 @@ test('the free question opens in the FAQ', async ({ page }) => {
   await page.goto('/');
   await page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeQuestion })).click();
   await expect(
-    page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeAnswer, values: pricingValuesOf({ locale: OwnerLocale.EnglishUs }) })),
+    page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeAnswer, values: pricingValuesOf({ locale: WebLocale.EnglishUs }) })),
   ).toBeVisible();
 });
 

@@ -9,7 +9,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS } from '@zapbip/types';
+import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS, WEB_LOCALE_OF_OWNER_LOCALE } from '@zapbip/types';
 import { chromium } from '@playwright/test';
 import { z } from 'zod';
 import { SCRIPTS } from './landing-demo/demo-copy';
@@ -188,6 +188,7 @@ async function postOwner(input: { origin: string; locale: OwnerLocale; body: Rec
 
 async function recordFlow(input: { origin: string; secret: string; locale: OwnerLocale }): Promise<DemoData> {
   const { origin, locale } = input;
+  const webLocale = WEB_LOCALE_OF_OWNER_LOCALE[locale];
   const script = SCRIPTS[locale];
   const client = new Client({ name: 'zapbip-landing-demo', version: '0.0.0' });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${origin}/c/${input.secret}/mcp`)));
@@ -228,9 +229,9 @@ async function recordFlow(input: { origin: string; secret: string; locale: Owner
     optionsLabel: script.optionsLabel,
     waitingLabel: script.waitingLabel,
     answeredLabel: script.answeredLabel,
-    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale }),
-    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale }),
-    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale })}`,
+    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale: webLocale }),
+    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale: webLocale }),
+    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale: webLocale })}`,
   };
 }
 

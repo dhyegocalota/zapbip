@@ -1,9 +1,9 @@
-import { ACCESS_BATCH_LIMIT, AccountState, DAY_MS, OwnerLocale, WAITLIST_INVITE_TTL_MS } from '@zapbip/types';
+import { ACCESS_BATCH_LIMIT, AccountState, DAY_MS, OwnerLocale, WAITLIST_INVITE_TTL_MS, WaitlistSource } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
-import { maskedPhoneOf } from '../../src/client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { escapedHtml } from '../support/site';
 import { seedInvite, seedWaitingAccount, seedWaitlistEntry, stateOfAccount } from '../support/access';
 import { readScreen } from '../support/inbox-session';
@@ -183,6 +183,89 @@ describe('the access page', () => {
     expect(html).toContain('value="expired@example.com"');
     expect(html).not.toContain('value="live@example.com"');
     expect(html).not.toContain('value="used@example.com"');
+  });
+});
+
+describe('the source of the email entries', () => {
+  async function seedPersonAndRobot(): Promise<void> {
+    await seedWaitlistEntry({ email: 'person@example.com', createdAt: NOW - DAY_MS });
+    await seedWaitlistEntry({ email: 'robot@example.com', source: WaitlistSource.Agent, createdAt: NOW - DAY_MS + 1 });
+  }
+
+  async function invitedEmails(): Promise<string[]> {
+    return (await inviteRows()).map((row) => row.email);
+  }
+
+  test('lists the form entries by default and leaves the agent entries out', async () => {
+    await seedPersonAndRobot();
+    const html = await (await getPage({ path: ACCESS_PATH, sessionToken })).text();
+    expect(html).toContain('value="person@example.com"');
+    expect(html).not.toContain('value="robot@example.com"');
+  });
+
+  test.each([
+    ['agent', ['robot@example.com']],
+    ['all', ['person@example.com', 'robot@example.com']],
+    ['form', ['person@example.com']],
+    ['nonsense', ['person@example.com']],
+  ])('lists %s as the source filter says', async (source, expected) => {
+    await seedPersonAndRobot();
+    const html = await (await getPage({ path: `${ACCESS_PATH}?source=${source}`, sessionToken })).text();
+    ['person@example.com', 'robot@example.com'].forEach((email) => {
+      expect(html.includes(`value="${email}"`)).toBe(expected.includes(email));
+    });
+  });
+
+  test('offers the filter and shows the source of each row', async () => {
+    await seedPersonAndRobot();
+    const html = await (await getPage({ path: `${ACCESS_PATH}?source=all`, sessionToken })).text();
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.AccessFilterSource }));
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.AccessFilterSourceAll }));
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.AccessColumnSource }));
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.SourceAgent }));
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.SourceForm }));
+  });
+
+  test('keeps the source filter in the select-all forms', async () => {
+    await seedPersonAndRobot();
+    const html = await (await getPage({ path: `${ACCESS_PATH}?source=all`, sessionToken })).text();
+    expect(html).toContain('<input type="hidden" name="source" value="all"/>');
+  });
+
+  test('select all invites only the form entries by default', async () => {
+    await seedPersonAndRobot();
+    await postBatch({ path: INVITE_PATH, fields: [['select_all', '1']] });
+    expect(await invitedEmails()).toEqual(['person@example.com']);
+  });
+
+  test('select all invites the agent entries too when the operator includes them', async () => {
+    await seedPersonAndRobot();
+    await postBatch({
+      path: INVITE_PATH,
+      fields: [
+        ['select_all', '1'],
+        ['source', 'all'],
+      ],
+    });
+    expect(await invitedEmails()).toEqual(['person@example.com', 'robot@example.com']);
+  });
+
+  test('select all invites only the agent entries when the operator asks for them alone', async () => {
+    await seedPersonAndRobot();
+    await postBatch({
+      path: INVITE_PATH,
+      fields: [
+        ['select_all', '1'],
+        ['source', 'agent'],
+      ],
+    });
+    expect(await invitedEmails()).toEqual(['robot@example.com']);
+  });
+
+  test('an entry ticked by hand is invited whatever its source', async () => {
+    await seedPersonAndRobot();
+    await postBatch({ path: INVITE_PATH, fields: emails('robot@example.com') });
+    expect(await invitedEmails()).toEqual(['robot@example.com']);
   });
 });
 

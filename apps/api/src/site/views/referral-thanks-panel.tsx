@@ -1,4 +1,4 @@
-import { WHATSAPP_LINK_ORIGIN, WHATSAPP_LINK_TEXT_PARAMETER, type OwnerLocale } from '@zapbip/types';
+import { WHATSAPP_LINK_ORIGIN, WHATSAPP_LINK_TEXT_PARAMETER, type WebLocale } from '@zapbip/types';
 import { INVITE_METER_GAP, INVITE_METER_SEGMENT_LIMIT, INVITE_METER_VIEWBOX_HEIGHT, INVITE_METER_VIEWBOX_WIDTH } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
@@ -43,7 +43,7 @@ function InviteMeter(props: { creditedCount: number; cap: number }) {
 }
 
 export function ReferralThanksPanel(props: {
-  locale: OwnerLocale;
+  locale: WebLocale;
   siteOrigin: string;
   referralCode: string;
   creditedCount: number;

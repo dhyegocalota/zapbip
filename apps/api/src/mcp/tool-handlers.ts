@@ -22,6 +22,7 @@ import {
   waitForReplyInputShape,
 } from '../contract/mcp-schemas';
 import { McpToolName } from '../contract/tool-definitions';
+import { accountStatus, connectAgent, listAgents, revokeAgent, signInLink } from './account-tools';
 import { setWake } from './set-wake';
 import { readInlineImages } from './inline-images';
 import { buildUploadLink } from './links';
@@ -187,6 +188,12 @@ export const OUTBOUND_TOOLS: ReadonlySet<McpToolName> = new Set([
   McpToolName.Ask,
 ]);
 
+export const ACCOUNT_CHANGE_TOOLS: ReadonlySet<McpToolName> = new Set([
+  McpToolName.ConnectAgent,
+  McpToolName.RevokeAgent,
+  McpToolName.SignInLink,
+]);
+
 export const TOOL_HANDLERS = {
   [McpToolName.SendMessage]: sendMessage,
   [McpToolName.SendMedia]: sendMedia,
@@ -199,4 +206,9 @@ export const TOOL_HANDLERS = {
   [McpToolName.CheckInbox]: checkInbox,
   [McpToolName.CreateUpload]: createUpload,
   [McpToolName.SetWake]: setWake,
+  [McpToolName.ListAgents]: listAgents,
+  [McpToolName.AccountStatus]: accountStatus,
+  [McpToolName.ConnectAgent]: connectAgent,
+  [McpToolName.RevokeAgent]: revokeAgent,
+  [McpToolName.SignInLink]: signInLink,
 } satisfies Record<McpToolName, unknown>;

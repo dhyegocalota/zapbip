@@ -46,7 +46,12 @@ export type OperatorRow = {
 
 export function backofficeEnv(input: { limiter?: RateLimit; overrides?: Partial<Bindings> }): Bindings {
   const { limiter = createFakeRateLimiter({ limit: UNLIMITED }), overrides } = input;
-  return { ...testEnv, BACKOFFICE_RATE_LIMITER: limiter, ...overrides };
+  return {
+    ...testEnv,
+    BACKOFFICE_RATE_LIMITER: limiter,
+    OPERATOR_KEY_RATE_LIMITER: createFakeRateLimiter({ limit: UNLIMITED }),
+    ...overrides,
+  };
 }
 
 export async function resetBackoffice(): Promise<void> {
