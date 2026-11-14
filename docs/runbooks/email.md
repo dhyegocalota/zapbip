@@ -4,6 +4,8 @@ Verify `zapbip.com` in Resend, give the Worker its key and check the welcome and
 
 You do all of this by hand ([ADR 0058](../adr/0058-email-is-sent-through-resend-with-react-email-templates.md)): the key is a secret and the DNS records belong to the zone, so an agent never reads, copies or sets them. Until `RESEND_API_KEY` exists the Worker sends nothing, logs `email.disabled` for every skipped message and the deploy only warns ([deploy.md](deploy.md), step 3), so production may go live first. The welcome goes from `hello@zapbip.com` with reply-to `support@zapbip.com`; the digest goes to `support@zapbip.com` at 11:00 UTC (08:00 in Brazil).
 
+Before sending anything, read the templates in the studio: `pnpm emails:preview` opens them at `http://localhost:3100`, the welcome in every language and the digest.
+
 1. **Verify the domain in Resend.** Sign in at resend.com, open Domains, choose Add domain, type `zapbip.com` and pick the region closest to Brazil. Resend lists the DNS records it needs (the DKIM `TXT` record, and the `MX` and `TXT` records of the bounce subdomain). In the Cloudflare dashboard open the `zapbip.com` zone, DNS, Records, and add each record exactly as Resend shows it, with the proxy off (DNS only). Back in Resend choose Verify DNS records.
 
    Expect: Resend shows the domain as Verified, and `dig +short TXT resend._domainkey.zapbip.com` prints the DKIM value Resend gave you.
