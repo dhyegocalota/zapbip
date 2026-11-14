@@ -1,9 +1,9 @@
 ---
 title: 'ask'
-description: 'اسأل المالك بأزرار أو قائمة وانتظر الجواب.'
+description: 'اسأل صاحب الحساب بأزرار أو قائمة وانتظر الجواب.'
 ---
 
-اسأل المالك بأزرار أو قائمة وانتظر الجواب.
+اسأل صاحب الحساب بأزرار أو قائمة وانتظر الجواب.
 
 ## المدخلات
 
@@ -15,7 +15,7 @@ description: 'اسأل المالك بأزرار أو قائمة وانتظر ا
 
 ## المخرجات
 
-`{ "status": "answered", "answer": ..., "message_id": string }` عندما يجيب المالك في الوقت المناسب؛ و`{ "status": "pending", "question_id": string }` عندما ينتهي الانتظار أولًا. مرّر `question_id` إلى [wait_for_reply](/ar/mcp-reference/wait-for-reply).
+`{ "status": "answered", "answer": ..., "message_id": string }` عندما يجيب صاحب الحساب في الوقت المناسب؛ و`{ "status": "pending", "question_id": string }` عندما ينتهي الانتظار أولًا. مرّر `question_id` إلى [wait_for_reply](/ar/mcp-reference/wait-for-reply).
 
 تكرار السؤال نفسه خلال 4 دقائق يعيد السؤال نفسه ولا يرسل أي شيء. راجع [الأسئلة](/ar/concepts/questions).
 

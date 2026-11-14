@@ -378,7 +378,7 @@ const INSTALL_LINES: LocalizedText = {
   [OwnerLocale.ChineseSimplified]:
     '请通过 zapbip 连接到我的 WhatsApp：阅读 {install_link} 并按说明操作。\n此链接 30 分钟内只能使用一次。请勿分享。',
   [OwnerLocale.Arabic]:
-    'اربط نفسك بـ WhatsApp الخاص بي عبر zapbip: اقرأ {install_link} واتبع التعليمات.\nيعمل هذا الرابط مرة واحدة خلال 30 دقيقة. لا تشاركه.',
+    'اتصل بحساب WhatsApp الخاص بي عبر zapbip: اقرأ {install_link} واتبع التعليمات.\nهذا الرابط صالح 30 دقيقة ويعمل مرة واحدة فقط. لا تشاركه.',
 };
 
 const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {

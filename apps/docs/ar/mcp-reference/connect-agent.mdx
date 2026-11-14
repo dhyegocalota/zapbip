@@ -1,9 +1,9 @@
 ---
 title: 'connect_agent'
-description: 'اربط وكيلًا جديدًا بعد أن يسمح المالك بذلك على WhatsApp.'
+description: 'اربط وكيلًا جديدًا بعد أن يسمح صاحب الحساب بذلك على WhatsApp.'
 ---
 
-يربط وكيلًا جديدًا بهذا الحساب باسمه. يسأل النظام المالك على WhatsApp بصفة الوكيل المستدعي، ويبقى الاستدعاء ينتظر الجواب. وهو ينفّذ حالة الاستخدام نفسها لأمر `وكيل جديد`، فقواعد الاسم وحد 8 وكلاء ورابط التثبيت كلها كما هي. راجع [دع الذكاء الاصطناعي لديك يدير zapbip](/ar/features/let-your-ai-manage-zapbip).
+يربط وكيلًا جديدًا بهذا الحساب باسمه. يسأل النظام صاحب الحساب على WhatsApp بصفة الوكيل المستدعي، ويبقى الاستدعاء ينتظر الجواب. وهو ينفّذ حالة الاستخدام نفسها لأمر `وكيل جديد`، فقواعد الاسم وحد 8 وكلاء ورابط التثبيت كلها كما هي. راجع [دع الذكاء الاصطناعي لديك يدير zapbip](/ar/features/let-your-ai-manage-zapbip).
 
 ## المدخلات
 
@@ -19,8 +19,8 @@ description: 'اربط وكيلًا جديدًا بعد أن يسمح المال
 
 `{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": string | null }`.
 
-- `applied`: رُبط الوكيل. عند اختيار **Allow** يُرسَل رابط التثبيت إلى المالك عبر WhatsApp ويكون `install_prompt` هو `null`. وعند اختيار **Allow, send to agent** يحمل `install_prompt` السطرين اللذين يُلصقان في الوكيل الجديد. وهذه هي الطريقة الوحيدة التي يدخل بها رابط أو سرّ إلى نتيجة أداة.
+- `applied`: رُبط الوكيل. عند اختيار **Allow** يُرسَل رابط التثبيت إلى صاحب الحساب عبر WhatsApp ويكون `install_prompt` هو `null`. وعند اختيار **Allow, send to agent** يحمل `install_prompt` السطرين اللذين يُلصقان في الوكيل الجديد. وهذه هي الطريقة الوحيدة التي يدخل بها رابط أو سرّ إلى نتيجة أداة.
 - `denied` و`timed_out`: لا شيء تغيّر.
-- `refused`: يكون `reason` أحد `invalid_name` أو `reserved_name` أو `name_taken` أو `limit_reached` أو `cooling_down` أو `window_closed` أو `send_failed` أو `suspended` أو `waitlisted`. يُرفض الاسم غير الصالح أو المحجوز قبل سؤال المالك. وعندما يتعذّر إرسال الرابط، يُبطَل الاتصال الذي أُنشئ من جديد.
+- `refused`: يكون `reason` أحد `invalid_name` أو `reserved_name` أو `name_taken` أو `limit_reached` أو `cooling_down` أو `window_closed` أو `send_failed` أو `suspended` أو `waitlisted`. يُرفض الاسم غير الصالح أو المحجوز قبل سؤال صاحب الحساب. وعندما يتعذّر إرسال الرابط، يُبطَل الاتصال الذي أُنشئ من جديد.
 
 الاستدعاءات التي تنفّذ إجراءً (`connect_agent` و[revoke_agent](/ar/mcp-reference/revoke-agent) و[sign_in_link](/ar/mcp-reference/sign-in-link)) محدودة بـ 3 في الدقيقة لكل اتصال؛ ويعيد الاستدعاء التالي خطأ يبدأ بـ `rate_limited`.

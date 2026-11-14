@@ -27,7 +27,7 @@ import InstallPrompt from '/snippets/ar/install-prompt.mdx';
 
 نوع الإيقاظ: **محلي**. يوقظ موصّل على حاسوبك Claude Code، فيجيب بعد نحو 7 ثوانٍ من كتابتك.
 
-- شغّل Claude Code بالأمر `claude --dangerously-load-development-channels server:zapbip-channel`. عندها تدفع قناة zapbip كل رسالة WhatsApp إلى الجلسة المفتوحة فور وصولها.
+- شغّل Claude Code بالأمر `claude --dangerously-load-development-channels server:zapbip-channel`. عندها تمرّر قناة zapbip كل رسالة WhatsApp إلى الجلسة المفتوحة فور وصولها.
 - إذا كانت الجلسة مغلقة، يستأنفها الموصّل خلال نحو 7 ثوانٍ. الخمول لا يستهلك رموزًا (tokens)؛ وكل رسالة تستهلك دورًا واحدًا.
 - أبقِ المستمع قيد التشغيل. ولإبقائه حيًا بعد إغلاق الطرفية، اتبع [تشغيل الموصّل كخدمة](/ar/developers/background-running).
 
@@ -48,7 +48,7 @@ import InstallPrompt from '/snippets/ar/install-prompt.mdx';
        { you: true, text: 'وكيل جديد claude-code', time: '15:00' },
        {
          name: 'zapbip',
-         text: 'تم إنشاء الوكيل claude-code. الصق هذا في وكيلك: اربط نفسك بـ WhatsApp الخاص بي عبر zapbip: اقرأ https://mcp.zapbip.com/i/zb_inst_<code> واتبع التعليمات. يعمل هذا الرابط مرة واحدة خلال 30 دقيقة. لا تشاركه. إذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد رابط claude-code».',
+         text: 'تم إنشاء الوكيل claude-code. الصق هذا في وكيلك: اتصل بحساب WhatsApp الخاص بي عبر zapbip: اقرأ https://mcp.zapbip.com/i/zb_inst_<code> واتبع التعليمات. هذا الرابط صالح 30 دقيقة ويعمل مرة واحدة فقط. لا تشاركه. إذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد رابط claude-code».',
          time: '15:00',
        },
      ]}
