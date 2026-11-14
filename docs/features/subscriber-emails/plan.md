@@ -21,13 +21,13 @@ One lane: the port comes first, then the templates, the welcome, the digest and 
 
 ### G1
 
-- [ ] **Step 1:** React, React DOM, `@react-email/components` and `@react-email/render` pinned in `apps/api`; the dry-run bundle builds.
-- [ ] **Step 2:** red tests for the Resend request and the delivery choice, then `EmailSender`, the Resend adapter, the fake and the disabled sender.
-- [ ] **Step 3:** red tests for the templates and the copy parity, then the layout, the welcome and the digest templates and their copy.
-- [ ] **Step 4:** red tests for the welcome after both join routes, once only and in the background, then migration `0016` and the welcome delivery.
-- [ ] **Step 5:** red tests for the digest facts, content and schedule, then the `subscriber_digest` job.
-- [ ] **Step 6:** the privacy policy names the welcome, access news and Resend in every language.
-- [ ] **Step 7:** `RESEND_API_KEY` documented and warned by the deploy preflight; runbook, rules and README updated.
+- [x] **Step 1:** React, React DOM, `@react-email/components` and `@react-email/render` pinned in `apps/api`; the dry-run bundle builds. — `0f6ffbf9`; dry run 3688.74 KiB / 738.41 KiB gzip before, 4922.70 KiB / 1008.88 KiB gzip after `84856d94`
+- [x] **Step 2:** red tests for the Resend request and the delivery choice, then `EmailSender`, the Resend adapter, the fake and the disabled sender. — red `2e69ccb2`, green `2ad31669`
+- [x] **Step 3:** red tests for the templates and the copy parity, then the layout, the welcome and the digest templates and their copy. — red `f0e75fb6`, green `1d4dde41` (welcome); the digest template landed with step 5
+- [x] **Step 4:** red tests for the welcome after both join routes, once only and in the background, then migration `0016` and the welcome delivery. — red `ad12afe5`, green `84856d94`, `98d9cf93`
+- [x] **Step 5:** red tests for the digest facts, content and schedule, then the `subscriber_digest` job. — red `4aff65bf`, green `ac043e46`
+- [x] **Step 6:** the privacy policy names the welcome, access news and Resend in every language. — red `9c39cecd`, green `599a2f89`
+- [x] **Step 7:** `RESEND_API_KEY` documented and warned by the deploy preflight; runbook, rules and README updated. — red `611ba05c`, green `720adc24`, `d597df41`
 
 ## Failure modes
 
@@ -42,7 +42,7 @@ One lane: the port comes first, then the templates, the welcome, the digest and 
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** a developer wrote `tester-briefing.md`.
+- [x] **Tester briefing:** a developer wrote `tester-briefing.md`.
 - [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence.
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **/check-ui:** screenshots and video recorded and uploaded (only if UI was touched).

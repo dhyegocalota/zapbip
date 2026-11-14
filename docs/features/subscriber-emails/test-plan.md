@@ -25,7 +25,7 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `welcome-email.test.ts` — input: an agent request-access; expected: one welcome in the requested language
 - [ ] `welcome-email.test.ts` — input: a sender that never settles; expected: the join answers `200` before the send ends
 - [ ] `welcome-email.test.ts` — input: a sender that fails; expected: the join answers `200`, `welcome_failed_at` stamped, `welcome_sent_at` empty
-- [ ] `subscriber-digest-queries.test.ts` — input: rows inside and outside the 24 hours; expected: only the rows inside, the totals over all rows
+- [ ] `subscriber-digest.test.ts` (integration) — input: rows inside and outside the 24 hours; expected: only the rows inside, the totals over all rows
 
 ## Prove it for real
 
