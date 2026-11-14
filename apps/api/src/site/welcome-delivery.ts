@@ -13,7 +13,7 @@ const FAILURE_STATEMENT = 'UPDATE landing_waitlist SET welcome_sent_at = NULL, w
 const RELEASE_STATEMENT = 'UPDATE landing_waitlist SET welcome_sent_at = NULL WHERE email = ?1';
 const WELCOME_ERROR_CODE = 'WelcomeError';
 
-export type WelcomeDelivery = {
+type WelcomeDelivery = {
   database: D1Database;
   sender: EmailSender;
   email: string;
@@ -37,25 +37,21 @@ function failureOf(input: { error: unknown }): EmailSendOutcome {
   return EmailSendOutcome.Failed;
 }
 
-async function sentOutcomeOf(input: WelcomeDelivery): Promise<EmailSendOutcome> {
-  const message = await welcomeMessageOf({ locale: input.locale, email: input.email, referralLink: input.referralLink });
-  return input.sender.send(message);
-}
-
 async function deliverWelcome(input: WelcomeDelivery): Promise<void> {
+  const message = await welcomeMessageOf({ locale: input.locale, email: input.email, referralLink: input.referralLink });
   const claim = await input.database.prepare(CLAIM_STATEMENT).bind(input.now, input.email).run();
   if (claim.meta.changes === 0) return;
-  const outcome = await sentOutcomeOf(input).catch((error: unknown) => failureOf({ error }));
+  const outcome = await input.sender.send(message).catch((error: unknown) => failureOf({ error }));
   const statement = OUTCOME_STATEMENTS[outcome](input);
   if (statement === null) return;
   await statement.run();
 }
 
-export async function sendWelcomeEmail(input: WelcomeDelivery): Promise<void> {
+async function sendWelcomeEmail(input: WelcomeDelivery): Promise<void> {
   await deliverWelcome(input).catch((error: unknown) => failureOf({ error }));
 }
 
-export function welcomeReferralLinkOf(input: { siteOrigin: string; locale: OwnerLocale; referralCode: string }): string | null {
+function welcomeReferralLinkOf(input: { siteOrigin: string; locale: OwnerLocale; referralCode: string }): string | null {
   if (!REFERRAL_SHARING_OPEN) return null;
   return `${input.siteOrigin}${pagePathOf({ locale: input.locale, agent: null, referralCode: input.referralCode })}`;
 }
