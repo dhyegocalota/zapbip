@@ -81,13 +81,13 @@ Hermes 对你消息的回复会通过插件本身送回，无需额外设置。
 mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
 ```
 
-然后在 WhatsApp 上让 Hermes 发送 `✅ installed`。如果这条消息到达，就说明一切正常。
+然后在 WhatsApp 上让 Hermes 发送 `✅ 安装完成`。如果这条消息到达，就说明一切正常。
 
 <Chat
   contact="zapbip"
   messages={[
-    { you: true, text: '安装好了就发 ✅ installed。', time: '18:10' },
-    { name: 'Hermes', text: '✅ installed', time: '18:10' },
+    { you: true, text: '安装好了就发 ✅ 安装完成。', time: '18:10' },
+    { name: 'Hermes', text: '✅ 安装完成', time: '18:10' },
   ]}
 />
 

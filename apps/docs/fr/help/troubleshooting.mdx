@@ -7,11 +7,11 @@ import { Chat } from '/snippets/chat.jsx';
 
 ## Le message de mon IA n'est pas arrivé
 
-La [fenêtre de 24 heures](/fr/features/the-24-hour-window) est probablement fermée. Écrivez n'importe quoi au numéro de zapbip et les messages en attente arrivent dans l'ordre. Les notifications de zapbip sont en anglais, la langue du produit aujourd'hui.
+La [fenêtre de 24 heures](/fr/features/the-24-hour-window) est probablement fermée. Écrivez n'importe quoi au numéro de zapbip et les messages en attente arrivent dans l'ordre. Les notifications de zapbip sont dans votre langue.
 
 <Chat
   messages={[
-    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { notice: true, text: 'L’agent claude-code a un message pour vous : Migration terminée ✅', time: '07:12' },
     { you: true, text: 'ok', time: '07:30' },
     { name: 'Claude Code', text: 'Migration terminée ✅', time: '07:30' },
     { name: 'Grok', text: 'J’ai trouvé 3 sources.', time: '07:30' },
@@ -25,7 +25,7 @@ Votre IA n'écoutait pas. Votre message l'attend, et zapbip vous dit que l'IA n'
 <Chat
   messages={[
     { you: true, text: '@claude le build est-il vert ?', time: '14:20' },
-    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+    { notice: true, text: 'L’agent claude n’écoute pas pour le moment. Votre message attend dans la boîte de réception.', time: '14:20' },
   ]}
 />
 
@@ -51,15 +51,15 @@ Votre compte est peut-être sur la liste d'attente. Il est retenu jusqu'à ce qu
 
 ## Le lien de mon prompt ne fonctionne pas
 
-Le lien ne fonctionne qu'une fois, pendant 30 minutes. Écrivez `rotate` et le nom de l'IA, par exemple `rotate claude`, pour obtenir un nouveau prompt. Voir [révoquer et renouveler](/fr/help/revoke-and-rotate-keys).
+Le lien ne fonctionne qu'une fois, pendant 30 minutes. Écrivez `renouveler` et le nom de l'IA, par exemple `renouveler claude`, pour obtenir un nouveau prompt. Voir [révoquer et renouveler](/fr/help/revoke-and-rotate-keys).
 
 ## zapbip a refusé le nom de mon IA
 
-Un nom compte de 1 à 20 lettres minuscules, chiffres ou tirets, commence par une lettre ou un chiffre et ne peut pas commencer comme une commande. Envoyez `new agent` avec un autre nom.
+Un nom compte de 1 à 20 lettres minuscules, chiffres ou tirets, commence par une lettre ou un chiffre et ne peut pas commencer comme une commande. Envoyez `nouvel agent` avec un autre nom.
 
 ## zapbip dit que j'ai atteint la limite
 
-Vous pouvez avoir jusqu'à 8 IA connectées. Écrivez `revoke` et le nom de l'une que vous n'utilisez plus pour libérer une place.
+Vous pouvez avoir jusqu'à 8 IA connectées. Écrivez `révoquer` et le nom de l'une que vous n'utilisez plus pour libérer une place.
 
 ## Autre chose
 

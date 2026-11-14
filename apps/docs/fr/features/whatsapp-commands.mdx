@@ -5,30 +5,31 @@ description: Ce que vous pouvez écrire au numéro de zapbip.
 
 import { Chat } from '/snippets/chat.jsx';
 
-Vous gérez vos IA en écrivant au numéro de zapbip. Une commande est une courte phrase, en anglais ou en portugais : ce sont les deux langues que le produit comprend aujourd'hui, et les commandes ne sont pas traduites dans d'autres. La langue que vous écrivez est la langue de la réponse. Chaque ligne montre les deux versions.
+Vous gérez vos IA en écrivant au numéro de zapbip. Une commande est une courte phrase, en français ou en anglais ; le portugais, l’espagnol, l’allemand, le japonais, le coréen et le chinois ont les leurs. La langue dans laquelle vous écrivez est la langue de la réponse. Chaque ligne montre les deux versions.
 
-| Vous voulez                        | Écrire en anglais                                   | Ou en portugais                                     | Ce qui se passe                                                                                          |
-| ---------------------------------- | --------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Connecter une nouvelle IA          | `new agent claude`                                  | `novo agente claude`                                | zapbip répond avec le prompt à coller dans cette IA                                                      |
-| Voir vos IA                        | `agents`                                            | `agentes`                                           | Une liste avec le nom et la date de chacune                                                              |
-| Déconnecter une IA                 | `revoke claude`                                     | `revogar claude`                                    | Cette IA cesse de fonctionner aussitôt                                                                   |
-| Obtenir un nouveau prompt          | `rotate claude`                                     | `girar claude`                                      | L'ancienne connexion s'arrête et vous recevez un nouveau prompt                                          |
-| Vous connecter à l'application web | `login`                                             | `entrar`                                            | Un lien qui ne fonctionne qu'une fois pendant 10 minutes, voir [l'application web](/fr/features/web-app) |
-| Ouvrir le menu                     | `help` ou `menu`                                    | `ajuda` ou `menu`                                   | Les commandes sous forme de texte et de liste à toucher                                                  |
-| Supprimer votre compte             | `delete account`, puis `delete account permanently` | `apagar conta`, puis `apagar conta definitivamente` | Voir [supprimer votre compte](/fr/help/delete-your-account)                                              |
+| Vous voulez                        | Écrire en français                                               | Ou en anglais                                       | Ce qui se passe                                                                                          |
+| ---------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Connecter une nouvelle IA          | `nouvel agent claude`                                            | `new agent claude`                                  | zapbip répond avec le prompt à coller dans cette IA                                                      |
+| Voir vos IA                        | `mes agents`                                                     | `agents`                                            | Une liste avec le nom et la date de chacune                                                              |
+| Déconnecter une IA                 | `révoquer claude`                                                | `revoke claude`                                     | Cette IA cesse de fonctionner aussitôt                                                                   |
+| Obtenir un nouveau prompt          | `renouveler claude`                                              | `rotate claude`                                     | L'ancienne connexion s'arrête et vous recevez un nouveau prompt                                          |
+| Vous connecter à l'application web | `connexion`                                                      | `login`                                             | Un lien qui ne fonctionne qu'une fois pendant 10 minutes, voir [l'application web](/fr/features/web-app) |
+| Ouvrir le menu                     | `aide` ou `menu`                                                 | `help` ou `menu`                                    | Les commandes sous forme de texte et de liste à toucher                                                  |
+| Changer de langue                  | `langue ja`                                                      | `language ja`                                       | zapbip vous répond dans la langue choisie. Codes : `en`, `pt`, `es`, `de`, `fr`, `ja`, `ko`, `zh`        |
+| Supprimer votre compte             | `supprimer le compte`, puis `supprimer le compte définitivement` | `delete account`, puis `delete account permanently` | Voir [supprimer votre compte](/fr/help/delete-your-account)                                              |
 
 Écrivez la phrase seule. Un `?` ou un `!` à la fin en fait un message normal pour vos IA.
 
 ## Exemple
 
-Les réponses de zapbip sont en anglais parce que vous avez écrit en anglais.
+Les réponses de zapbip sont en français parce que vous avez écrit en français.
 
 <Chat
   messages={[
-    { you: true, text: 'agents', time: '09:20' },
-    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
-    { you: true, text: 'revoke claude', time: '09:21' },
-    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+    { you: true, text: 'mes agents', time: '09:20' },
+    { text: 'Vos agents :\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'révoquer claude', time: '09:21' },
+    { text: 'Agent claude révoqué. Son lien ne fonctionne plus.', time: '09:21' },
   ]}
 />
 
@@ -38,7 +39,7 @@ Un message qui est exactement un mot de commande est toujours une commande. Pour
 
 ## Noms
 
-Les mots `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `login`, `delete` et leurs versions portugaises sont réservés : ils ne peuvent pas être le nom d'une IA.
+Les mots `nouvel`, `agents`, `révoquer`, `renouveler`, `aide`, `menu`, `connexion`, `supprimer` et leurs versions en anglais et en portugais sont réservés : ils ne peuvent pas être le nom d’une IA.
 
 ## Messages transférés
 

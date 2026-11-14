@@ -3,17 +3,17 @@ title: Gestiona tus IAs
 description: Conecta, lista, desconecta y renueva la conexión de cada IA.
 ---
 
-Cada IA tiene su propia conexión con tu WhatsApp. Las gestionas todas escribiendo al número de zapbip. Los comandos están en inglés, que es lo que el producto entiende hoy; también entiende los mismos comandos en portugués.
+Cada IA tiene su propia conexión con tu WhatsApp. Las gestionas todas escribiendo al número de zapbip. Los comandos están en español; también entiende los mismos comandos en inglés y en portugués.
 
 ## Conecta una IA nueva
 
-Escribe `new agent` y un nombre, por ejemplo `new agent claude`. zapbip responde con dos líneas. Pégalas en esa IA; ella lee las instrucciones del enlace y se conecta sola.
+Escribe `nuevo agente` y un nombre, por ejemplo `nuevo agente claude`. zapbip responde con dos líneas. Pégalas en esa IA; ella lee las instrucciones del enlace y se conecta sola.
 
 El nombre se simplifica por ti: los acentos desaparecen, las letras pasan a minúsculas y los espacios se convierten en guiones, así que `Claude Code` pasa a ser `claude-code`. Un nombre tiene hasta 20 caracteres, empieza por una letra o un dígito y es único entre tus IAs conectadas. Un nombre desconectado se puede volver a usar.
 
 ## El enlace funciona una vez
 
-El enlace del prompt funciona durante 30 minutos y deja de funcionar cuando tu IA se conecta por primera vez. Hasta entonces, cualquiera que lo tenga podría conectarse como esa IA, así que no lo publiques en ningún sitio público. Si caduca o lo compartiste por error, escribe `rotate claude` para obtener uno nuevo.
+El enlace del prompt funciona durante 30 minutos y deja de funcionar cuando tu IA se conecta por primera vez. Hasta entonces, cualquiera que lo tenga podría conectarse como esa IA, así que no lo publiques en ningún sitio público. Si caduca o lo compartiste por error, escribe `rotar claude` para obtener uno nuevo.
 
 ## Mira tus IAs
 
@@ -21,14 +21,14 @@ Escribe `agents`. zapbip lista el nombre, la fecha de creación y la aplicación
 
 ## Desconecta una IA
 
-Escribe `revoke claude`. Todas las formas en que esa IA está conectada se detienen al instante: su enlace con zapbip, un listener local que corra en tu ordenador y cualquier activación que la arrancaría. Para volver a usar esa IA, escribe `new agent claude`.
+Escribe `revocar claude`. Todas las formas en que esa IA está conectada se detienen al instante: su enlace con zapbip, un listener local que corra en tu ordenador y cualquier activación que la arrancaría. Para volver a usar esa IA, escribe `nuevo agente claude`.
 
 ## Obtén un prompt nuevo
 
-Escribe `rotate claude`. La conexión anterior deja de funcionar de inmediato, con el mismo alcance que `revoke`: su enlace, un listener local conectado y cualquier activación. Recibes un prompt nuevo. Si zapbip no puede entregarte el prompt nuevo, tu conexión anterior se mantiene.
+Escribe `rotar claude`. La conexión anterior deja de funcionar de inmediato, con el mismo alcance que `revocar`: su enlace, un listener local conectado y cualquier activación. Recibes un prompt nuevo. Si zapbip no puede entregarte el prompt nuevo, tu conexión anterior se mantiene.
 
 ## El límite
 
-Puedes tener hasta 8 IAs conectadas. Las desconectadas no cuentan. Al llegar al límite, zapbip te lo dice y te señala `revoke`.
+Puedes tener hasta 8 IAs conectadas. Las desconectadas no cuentan. Al llegar al límite, zapbip te lo dice y te señala `revocar`.
 
 Mira cada frase en [comandos en WhatsApp](/es/features/whatsapp-commands).

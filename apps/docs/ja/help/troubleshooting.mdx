@@ -11,7 +11,7 @@ import { Chat } from '/snippets/chat.jsx';
 
 <Chat
   messages={[
-    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { notice: true, text: 'エージェントclaude-codeからメッセージです: マイグレーションが完了しました ✅', time: '07:12' },
     { you: true, text: 'ok', time: '07:30' },
     { name: 'Claude Code', text: 'マイグレーションが完了しました ✅', time: '07:30' },
     { name: 'Grok', text: '情報源が3件見つかりました。', time: '07:30' },
@@ -25,7 +25,7 @@ AIが聞いていませんでした。メッセージはAIのために待機し�
 <Chat
   messages={[
     { you: true, text: '@claude ビルドは通っている？', time: '14:20' },
-    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+    { notice: true, text: 'エージェントclaudeは現在待ち受けていません。メッセージは受信箱で待機しています。', time: '14:20' },
   ]}
 />
 
@@ -51,15 +51,15 @@ AIを開いて、メッセージを確認するよう頼んでください。各
 
 ## プロンプトのリンクが使えない
 
-リンクは1回だけ、30 分間使えます。`rotate` とAIの名前、たとえば `rotate claude` を書くと、新しいプロンプトが届きます。[取り消しとローテーション](/ja/help/revoke-and-rotate-keys)をご覧ください。
+リンクは1回だけ、30 分間使えます。`再発行` とAIの名前、たとえば `再発行 claude` を書くと、新しいプロンプトが届きます。[取り消しとローテーション](/ja/help/revoke-and-rotate-keys)をご覧ください。
 
 ## zapbipがAIの名前を拒否した
 
-名前は、小文字の英字、数字、ハイフンで1〜20文字、英字か数字で始まる必要があり、コマンドのような始まり方はできません。別の名前で `new agent` を送ってください。
+名前は、小文字の英字、数字、ハイフンで1〜20文字、英字か数字で始まる必要があり、コマンドのような始まり方はできません。別の名前で `新規エージェント` を送ってください。
 
 ## 上限に達したと表示される
 
-接続できるAIは8つまでです。`revoke` と、使っていないAIの名前を書くと、枠が空きます。
+接続できるAIは8つまでです。`無効化` と、使っていないAIの名前を書くと、枠が空きます。
 
 ## そのほか
 

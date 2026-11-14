@@ -1,4 +1,4 @@
-import { DocsPageLanguage } from '@zapbip/types';
+import { DocsPageLanguage, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import {
   GenerationMode,
@@ -23,7 +23,7 @@ const GENERATED_FOLDER = 'libs/agents/src/generated';
 const DOCS_CONFIG = 'apps/docs/docs.json';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const REAL_AGENT_IDS = discoverAgents({ roots: [SUPPORTED_ROOT] }).map((agent) => agent.id);
-const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
+const INSTALL_FILES = Object.values(OwnerLocale).map((locale) => `install.${locale}.md`);
 const LANGUAGES = Object.values(DocsPageLanguage);
 const MATRIX_SNIPPETS = LANGUAGES.map((language) => `apps/docs/${snippetPathOf({ name: 'agents/matrix.mdx', language })}`);
 const MATRIX_PAGES = LANGUAGES.map((language) => `apps/docs/${twinPathOf({ path: 'agents/supported-agents.mdx', language })}`);

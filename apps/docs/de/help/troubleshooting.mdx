@@ -7,11 +7,11 @@ import { Chat } from '/snippets/chat.jsx';
 
 ## Die Nachricht meiner KI ist nicht angekommen
 
-Wahrscheinlich ist das [24-Stunden-Fenster](/de/features/the-24-hour-window) geschlossen. Schreib irgendetwas an die zapbip-Nummer, und die wartenden Nachrichten kommen der Reihe nach an. Die Hinweise von zapbip sind auf Englisch, der Sprache des Produkts heute.
+Wahrscheinlich ist das [24-Stunden-Fenster](/de/features/the-24-hour-window) geschlossen. Schreib irgendetwas an die zapbip-Nummer, und die wartenden Nachrichten kommen der Reihe nach an. Die Hinweise von zapbip sind in deiner Sprache.
 
 <Chat
   messages={[
-    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { notice: true, text: 'Der Agent claude-code hat eine Nachricht für dich: Migration abgeschlossen ✅', time: '07:12' },
     { you: true, text: 'ok', time: '07:30' },
     { name: 'Claude Code', text: 'Migration abgeschlossen ✅', time: '07:30' },
     { name: 'Grok', text: '3 Quellen gefunden.', time: '07:30' },
@@ -25,7 +25,7 @@ Deine KI hat nicht zugehört. Deine Nachricht wartet auf sie, und zapbip sagt di
 <Chat
   messages={[
     { you: true, text: '@claude ist der Build grün?', time: '14:20' },
-    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+    { notice: true, text: 'Der Agent claude hört gerade nicht zu. Deine Nachricht wartet im Posteingang.', time: '14:20' },
   ]}
 />
 
@@ -51,15 +51,15 @@ Dein Konto steht vielleicht auf der Warteliste. Es wird zurückgehalten, bis das
 
 ## Der Link in meinem Prompt funktioniert nicht
 
-Der Link funktioniert einmal, 30 Minuten lang. Schreib `rotate` und den Namen der KI, zum Beispiel `rotate claude`, um einen neuen Prompt zu bekommen. Siehe [Widerrufen und erneuern](/de/help/revoke-and-rotate-keys).
+Der Link funktioniert einmal, 30 Minuten lang. Schreib `erneuern` und den Namen der KI, zum Beispiel `erneuern claude`, um einen neuen Prompt zu bekommen. Siehe [Widerrufen und erneuern](/de/help/revoke-and-rotate-keys).
 
 ## zapbip hat den Namen meiner KI abgelehnt
 
-Ein Name hat 1 bis 20 Kleinbuchstaben, Ziffern oder Bindestriche, beginnt mit einem Buchstaben oder einer Ziffer und darf nicht wie ein Befehl beginnen. Sende `new agent` mit einem anderen Namen.
+Ein Name hat 1 bis 20 Kleinbuchstaben, Ziffern oder Bindestriche, beginnt mit einem Buchstaben oder einer Ziffer und darf nicht wie ein Befehl beginnen. Sende `neuer agent` mit einem anderen Namen.
 
 ## zapbip sagt, ich hätte das Limit erreicht
 
-Du kannst bis zu 8 KIs verbunden haben. Schreib `revoke` und den Namen einer KI, die du nicht mehr nutzt, um einen Platz freizugeben.
+Du kannst bis zu 8 KIs verbunden haben. Schreib `widerrufen` und den Namen einer KI, die du nicht mehr nutzt, um einen Platz freizugeben.
 
 ## Etwas anderes
 

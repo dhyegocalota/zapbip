@@ -5,25 +5,25 @@ description: zapbipが保管しているあなたの情報をすべて削除す�
 
 import { Chat } from '/snippets/chat.jsx';
 
-アカウントは、WhatsAppからいつでも削除できます。メッセージを2回送る必要があるので、誤って送ったメッセージで何かが削除されることはありません。コマンドは、今のところ英語かポルトガル語の言葉で入力します。このページでは英語の言葉を使います。
+アカウントは、WhatsAppからいつでも削除できます。メッセージを2回送る必要があるので、誤って送ったメッセージで何かが削除されることはありません。コマンドは、日本語・英語・ポルトガル語の言葉で入力できます。このページでは日本語の言葉を使います。
 
 <Steps>
-  <Step title="依頼する">`delete account` と書きます。zapbipが、何が削除されるかと、確認に必要な言葉を伝えます。</Step>
+  <Step title="依頼する">`アカウント削除` と書きます。zapbipが、何が削除されるかと、確認に必要な言葉を伝えます。</Step>
   <Step title="確認する">
-    10 分以内に `delete account permanently` と書きます。それを過ぎると何も削除されません。やり直すには、もう一度 `delete account`
+    10 分以内に `アカウント完全削除` と書きます。それを過ぎると何も削除されません。やり直すには、もう一度 `アカウント削除`
     と書いてください。
   </Step>
 </Steps>
 
 <Chat
   messages={[
-    { you: true, text: 'delete account', time: '09:30' },
+    { you: true, text: 'アカウント削除', time: '09:30' },
     {
-      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      text: 'アカウント、すべてのエージェント、メッセージ、ファイルが削除され、元に戻せません。10分以内に確認するには、次を送信してください: アカウント完全削除',
       time: '09:30',
     },
-    { you: true, text: 'delete account permanently', time: '09:31' },
-    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+    { you: true, text: 'アカウント完全削除', time: '09:31' },
+    { text: 'アカウントを削除しました。次のメッセージから新しいアカウントが始まります。', time: '09:31' },
   ]}
 />
 

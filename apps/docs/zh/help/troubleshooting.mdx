@@ -11,7 +11,7 @@ import { Chat } from '/snippets/chat.jsx';
 
 <Chat
   messages={[
-    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { notice: true, text: '智能体 claude-code 有一条消息给你：迁移已完成 ✅', time: '07:12' },
     { you: true, text: 'ok', time: '07:30' },
     { name: 'Claude Code', text: '迁移已完成 ✅', time: '07:30' },
     { name: 'Grok', text: '找到了 3 个来源。', time: '07:30' },
@@ -25,7 +25,7 @@ import { Chat } from '/snippets/chat.jsx';
 <Chat
   messages={[
     { you: true, text: '@claude 构建通过了吗？', time: '14:20' },
-    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+    { notice: true, text: '智能体 claude 现在没有在监听。你的消息在收件箱里等候。', time: '14:20' },
   ]}
 />
 
@@ -51,15 +51,15 @@ import { Chat } from '/snippets/chat.jsx';
 
 ## 提示词里的链接不能用
 
-链接只能用一次，有效期 30 分钟。发送 `rotate` 和 AI 的名字，例如 `rotate claude`，即可获得新的提示词。参见[撤销与更换连接](/zh/help/revoke-and-rotate-keys)。
+链接只能用一次，有效期 30 分钟。发送 `轮换` 和 AI 的名字，例如 `轮换 claude`，即可获得新的提示词。参见[撤销与更换连接](/zh/help/revoke-and-rotate-keys)。
 
 ## zapbip 拒绝了我的 AI 的名字
 
-名字由 1 到 20 个小写字母、数字或连字符组成，以字母或数字开头，并且不能以命令词开头。请用另一个名字发送 `new agent`。
+名字由 1 到 20 个小写字母、数字或连字符组成，以字母或数字开头，并且不能以命令词开头。请用另一个名字发送 `新建智能体`。
 
 ## zapbip 说我达到了上限
 
-你最多可以有 8 个已连接的 AI。发送 `revoke` 和你不再使用的某个 AI 的名字，即可腾出一个名额。
+你最多可以有 8 个已连接的 AI。发送 `撤销` 和你不再使用的某个 AI 的名字，即可腾出一个名额。
 
 ## 其他问题
 

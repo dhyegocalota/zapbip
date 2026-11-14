@@ -5,40 +5,40 @@ description: 切断一个 AI，或更换它的链接。
 
 import { Chat } from '/snippets/chat.jsx';
 
-每个 AI 都有自己的连接。你通过给 zapbip 的号码发消息来切断它或更换它的链接。目前命令需要用英语或葡萄牙语的词来输入，本页使用英语的词。
+每个 AI 都有自己的连接。你通过给 zapbip 的号码发消息来切断它或更换它的链接。命令可以用中文、英语或葡萄牙语的词来输入，本页使用中文的词。
 
 ## 切断一个 AI
 
-发送 `revoke` 和这个 AI 的名字，例如 `revoke claude`。该 AI 的所有连接方式会立即停止：它通往 zapbip 的链接、你电脑上运行的监听器，以及任何会启动它的唤醒。
+发送 `撤销` 和这个 AI 的名字，例如 `撤销 claude`。该 AI 的所有连接方式会立即停止：它通往 zapbip 的链接、你电脑上运行的监听器，以及任何会启动它的唤醒。
 
 <Chat
   messages={[
-    { you: true, text: 'revoke claude', time: '16:02' },
-    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+    { you: true, text: '撤销 claude', time: '16:02' },
+    { text: '智能体 claude 已撤销。它的链接已失效。', time: '16:02' },
   ]}
 />
 
-要再次使用这个 AI，发送 `new agent claude`。
+要再次使用这个 AI，发送 `新建智能体 claude`。
 
 ## 更换链接
 
-发送 `rotate` 和名字，例如 `rotate claude`。旧的连接会立即失效，范围与 `revoke` 相同，zapbip 会给你发一条新的提示词，粘贴到那个 AI 里。
+发送 `轮换` 和名字，例如 `轮换 claude`。旧的连接会立即失效，范围与 `撤销` 相同，zapbip 会给你发一条新的提示词，粘贴到那个 AI 里。
 
 <Chat
   messages={[
-    { you: true, text: 'rotate claude', time: '16:05' },
+    { you: true, text: '轮换 claude', time: '16:05' },
     {
-      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      text: '智能体 claude 的链接已更换。旧链接已失效。请把下面的内容粘贴到你的智能体中： ...',
       time: '16:05',
     },
   ]}
 />
 
-更换后的链接只发送一次。zapbip 不会再次显示它：`agents` 列出你的 AI 时不带任何链接。如果新的提示词没有送达，zapbip 会保留旧的连接，你可以再次发送 `rotate claude`。
+更换后的链接只发送一次。zapbip 不会再次显示它：`agents` 列出你的 AI 时不带任何链接。如果新的提示词没有送达，zapbip 会保留旧的连接，你可以再次发送 `轮换 claude`。
 
 ## 何时用哪个
 
-- 你弄丢了某个 AI、不再使用它，或不小心分享了它的链接：`revoke`。
-- 链接过期了、已经被用过或已泄露，而你仍想继续使用这个 AI：`rotate`。
+- 你弄丢了某个 AI、不再使用它，或不小心分享了它的链接：`撤销`。
+- 链接过期了、已经被用过或已泄露，而你仍想继续使用这个 AI：`轮换`。
 
 所有命令词请见 [WhatsApp 命令](/zh/features/whatsapp-commands)。

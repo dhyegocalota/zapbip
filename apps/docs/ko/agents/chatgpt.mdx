@@ -40,11 +40,11 @@ ChatGPT는 하나의 답을 약 5분 기다린 뒤 다시 묻기 때문에, 전�
 
    <StartLink />
 
-2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다.
+2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있습니다.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       { you: true, text: '새 에이전트 chatgpt', time: '16:00' },
        {
          name: 'zapbip',
          text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
@@ -65,12 +65,12 @@ ChatGPT는 하나의 답을 약 5분 기다린 뒤 다시 묻기 때문에, 전�
 
 6. **폴링한다고 zapbip에 알립니다.** `set_wake({mode: "scheduled", interval_minutes: 60})`을 호출합니다.
 
-7. **테스트합니다.** 채팅에서 `send_message`를 호출해 ✅ installed를 보냅니다.
+7. **테스트합니다.** 채팅에서 `send_message`를 호출해 ✅ 설치 완료를 보냅니다.
 
 ## 작동 확인
 
-연결이 끝나면 ChatGPT가 내 WhatsApp으로 `✅ installed`를 보냅니다.
+연결이 끝나면 ChatGPT가 내 WhatsApp으로 `✅ 설치 완료`를 보냅니다.
 
-<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+<Chat messages={[{ name: 'ChatGPT', text: '✅ 설치 완료', time: '16:05' }]} />
 
 아무것도 도착하지 않으면 [문제 해결](/ko/help/troubleshooting)을 보세요.

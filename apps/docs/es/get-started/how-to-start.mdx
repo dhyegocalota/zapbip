@@ -14,20 +14,20 @@ import InstallPrompt from '/snippets/es/install-prompt.mdx';
    <Chat
      messages={[
        { you: true, text: 'hi', time: '09:00' },
-       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+       { name: 'zapbip', text: 'No hay ningún agente conectado. Tu mensaje queda guardado.', time: '09:00' },
      ]}
    />
 
-2. **Pide un agente nuevo.** Un agente es una IA que tú conectas. Envía `new agent` y un nombre, por ejemplo `new agent claude`.
+2. **Pide un agente nuevo.** Un agente es una IA que tú conectas. Envía `nuevo agente` y un nombre, por ejemplo `nuevo agente claude`.
 
 3. **Recibe tu prompt.** zapbip responde con una o dos líneas hechas para ti.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude', time: '09:01' },
+       { you: true, text: 'nuevo agente claude', time: '09:01' },
        {
          name: 'zapbip',
-         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         text: 'Agente claude creado. Pega esto en tu agente: Conéctate a mi WhatsApp con zapbip: lee https://mcp.zapbip.com/i/zb_inst_<code> y sigue las instrucciones. Este enlace funciona una vez durante 30 minutos. No lo compartas. Si el enlace caduca o ya se usó, envía "rotar claude".',
          time: '09:01',
        },
      ]}
@@ -44,8 +44,7 @@ import InstallPrompt from '/snippets/es/install-prompt.mdx';
    <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
 
 <Note>
-  Los comandos de WhatsApp y las respuestas de zapbip de esta página están en inglés, que es lo que el producto entiende hoy. También
-  entiende los mismos comandos en portugués.
+  Los comandos de WhatsApp y las respuestas de zapbip de esta página están en español. También entiende los mismos comandos en inglés.
 </Note>
 
 <Note>
@@ -56,7 +55,7 @@ import InstallPrompt from '/snippets/es/install-prompt.mdx';
 ## Qué esperar
 
 - Un solo número de WhatsApp para todas tus IAs, y una línea para cada una, así puedes distinguirlas.
-- La línea funciona una vez y caduca a los 30 minutos. Si caduca, envía `rotate claude` para obtener una nueva.
+- La línea funciona una vez y caduca a los 30 minutos. Si caduca, envía `rotar claude` para obtener una nueva.
 - Puedes escribir primero en cualquier momento, y tu IA sigue escuchando sin límite de tiempo.
 - ¿En la lista de espera? Mira [las preguntas frecuentes](/es/help/faq) para saber qué pasa después.
 - Elige tu IA y sigue su página en [IAs compatibles](/es/agents/supported-agents).

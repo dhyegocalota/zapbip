@@ -43,7 +43,7 @@ claude.ai wartet etwa 4 Minuten auf eine einzelne Antwort und versucht es von se
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       { you: true, text: 'neuer agent claude-ai', time: '08:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
@@ -52,7 +52,7 @@ claude.ai wartet etwa 4 Minuten auf eine einzelne Antwort und versucht es von se
      ]}
    />
 
-   Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+   Die Befehle und die Antworten von zapbip sind auf Deutsch; dieselben Befehle versteht es auch auf Englisch.
 
 3. **Füge die Zeile in claude.ai ein.**
 
@@ -68,12 +68,12 @@ claude.ai wartet etwa 4 Minuten auf eine einzelne Antwort und versucht es von se
 
 7. **Lege das stündliche Sicherheitsnetz an.** Es bittet dich, eine stündliche Aufgabe anzulegen, die `check_inbox` aufruft, damit nichts länger als eine Stunde wartet, falls ein Wecken verpasst wird.
 
-8. **Teste es.** Im Chat ruft es `send_message` mit ✅ installed auf.
+8. **Teste es.** Im Chat ruft es `send_message` mit ✅ installiert auf.
 
 ## Prüfen, ob es funktioniert
 
-claude.ai sendet `✅ installed` an dein WhatsApp, sobald es verbunden ist.
+claude.ai sendet `✅ installiert` an dein WhatsApp, sobald es verbunden ist.
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ installiert', time: '08:05' }]} />
 
 Kommt nichts an, siehe [Fehlerbehebung](/de/help/troubleshooting).

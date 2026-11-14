@@ -29,11 +29,11 @@ npx zapbip@0.1.0 listen
 
 ## ゼロから設定する
 
-1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent gemini-cli` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `新規エージェント gemini-cli` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { you: true, text: '新規エージェント gemini-cli', time: '09:00' },
        { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -48,13 +48,13 @@ npx zapbip@0.1.0 listen
 
 5. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
 
-6. **テストします。** 新しいプロセスで `gemini -p "Call send_message with the text '✅ installed'"` を実行します。✅ installed を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Gemini CLIを再起動してください。
+6. **テストします。** 新しいプロセスで `gemini -p "Call send_message with the text '✅ インストール完了'"` を実行します。✅ インストール完了 を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Gemini CLIを再起動してください。
 
 ## 動作の確認
 
-Gemini CLIに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+Gemini CLIに、WhatsAppで `✅ インストール完了` を送るよう頼んでください。届けば、接続は機能しています。
 
-<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ インストール完了', time: '09:03' }]} />
 
 届かない場合は、Gemini CLIを再起動して、もう一度頼んでください。
 

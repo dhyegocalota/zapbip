@@ -7,7 +7,7 @@ import { Chat } from '/snippets/chat.jsx';
 import StartLink from '/snippets/ja/start-link.mdx';
 import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
-WhatsAppのコマンドは、今のところ英語かポルトガル語の言葉で入力します。このページでは英語の言葉を使います。
+WhatsAppのコマンドは、日本語・英語・ポルトガル語の言葉で入力できます。このページでは日本語の言葉を使います。
 
 1. **WhatsAppでzapbipの番号にメッセージを送ります。** 任意のテキスト、たとえば `hi` を送ってください。最初のメッセージでアカウントが作られ、その電話があなたのものだと確認されます。
 
@@ -16,20 +16,20 @@ WhatsAppのコマンドは、今のところ英語かポルトガル語の言葉
    <Chat
      messages={[
        { you: true, text: 'hi', time: '09:00' },
-       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+       { name: 'zapbip', text: '接続されているエージェントがありません。メッセージは保管されています。', time: '09:00' },
      ]}
    />
 
-2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。`new agent` と名前を送ります。たとえば `new agent claude` です。
+2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。`新規エージェント` と名前を送ります。たとえば `新規エージェント claude` です。
 
 3. **プロンプトを受け取ります。** zapbipが、あなた専用の1〜2行で返信します。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude', time: '09:01' },
+       { you: true, text: '新規エージェント claude', time: '09:01' },
        {
          name: 'zapbip',
-         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         text: 'エージェントclaudeを作成しました。次の内容をエージェントに貼り付けてください: zapbipで私のWhatsAppにつながってください。https://mcp.zapbip.com/i/zb_inst_<code>を読み、手順に従ってください。 このリンクは30分間、1回だけ使えます。共有しないでください。 リンクの期限が切れた場合や使用済みの場合は、「再発行 claude」と送信してください。',
          time: '09:01',
        },
      ]}
@@ -52,7 +52,7 @@ WhatsAppのコマンドは、今のところ英語かポルトガル語の言葉
 ## 知っておくこと
 
 - すべてのAIに使うWhatsApp番号は1つです。AIごとに1行が発行されるので、見分けられます。
-- その1行は1回だけ使え、30 分で期限が切れます。期限が切れたら `rotate claude` と送ると新しいものが届きます。
+- その1行は1回だけ使え、30 分で期限が切れます。期限が切れたら `再発行 claude` と送ると新しいものが届きます。
 - いつでも自分から書けます。AIは時間制限なく聞き続けます。
 - ウェイトリストに載っている場合は、この後どうなるかを[FAQ](/ja/help/faq)で確認してください。
 - 使うAIを選んで、[対応エージェント](/ja/agents/supported-agents)にあるそのページに従ってください。

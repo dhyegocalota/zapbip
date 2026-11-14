@@ -2,15 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { AgentId } from '@zapbip/agents/definitions';
 import { ConnectorClient } from '@zapbip/agents/connector';
-import {
-  DOCS_START_LINK_LANGUAGES,
-  DocsPageLanguage,
-  DocsRetentionKind,
-  McpToolName,
-  MessageKind,
-  START_LINK,
-  START_LINK_LANGUAGE_PARAMETER,
-} from '@zapbip/types';
+import { DocsPageLanguage, DocsRetentionKind, McpToolName, MessageKind, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import {
   AGENT_PAGE_HEADINGS,
   AGENT_PAGE_SECTIONS,
@@ -184,7 +176,7 @@ function identicalViolations({ english, translated }: { english: string; transla
 }
 
 function startLinkViolations({ snippet, language }: { snippet: string; language: DocsPageLanguage }): string[] {
-  const expectedLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_START_LINK_LANGUAGES[language]}`;
+  const expectedLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}`;
   return snippet.includes(expectedLink) ? [] : [`missing ${expectedLink}`];
 }
 

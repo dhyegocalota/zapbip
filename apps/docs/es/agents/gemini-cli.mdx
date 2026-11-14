@@ -29,11 +29,11 @@ Ejecuta un solo listener a la vez. Un segundo listener reemplaza al primero.
 
 ## Configúralo desde cero
 
-1. **Escribe al número de zapbip en WhatsApp.** Envía `new agent gemini-cli`. [Cómo empezar](/es/get-started/how-to-start) muestra cada mensaje. Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+1. **Escribe al número de zapbip en WhatsApp.** Envía `nuevo agente gemini-cli`. [Cómo empezar](/es/get-started/how-to-start) muestra cada mensaje. Los comandos y las respuestas de zapbip están en español; también entiende los mismos comandos en inglés.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { you: true, text: 'nuevo agente gemini-cli', time: '09:00' },
        { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -48,13 +48,13 @@ Ejecuta un solo listener a la vez. Un segundo listener reemplaza al primero.
 
 5. **Empieza a escuchar.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` en un terminal en segundo plano y mantiene ese terminal en marcha, sin límite de tiempo. Cada vez que aparece una línea nueva allí, llama a `check_inbox` y responde.
 
-6. **Pruébalo.** En un proceso nuevo ejecuta `gemini -p "Call send_message with the text '✅ installed'"`. Un `send_message` con ✅ installed llega a tu WhatsApp. Si el comando falla, se detiene y muestra las últimas 20 líneas. Después reinicia Gemini CLI.
+6. **Pruébalo.** En un proceso nuevo ejecuta `gemini -p "Call send_message with the text '✅ listo'"`. Un `send_message` con ✅ listo llega a tu WhatsApp. Si el comando falla, se detiene y muestra las últimas 20 líneas. Después reinicia Gemini CLI.
 
 ## Comprueba que funciona
 
-Pide a Gemini CLI que envíe `✅ installed` por WhatsApp. Cuando llegue, la conexión funciona.
+Pide a Gemini CLI que envíe `✅ listo` por WhatsApp. Cuando llegue, la conexión funciona.
 
-<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ listo', time: '09:03' }]} />
 
 Si no llega, reinicia Gemini CLI y vuelve a pedírselo.
 

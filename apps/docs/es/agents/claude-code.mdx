@@ -45,7 +45,7 @@ Usa un solo listener, nunca dos a la vez. Si el canal no está activo, Claude Co
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-code', time: '15:00' },
+       { you: true, text: 'nuevo agente claude-code', time: '15:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
@@ -54,7 +54,7 @@ Usa un solo listener, nunca dos a la vez. Si el canal no está activo, Claude Co
      ]}
    />
 
-   Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+   Los comandos y las respuestas de zapbip están en español; también entiende los mismos comandos en inglés.
 
 3. **Pega la línea en Claude Code.**
 
@@ -74,12 +74,12 @@ Usa un solo listener, nunca dos a la vez. Si el canal no está activo, Claude Co
 
 8. **Solo si los canales no están disponibles.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` en segundo plano y lo vigila con Monitor, rearmándolo con cada aviso de tiempo agotado.
 
-9. **Pruébalo.** En un proceso nuevo ejecuta `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message`. Un `send_message` con ✅ installed llega a tu WhatsApp. Si el comando falla, se detiene y muestra las últimas 20 líneas. Después reinicia Claude Code para usar las herramientas de zapbip.
+9. **Pruébalo.** En un proceso nuevo ejecuta `claude -p "Call send_message with the text '✅ listo'" --allowedTools=mcp__zapbip__send_message`. Un `send_message` con ✅ listo llega a tu WhatsApp. Si el comando falla, se detiene y muestra las últimas 20 líneas. Después reinicia Claude Code para usar las herramientas de zapbip.
 
 ## Comprueba que funciona
 
-Pide a Claude Code que envíe `✅ installed` a tu WhatsApp. Debería llegar en unos segundos.
+Pide a Claude Code que envíe `✅ listo` a tu WhatsApp. Debería llegar en unos segundos.
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ listo', time: '15:03' }]} />
 
 Si no llega nada, mira [Solución de problemas](/es/help/troubleshooting).

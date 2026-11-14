@@ -1,6 +1,6 @@
 # 0047. The web surfaces speak eight languages through a web locale, while the WhatsApp copy stays in two
 
-- Status: Accepted
+- Status: Superseded by [0051](0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md)
 - Date: 2026-11-13
 - Deciders: Dhyego Calota (owner, delegated 2026-11-13); Claude (advisor)
 - Inspired by: the owner's order of 2026-11-13, "translate everything to Spanish, Chinese, German, French, Japanese and Korean"; [ADR 0041](0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) (the site is served by path); [ADR 0042](0042-the-customer-web-app-signs-in-with-a-one-time-link-sent-over-whatsapp.md) (the app and the owner's WhatsApp words); the web shell spec (languages are data)

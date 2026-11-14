@@ -14,20 +14,20 @@ import InstallPrompt from '/snippets/de/install-prompt.mdx';
    <Chat
      messages={[
        { you: true, text: 'hi', time: '09:00' },
-       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+       { name: 'zapbip', text: 'Es ist kein Agent verbunden. Deine Nachricht ist gespeichert.', time: '09:00' },
      ]}
    />
 
-2. **Bitte um einen neuen Agent.** Ein Agent ist eine KI, die du verbindest. Sende `new agent` und einen Namen, zum Beispiel `new agent claude`.
+2. **Bitte um einen neuen Agent.** Ein Agent ist eine KI, die du verbindest. Sende `neuer agent` und einen Namen, zum Beispiel `neuer agent claude`.
 
 3. **Hol dir deinen Prompt.** zapbip antwortet mit ein oder zwei Zeilen, die für dich gemacht sind.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude', time: '09:01' },
+       { you: true, text: 'neuer agent claude', time: '09:01' },
        {
          name: 'zapbip',
-         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         text: 'Agent claude erstellt. Füge das in deinen Agenten ein: Verbinde dich mit zapbip mit meinem WhatsApp: Lies https://mcp.zapbip.com/i/zb_inst_<code> und folge den Anweisungen. Dieser Link funktioniert einmal und 30 Minuten lang. Gib ihn nicht weiter. Wenn der Link abläuft oder schon benutzt wurde, sende "erneuern claude".',
          time: '09:01',
        },
      ]}
@@ -44,8 +44,7 @@ import InstallPrompt from '/snippets/de/install-prompt.mdx';
    <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
 
 <Note>
-  Die WhatsApp-Befehle und die Antworten von zapbip auf dieser Seite sind auf Englisch, denn das versteht das Produkt heute. Dieselben
-  Befehle versteht es auch auf Portugiesisch.
+  Die WhatsApp-Befehle und die Antworten von zapbip auf dieser Seite sind auf Deutsch. Dieselben Befehle versteht es auch auf Englisch.
 </Note>
 
 <Note>
@@ -56,7 +55,7 @@ import InstallPrompt from '/snippets/de/install-prompt.mdx';
 ## Was dich erwartet
 
 - Eine WhatsApp-Nummer für alle deine KIs und eine eigene Zeile für jede, damit du sie auseinanderhalten kannst.
-- Die Zeile funktioniert einmal und läuft nach 30 Minuten ab. Läuft sie ab, sende `rotate claude` für eine neue.
+- Die Zeile funktioniert einmal und läuft nach 30 Minuten ab. Läuft sie ab, sende `erneuern claude` für eine neue.
 - Du kannst jederzeit zuerst schreiben, und deine KI hört ohne Zeitlimit weiter zu.
 - Auf der Warteliste? In den [FAQ](/de/help/faq) steht, wie es weitergeht.
 - Wähle deine KI und folge ihrer Seite unter [Unterstützte KIs](/de/agents/supported-agents).

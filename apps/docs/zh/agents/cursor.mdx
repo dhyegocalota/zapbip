@@ -41,7 +41,7 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
    <Chat
      messages={[
-       { you: true, text: 'new agent cursor', time: '14:00' },
+       { you: true, text: '新建智能体 cursor', time: '14:00' },
        {
          name: 'zapbip',
          text: 'Agent cursor created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate cursor".',
@@ -62,12 +62,12 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
 6. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
 
-7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。然后重启 Cursor 聊天，以使用 zapbip 的工具。
+7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ 安装完成。然后重启 Cursor 聊天，以使用 zapbip 的工具。
 
 ## 检查是否正常工作
 
-让 Cursor 向你的 WhatsApp 发送 `✅ installed`。它应在几秒内到达。
+让 Cursor 向你的 WhatsApp 发送 `✅ 安装完成`。它应在几秒内到达。
 
-<Chat messages={[{ name: 'Cursor', text: '✅ installed', time: '14:03' }]} />
+<Chat messages={[{ name: 'Cursor', text: '✅ 安装完成', time: '14:03' }]} />
 
 如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

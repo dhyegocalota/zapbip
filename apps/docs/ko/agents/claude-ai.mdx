@@ -39,11 +39,11 @@ claude.ai는 하나의 답을 약 4분 기다린 뒤 스스로 다시 시도하�
 
    <StartLink />
 
-2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다.
+2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있습니다.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       { you: true, text: '새 에이전트 claude-ai', time: '08:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
@@ -66,12 +66,12 @@ claude.ai는 하나의 답을 약 4분 기다린 뒤 스스로 다시 시도하�
 
 7. **1시간마다 도는 안전망을 만듭니다.** `check_inbox`를 호출하는 1시간마다 도는 작업을 만들라고 안내합니다. 웨이크를 놓쳐도 1시간 넘게 기다리는 일이 없게 하기 위해서입니다.
 
-8. **테스트합니다.** 채팅에서 `send_message`를 호출해 ✅ installed를 보냅니다.
+8. **테스트합니다.** 채팅에서 `send_message`를 호출해 ✅ 설치 완료를 보냅니다.
 
 ## 작동 확인
 
-연결이 끝나면 claude.ai가 내 WhatsApp으로 `✅ installed`를 보냅니다.
+연결이 끝나면 claude.ai가 내 WhatsApp으로 `✅ 설치 완료`를 보냅니다.
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ 설치 완료', time: '08:05' }]} />
 
 아무것도 도착하지 않으면 [문제 해결](/ko/help/troubleshooting)을 보세요.

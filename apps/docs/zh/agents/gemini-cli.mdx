@@ -29,11 +29,11 @@ npx zapbip@0.1.0 listen
 
 ## 从零开始设置
 
-1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `new agent gemini-cli`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `新建智能体 gemini-cli`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { you: true, text: '新建智能体 gemini-cli', time: '09:00' },
        { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -48,13 +48,13 @@ npx zapbip@0.1.0 listen
 
 5. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
 
-6. **测试。** 在一个新进程中，它运行 `gemini -p "Call send_message with the text '✅ installed'"`。一条内容为 ✅ installed 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Gemini CLI。
+6. **测试。** 在一个新进程中，它运行 `gemini -p "Call send_message with the text '✅ 安装完成'"`。一条内容为 ✅ 安装完成 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Gemini CLI。
 
 ## 检查是否正常工作
 
-让 Gemini CLI 在 WhatsApp 上发送 `✅ installed`。消息到达，就说明连接正常。
+让 Gemini CLI 在 WhatsApp 上发送 `✅ 安装完成`。消息到达，就说明连接正常。
 
-<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ 安装完成', time: '09:03' }]} />
 
 如果没有到达，请重启 Gemini CLI 再试一次。
 

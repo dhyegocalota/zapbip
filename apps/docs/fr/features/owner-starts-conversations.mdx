@@ -30,14 +30,14 @@ Votre message n'est jamais perdu. Si l'IA ne peut pas être réveillée, il atte
 
 ## Quand votre IA n'écoute pas
 
-zapbip vous le dit tout de suite, pour que vous sachiez qu'elle attend. Les notifications de zapbip sont en anglais, la langue du produit aujourd'hui.
+zapbip vous le dit tout de suite, pour que vous sachiez qu'elle attend. Les notifications de zapbip sont dans votre langue.
 
 <Chat
   messages={[
     { you: true, text: '@claude le build est-il vert ?', time: '09:00' },
     {
       notice: true,
-      text: 'The agent claude is not listening right now. Your message waits in the inbox.',
+      text: 'L’agent claude n’écoute pas pour le moment. Votre message attend dans la boîte de réception.',
       time: '09:00',
     },
   ]}
@@ -50,7 +50,7 @@ WhatsApp ne laisse zapbip écrire librement que dans les 24 heures qui suivent v
 <Chat
   messages={[
     { you: true, text: '@claude le build est-il vert ?', time: 'Hier 09:00' },
-    { notice: true, text: 'The agent claude has a message for you: Yes, all 212 tests pass.', time: '10:30' },
+    { notice: true, text: 'L’agent claude a un message pour vous : Oui, les 212 tests passent.', time: '10:30' },
     { you: true, text: 'ok', time: '10:31' },
     { name: 'Claude', text: 'Oui, les 212 tests passent.', time: '10:31' },
   ]}
