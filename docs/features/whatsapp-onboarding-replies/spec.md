@@ -1,6 +1,6 @@
 # WhatsApp onboarding replies
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡
 **Owner approval:** approved 2026-11-13 (delegated)
 **ADRs:** [0049](../../adr/0049-a-phone-gets-one-onboarding-reply-a-day-and-a-customer-on-another-number-is-pointed-home.md)
