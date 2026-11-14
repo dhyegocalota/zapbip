@@ -1,4 +1,4 @@
-import { HttpStatus } from '@zapbip/types';
+import { HttpStatus, WebLocale } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { Hono } from 'hono';
 import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../backoffice/assets/favicon';
@@ -18,6 +18,7 @@ import { renderRobots, renderSitemap } from './robots-and-sitemap';
 import { siteContext } from './site-context';
 import { PAGE_CACHE_CONTROL, PAGE_VARY, SCRIPT_CONTENT_TYPE, STYLESHEET_CONTENT_TYPE, TEXT_CONTENT_TYPE } from './site-constants';
 import type { SiteEnv } from './site-env';
+import { localePathOf } from './site-language';
 import { pagePathOf } from './site-links';
 import { SitePath } from './site-paths';
 import { SITE_SECURITY_HEADERS, SITE_STRICT_TRANSPORT_SECURITY } from './site-policy';
@@ -52,8 +53,7 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hon
       status: HttpStatus.Ok,
       headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY },
     });
-  app.get(SitePath.Home, landing);
-  app.get(SitePath.PortugueseHome, landing);
+  Object.values(WebLocale).forEach((locale) => app.get(localePathOf({ locale }), landing));
   LEGAL_PAGES.forEach((page) =>
     app.get(legalPathOf(page), (context) =>
       renderLegal({ context, document: page.document, headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY } }),

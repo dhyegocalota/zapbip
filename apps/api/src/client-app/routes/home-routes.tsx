@@ -1,4 +1,4 @@
-import { CLIENT_APP_LOGIN_TEXT, HttpStatus } from '@zapbip/types';
+import { CLIENT_APP_LOGIN_TEXT, HttpStatus, OWNER_LOCALE_OF_WEB_LOCALE } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { numberRegistryOf } from '../../adapters/d1/d1-number-registry';
 import { LogEvent } from '../../contract/log';
@@ -39,7 +39,7 @@ async function respondSignedOut(input: { context: Context<ClientAppEnv> }): Prom
   const locale = context.get('locale');
   const displayNumber = await numberRegistryOf({ bindings: context.env }).findStartDisplayNumber();
   if (displayNumber === null) return respondUnavailable({ context });
-  const whatsappHref = whatsappLinkTarget({ displayNumber, text: CLIENT_APP_LOGIN_TEXT[locale] });
+  const whatsappHref = whatsappLinkTarget({ displayNumber, text: CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]] });
   if (whatsappHref === null) {
     logEvent({ event: LogEvent.StartLinkInvalidNumber });
     return respondUnavailable({ context });

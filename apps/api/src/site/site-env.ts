@@ -1,5 +1,5 @@
 import type { InstallClient } from '@zapbip/agents/install';
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import type { ShellTheme } from '../web-shell/shell-theme';
 import type { Bindings } from '../contract/env';
 import type { SiteStartTab } from './site-agents';
@@ -7,7 +7,7 @@ import type { SiteStartTab } from './site-agents';
 export type SiteEnv = {
   Bindings: Bindings;
   Variables: {
-    locale: OwnerLocale;
+    locale: WebLocale;
     theme: ShellTheme;
     referralCode: string | null;
     agent: InstallClient | null;

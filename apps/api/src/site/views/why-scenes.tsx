@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { SENDER_INDEXES, senderNameOf, siteAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
@@ -14,7 +14,7 @@ const CHIP_AGENT_COUNT = 6;
 const TERMINAL_DOT_COUNT = 3;
 const TERMINAL_DOTS = Array.from({ length: TERMINAL_DOT_COUNT }, (_value, index) => index);
 
-type SceneProps = { locale: OwnerLocale };
+type SceneProps = { locale: WebLocale };
 
 export function OfficialScene(props: SceneProps) {
   const translate = copyOf({ locale: props.locale });

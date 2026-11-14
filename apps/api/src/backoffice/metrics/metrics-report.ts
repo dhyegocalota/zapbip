@@ -1,4 +1,4 @@
-import type { AccountState, OwnerLocale } from '@zapbip/types';
+import type { AccountState, WebLocale } from '@zapbip/types';
 import type { ActivityMetric } from '../../contract/activity-metric';
 
 export type DayTotal = { day: string; total: number };
@@ -10,7 +10,7 @@ export type ClientTotal = { clientName: string | null; total: number };
 export type AgentTotals = { active: number; connected: number };
 export type RestrictedNumber = NumberOption & { restrictedAt: number };
 
-export type LocaleTotal = { locale: OwnerLocale; total: number };
+export type LocaleTotal = { locale: WebLocale; total: number };
 export type InviteTotals = { issued: number; used: number };
 export type ReleaseTotals = { released: number; connected: number };
 export type AccessReport = {

@@ -1,4 +1,4 @@
-import { CLIENT_APP_PORTUGUESE_PATH_PREFIX, HttpStatus } from '@zapbip/types';
+import { HttpStatus, WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
 import { Hono, type Context, type Next } from 'hono';
 import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../backoffice/assets/favicon';
 import { STYLESHEET_CACHE_CONTROL } from '../backoffice/backoffice-constants';
@@ -9,7 +9,7 @@ import { plainResponse, SERVER_ERROR_TEXT } from '../routes/private-response';
 import { CLIENT_APP_ERROR_CODE, STYLESHEET_CONTENT_TYPE } from './client-app-constants';
 import { ClientAppCopyKey } from './client-app-copy';
 import type { ClientAppEnv } from './client-app-env';
-import { ClientAppPath } from './client-app-paths';
+import { ClientAppPath, PREFIXED_LOCALES } from './client-app-paths';
 import { CLIENT_APP_DEFAULT_CACHE_CONTROL, CLIENT_APP_SECURITY_HEADERS, CLIENT_APP_STRICT_TRANSPORT_SECURITY } from './client-app-policy';
 import { CLIENT_APP_STYLESHEET } from './client-app-stylesheet';
 import { respondMessage } from './respond';
@@ -56,7 +56,7 @@ export function createClientApp(): Hono<ClientAppEnv> {
   );
   app.use('*', clientAppContext);
   app.route('/', localizedRoutes());
-  app.route(CLIENT_APP_PORTUGUESE_PATH_PREFIX, localizedRoutes());
+  PREFIXED_LOCALES.forEach((locale) => app.route(WEB_LOCALE_PATH_PREFIXES[locale], localizedRoutes()));
   app.notFound((context) =>
     respondMessage({ context, status: HttpStatus.NotFound, title: ClientAppCopyKey.NotFoundTitle, body: ClientAppCopyKey.NotFoundBody }),
   );

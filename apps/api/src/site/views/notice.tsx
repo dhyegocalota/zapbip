@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { copyOf } from '../site-copy-text';
 import { SiteCopyKey } from '../site-copy';
@@ -17,7 +17,7 @@ const VARIANT_GLYPHS: Record<NoticeVariant, string> = {
 };
 const ALERT_VARIANTS = [NoticeVariant.Warning, NoticeVariant.Error];
 
-export function Notice(props: { variant: NoticeVariant; locale: OwnerLocale; title: string | null; message: string; id?: string }) {
+export function Notice(props: { variant: NoticeVariant; locale: WebLocale; title: string | null; message: string; id?: string }) {
   const translate = copyOf({ locale: props.locale });
   const role = ALERT_VARIANTS.includes(props.variant) ? 'alert' : 'status';
   return (

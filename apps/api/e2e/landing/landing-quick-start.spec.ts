@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, WebLocale } from '@zapbip/types';
 import { SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { expect, test } from './fixtures';
@@ -147,11 +147,11 @@ test.describe('pt-BR browser', () => {
 
   test('the section speaks Portuguese and keeps the language on a switch', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#start')).toContainText(siteCopy({ key: SiteCopyKey.StartTitle, locale: OwnerLocale.PortugueseBrazil }));
+    await expect(page.locator('#start')).toContainText(siteCopy({ key: SiteCopyKey.StartTitle, locale: WebLocale.PortugueseBrazil }));
     await tabOf({ page, id: SECOND_AGENT.id }).click();
     await expect(page).toHaveURL(/\/pt-br\?agent=/);
     await expect(page.locator(`#start-panel-${SECOND_AGENT.id} .start-copy`)).toHaveText(
-      siteCopy({ key: SiteCopyKey.StartCopy, locale: OwnerLocale.PortugueseBrazil }),
+      siteCopy({ key: SiteCopyKey.StartCopy, locale: WebLocale.PortugueseBrazil }),
     );
   });
 });

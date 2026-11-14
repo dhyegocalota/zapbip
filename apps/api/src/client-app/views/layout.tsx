@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { FAVICON_CONTENT_TYPE } from '../../backoffice/assets/favicon';
 import { BRAND_SEPARATOR, CSRF_FIELD, THEME_COLOR_DARK, THEME_COLOR_LIGHT, WIDE_BODY_CLASS } from '../client-app-constants';
@@ -12,7 +12,7 @@ import { ShellFooter } from '../../web-shell/shell-footer';
 import type { ShellTheme } from '../../web-shell/shell-theme';
 
 export type LayoutProps = {
-  locale: OwnerLocale;
+  locale: WebLocale;
   theme: ShellTheme;
   title: string;
   currentPath: string;
@@ -21,7 +21,7 @@ export type LayoutProps = {
   children?: Child;
 };
 
-function SignOutForm(props: { locale: OwnerLocale; csrfToken: string }) {
+function SignOutForm(props: { locale: WebLocale; csrfToken: string }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <form method="post" action={pathWithLocale({ locale: props.locale, path: ClientAppPath.SignOut })}>

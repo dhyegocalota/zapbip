@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { expect, test } from './fixtures';
 import { shellCopy } from './support/site-copy';
@@ -6,10 +6,10 @@ import { shellCopy } from './support/site-copy';
 const SCROLL_WIDTH_SCRIPT = 'document.documentElement.scrollWidth';
 const VIEWPORT_WIDTH_SCRIPT = 'document.documentElement.clientWidth';
 const LEGAL_TWINS = [
-  ['/terms', '/pt-br/termos', OwnerLocale.PortugueseBrazil],
-  ['/privacy', '/pt-br/privacidade', OwnerLocale.PortugueseBrazil],
-  ['/pt-br/termos', '/terms', OwnerLocale.EnglishUs],
-  ['/pt-br/privacidade', '/privacy', OwnerLocale.EnglishUs],
+  ['/terms', '/pt-br/termos', WebLocale.PortugueseBrazil],
+  ['/privacy', '/pt-br/privacidade', WebLocale.PortugueseBrazil],
+  ['/pt-br/termos', '/terms', WebLocale.EnglishUs],
+  ['/pt-br/privacidade', '/privacy', WebLocale.EnglishUs],
 ] as const;
 
 for (const [path, twin, locale] of LEGAL_TWINS) {
@@ -28,7 +28,7 @@ test('the footer of the home page leads to the privacy policy', async ({ page })
   await page.goto('/');
   await page
     .locator('.footer-links')
-    .getByRole('link', { name: shellCopy({ key: ShellCopyKey.FooterPrivacy, locale: OwnerLocale.EnglishUs }) })
+    .getByRole('link', { name: shellCopy({ key: ShellCopyKey.FooterPrivacy, locale: WebLocale.EnglishUs }) })
     .click();
   await expect(page).toHaveURL(/\/privacy$/);
   await expect(page.locator('main h1')).toBeVisible();

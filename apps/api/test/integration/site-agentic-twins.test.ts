@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { COMPANY, OwnerLocale } from '@zapbip/types';
+import { COMPANY, WebLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LegalDocument } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
@@ -16,14 +16,14 @@ const TEXT_TYPE = 'text/plain; charset=utf-8';
 const MARKDOWN_ACCEPT = 'text/markdown, text/html;q=0.8';
 const BROWSER_ACCEPT = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
 const HOME_TWINS = [
-  ['/index.md', OwnerLocale.EnglishUs],
-  ['/pt-br.md', OwnerLocale.PortugueseBrazil],
+  ['/index.md', WebLocale.EnglishUs],
+  ['/pt-br.md', WebLocale.PortugueseBrazil],
 ] as const;
 const LEGAL_TWINS = [
-  ['/terms.md', LegalDocument.Terms, OwnerLocale.EnglishUs],
-  ['/privacy.md', LegalDocument.Privacy, OwnerLocale.EnglishUs],
-  ['/pt-br/termos.md', LegalDocument.Terms, OwnerLocale.PortugueseBrazil],
-  ['/pt-br/privacidade.md', LegalDocument.Privacy, OwnerLocale.PortugueseBrazil],
+  ['/terms.md', LegalDocument.Terms, WebLocale.EnglishUs],
+  ['/privacy.md', LegalDocument.Privacy, WebLocale.EnglishUs],
+  ['/pt-br/termos.md', LegalDocument.Terms, WebLocale.PortugueseBrazil],
+  ['/pt-br/privacidade.md', LegalDocument.Privacy, WebLocale.PortugueseBrazil],
 ] as const;
 const HTML_PAGES = [
   ['/', '/index.md'],
@@ -34,7 +34,7 @@ const HTML_PAGES = [
   ['/pt-br/privacidade', '/pt-br/privacidade.md'],
 ] as const;
 
-function copy(input: { key: SiteCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
+function copy(input: { key: SiteCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
   return renderSiteCopy(input);
 }
 
@@ -84,8 +84,8 @@ describe('the Markdown twins of the home pages', () => {
 
 describe('the agents section of the page', () => {
   it.each([
-    ['/', OwnerLocale.EnglishUs],
-    ['/pt-br', OwnerLocale.PortugueseBrazil],
+    ['/', WebLocale.EnglishUs],
+    ['/pt-br', WebLocale.PortugueseBrazil],
   ] as const)('%s shows the same title and body as its Markdown twin', async (path, locale) => {
     const { text } = await textOf({ path });
     const endpoint = `${SITE_ORIGIN}/api/request-access`;
@@ -171,13 +171,13 @@ describe('the head of every page', () => {
 
 describe('llms.txt', () => {
   it.each([
-    ['/llms.txt', OwnerLocale.EnglishUs, '/terms.md'],
-    ['/pt-br/llms.txt', OwnerLocale.PortugueseBrazil, '/pt-br/termos.md'],
+    ['/llms.txt', WebLocale.EnglishUs, '/terms.md'],
+    ['/pt-br/llms.txt', WebLocale.PortugueseBrazil, '/pt-br/termos.md'],
   ])('%s follows the llms.txt format', async (path, locale, termsTwin) => {
     const { response, text } = await textOf({ path });
     expect(response.headers.get('content-type')).toBe(TEXT_TYPE);
     expect(text.startsWith('# zapbip\n\n> ')).toBe(true);
-    expect(text).toContain(`${SITE_ORIGIN}${locale === OwnerLocale.EnglishUs ? '/index.md' : '/pt-br.md'}`);
+    expect(text).toContain(`${SITE_ORIGIN}${locale === WebLocale.EnglishUs ? '/index.md' : '/pt-br.md'}`);
     expect(text).toContain(`${SITE_ORIGIN}${termsTwin}`);
     expect(text).toContain(`${SITE_ORIGIN}/api/request-access`);
     expect(text).toContain('https://docs.zapbip.com/llms.txt');
@@ -189,14 +189,14 @@ describe('llms.txt', () => {
   it('answers the language of its path', async () => {
     const english = await textOf({ path: '/llms.txt' });
     const portuguese = await textOf({ path: '/pt-br/llms.txt' });
-    expect(english.text).toContain(copy({ key: SiteCopyKey.MetaTitle, locale: OwnerLocale.EnglishUs }));
-    expect(portuguese.text).toContain(copy({ key: SiteCopyKey.MetaTitle, locale: OwnerLocale.PortugueseBrazil }));
-    expect(portuguese.text).not.toContain(copy({ key: SiteCopyKey.MetaTitle, locale: OwnerLocale.EnglishUs }));
+    expect(english.text).toContain(copy({ key: SiteCopyKey.MetaTitle, locale: WebLocale.EnglishUs }));
+    expect(portuguese.text).toContain(copy({ key: SiteCopyKey.MetaTitle, locale: WebLocale.PortugueseBrazil }));
+    expect(portuguese.text).not.toContain(copy({ key: SiteCopyKey.MetaTitle, locale: WebLocale.EnglishUs }));
   });
 
   it('lists the llms files of every language', async () => {
     const { text } = await textOf({ path: '/llms.txt' });
-    Object.values(OwnerLocale).forEach((locale) => {
+    Object.values(WebLocale).forEach((locale) => {
       const home = localePathOf({ locale });
       const prefix = home === '/' ? '' : home;
       expect(text).toContain(`${SITE_ORIGIN}${prefix}/llms.txt`);
@@ -204,7 +204,7 @@ describe('llms.txt', () => {
     });
   });
 
-  it.each(Object.values(OwnerLocale))('has a full file for %s with the home and both legal documents', async (locale) => {
+  it.each(Object.values(WebLocale))('has a full file for %s with the home and both legal documents', async (locale) => {
     const home = localePathOf({ locale });
     const prefix = home === '/' ? '' : home;
     const { response, text } = await textOf({ path: `${prefix}/llms-full.txt` });

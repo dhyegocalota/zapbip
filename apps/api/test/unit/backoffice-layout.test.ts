@@ -1,4 +1,4 @@
-import { HttpStatus, OwnerLocale } from '@zapbip/types';
+import { HttpStatus, WebLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
 import { ShellTheme, resolveTheme } from '../../src/web-shell/shell-theme';
@@ -18,7 +18,7 @@ const FOOTER_PATTERN = /<footer[\s\S]*<\/footer>/;
 
 function render(input: Partial<LayoutProps>): string {
   const props: LayoutProps = {
-    locale: OwnerLocale.EnglishUs,
+    locale: WebLocale.EnglishUs,
     environment: DeployEnvironment.Production,
     title: 'Overview',
     stylesheetHref: STYLESHEET_HREF,
@@ -35,8 +35,8 @@ function render(input: Partial<LayoutProps>): string {
 
 describe('backoffice layout', () => {
   it('sets the document language from the locale', () => {
-    expect(render({ locale: OwnerLocale.PortugueseBrazil })).toContain('lang="pt-BR"');
-    expect(render({ locale: OwnerLocale.EnglishUs })).toContain('lang="en"');
+    expect(render({ locale: WebLocale.PortugueseBrazil })).toContain('lang="pt-BR"');
+    expect(render({ locale: WebLocale.EnglishUs })).toContain('lang="en"');
   });
 
   it.each(Object.values(ShellTheme))('writes data-theme="%s" on the html element', (theme) => {
@@ -75,9 +75,7 @@ describe('backoffice layout', () => {
   });
 
   it('writes the theme on the error page', () => {
-    const html = String(
-      ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null, theme: ShellTheme.Dark }),
-    );
+    const html = String(ErrorPage({ status: HttpStatus.NotFound, locale: WebLocale.EnglishUs, environment: null, theme: ShellTheme.Dark }));
     expect(html).toContain('data-theme="dark"');
   });
 
@@ -161,8 +159,8 @@ describe('backoffice layout', () => {
 
 describe('sign-in page', () => {
   it.each([
-    [OwnerLocale.EnglishUs, 'Operator access', 'Your email and password first, then the code from your authenticator app.'],
-    [OwnerLocale.PortugueseBrazil, 'Acesso do operador', 'Seu e-mail e sua senha. Depois, o código do seu autenticador.'],
+    [WebLocale.EnglishUs, 'Operator access', 'Your email and password first, then the code from your authenticator app.'],
+    [WebLocale.PortugueseBrazil, 'Acesso do operador', 'Seu e-mail e sua senha. Depois, o código do seu autenticador.'],
   ])('renders the eyebrow and the lead in %s', (locale, eyebrow, lead) => {
     const html = String(
       SignInPage({
@@ -181,8 +179,8 @@ describe('sign-in page', () => {
 
 describe('sign-in code page', () => {
   it.each([
-    [OwnerLocale.EnglishUs, 'Enter the 6-digit code from your authenticator app. This step expires in 5 minutes.'],
-    [OwnerLocale.PortugueseBrazil, 'Digite o código de 6 dígitos do seu app autenticador. Esta etapa expira em 5 minutos.'],
+    [WebLocale.EnglishUs, 'Enter the 6-digit code from your authenticator app. This step expires in 5 minutes.'],
+    [WebLocale.PortugueseBrazil, 'Digite o código de 6 dígitos do seu app autenticador. Esta etapa expira em 5 minutos.'],
   ])('renders the code lead in %s and no password field', (locale, lead) => {
     const html = String(
       SignInCodePage({

@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { InstallClient } from '@zapbip/agents/install';
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { ACCEPT_LANGUAGE_HEADER } from '../backoffice/backoffice-constants';
 import { resolveTheme } from '../web-shell/shell-theme';
 import { isReferralCode } from './referral-code';
@@ -11,7 +11,7 @@ import type { SiteEnv } from './site-env';
 import { legalPageOf } from './legal-links';
 import { localeOfPath, preferredLocaleOf } from './site-language';
 
-function localeOf(input: { context: Context<SiteEnv> }): OwnerLocale {
+function localeOf(input: { context: Context<SiteEnv> }): WebLocale {
   const { context } = input;
   const pathname = new URL(context.req.url).pathname;
   const pathLocale = localeOfPath({ pathname });

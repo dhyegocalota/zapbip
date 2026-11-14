@@ -1,11 +1,11 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { LanguageMenu } from './language-menu';
 import type { ShellHiddenField } from './shell-fields';
 import type { ShellTheme } from './shell-theme';
 import { ThemeSwitch } from './theme-switch';
 
 export type ShellControlsProps = {
-  locale: OwnerLocale;
+  locale: WebLocale;
   theme: ShellTheme;
   localeAction: string;
   themeAction: string;

@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { ContactText } from './contact-text';
@@ -9,7 +9,7 @@ const BAND_ITEMS: { icon: string; title: SiteCopyKey; body: SiteCopyKey }[] = [
   { icon: '⚿', title: SiteCopyKey.PrivacyKeysTitle, body: SiteCopyKey.PrivacyKeysBody },
 ];
 
-export function PrivacyBand(props: { locale: OwnerLocale }) {
+export function PrivacyBand(props: { locale: WebLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="band" id="privacy" aria-labelledby="privacy-title">

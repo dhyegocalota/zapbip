@@ -1,4 +1,4 @@
-import { HttpStatus, OwnerLocale } from '@zapbip/types';
+import { HttpStatus, WebLocale } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { SAFE_METHODS } from '../backoffice/backoffice-constants';
 import { markdownPathOf } from './agentic-paths';
@@ -14,7 +14,7 @@ const ACCEPT_HEADER = 'accept';
 export type PageTwin = { htmlPath: string; markdownOf: (input: { origin: string }) => string };
 
 export const PAGE_TWINS: PageTwin[] = [
-  ...Object.values(OwnerLocale).map((locale) => ({
+  ...Object.values(WebLocale).map((locale) => ({
     htmlPath: localePathOf({ locale }),
     markdownOf: ({ origin }: { origin: string }) => homeMarkdownOf({ locale, origin }),
   })),

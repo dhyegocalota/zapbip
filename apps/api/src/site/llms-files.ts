@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { LlmsFile, llmsPathOf, markdownPathOf } from './agentic-paths';
 import { legalTextOf } from './legal-copy';
 import { LEGAL_PAGES, legalPathOf } from './legal-links';
@@ -52,7 +52,7 @@ function section(input: { title: string; entries: LinkEntry[] }): MarkdownBlock[
   return [{ kind: MarkdownBlockKind.Heading, level: SECTION_LEVEL, text: input.title }, linkList({ entries: input.entries })];
 }
 
-export function llmsTextOf(input: { origin: string; locale: OwnerLocale }): string {
+export function llmsTextOf(input: { origin: string; locale: WebLocale }): string {
   const { origin, locale } = input;
   const translate = copyOf({ locale });
   const description = translate(SiteCopyKey.MetaDescription, { ...pricingValuesOf({ locale }), agents: leadingAgentNames() });
@@ -69,7 +69,7 @@ export function llmsTextOf(input: { origin: string; locale: OwnerLocale }): stri
   ];
   const interfaces = INTERFACES.map((entry) => ({ title: entry.title, url: `${origin}${entry.path}`, description: entry.description }));
   const docs = DOCS_LINKS.map((entry) => ({ title: entry.title, url: `${DOCS_ORIGIN}${entry.path}`, description: entry.description }));
-  const otherLanguages = Object.values(OwnerLocale).flatMap((candidate) =>
+  const otherLanguages = Object.values(WebLocale).flatMap((candidate) =>
     Object.values(LlmsFile).map((file) => ({
       title: `${languageOf({ locale: candidate })} ${file}`,
       url: `${origin}${llmsPathOf({ locale: candidate, file })}`,
@@ -88,7 +88,7 @@ export function llmsTextOf(input: { origin: string; locale: OwnerLocale }): stri
   });
 }
 
-export function llmsFullTextOf(input: { origin: string; locale: OwnerLocale }): string {
+export function llmsFullTextOf(input: { origin: string; locale: WebLocale }): string {
   const { origin, locale } = input;
   const legalPages = LEGAL_PAGES.filter((page) => page.locale === locale).map((page) => legalMarkdownOf(page));
   return [homeMarkdownOf({ locale, origin }), ...legalPages].join(FULL_SEPARATOR);

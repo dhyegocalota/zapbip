@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { COMPANY, PRICING_FREE_MESSAGES, OwnerLocale } from '@zapbip/types';
+import { COMPANY, PRICING_FREE_MESSAGES, WebLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { siteAgents, siteQuickStartOf } from '../../src/site/site-agents';
 import { SECURITY_TEXT_VALIDITY_MS, SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
@@ -54,7 +54,7 @@ describe('security.txt', () => {
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(text).toContain(`Contact: mailto:${COMPANY.contactEmail}`);
     expect(text).not.toContain('Policy:');
-    expect(text).toContain('Preferred-Languages: en, pt');
+    expect(text).toContain('Preferred-Languages: de, en, es, fr, ja, ko, pt, zh');
     expect(text).toContain(`Canonical: ${SITE_ORIGIN}/.well-known/security.txt`);
     expect(expires).toBeGreaterThanOrEqual(before + SECURITY_TEXT_VALIDITY_MS - 1000);
     expect(expires).toBeLessThanOrEqual(Date.now() + SECURITY_TEXT_VALIDITY_MS + 1000);
@@ -69,7 +69,7 @@ describe('GET /api/pricing', () => {
     expect(body.language).toBe('pt-BR');
     expect(body.currency).toBe('BRL');
     expect((body.free as { messages: number }).messages).toBe(PRICING_FREE_MESSAGES);
-    expect(JSON.stringify(body)).toContain(renderSiteCopy({ key: SiteCopyKey.PricingBilling, locale: OwnerLocale.PortugueseBrazil }));
+    expect(JSON.stringify(body)).toContain(renderSiteCopy({ key: SiteCopyKey.PricingBilling, locale: WebLocale.PortugueseBrazil }));
   });
 
   it('answers English and dollars with no language asked', async () => {
@@ -88,7 +88,7 @@ describe('GET /api/pricing', () => {
 describe('GET /api/quick-start', () => {
   it.each(siteAgents().map((agent) => agent.id))('answers the hint and the code of %s', async (id) => {
     const { response, body } = await jsonOf({ path: `/api/quick-start?agent=${id}` });
-    const expected = siteQuickStartOf({ id, locale: OwnerLocale.EnglishUs, connectionLink: SITE_EXAMPLE_CONNECTION_LINK });
+    const expected = siteQuickStartOf({ id, locale: WebLocale.EnglishUs, connectionLink: SITE_EXAMPLE_CONNECTION_LINK });
     expect(response.status).toBe(200);
     expect(body).toMatchObject({ agent: id, hint: expected.hint, path: expected.path, code: expected.code, isExample: true });
   });
@@ -96,7 +96,7 @@ describe('GET /api/quick-start', () => {
   it('answers the any-MCP-app steps', async () => {
     const { body } = await jsonOf({ path: '/api/quick-start?agent=any&language=pt-BR' });
     expect(body.code).toBe(SITE_EXAMPLE_CONNECTION_LINK);
-    expect(body.hint).toBe(renderSiteCopy({ key: SiteCopyKey.StartAnyHint, locale: OwnerLocale.PortugueseBrazil }));
+    expect(body.hint).toBe(renderSiteCopy({ key: SiteCopyKey.StartAnyHint, locale: WebLocale.PortugueseBrazil }));
   });
 
   it.each(['', '?agent=nope', '?agent=__proto__'])('lists the agents it knows for %j', async (query) => {

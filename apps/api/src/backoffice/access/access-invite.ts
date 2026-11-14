@@ -1,4 +1,4 @@
-import { START_PREFILLED_TEXT } from '@zapbip/types';
+import { OWNER_LOCALE_OF_WEB_LOCALE, START_PREFILLED_TEXT } from '@zapbip/types';
 import { D1AccessInvites } from '../../adapters/d1/d1-access-invites';
 import { numberRegistryOf } from '../../adapters/d1/d1-number-registry';
 import type { Bindings } from '../../contract/env';
@@ -29,7 +29,7 @@ export async function issueInvites(input: {
   return entries.flatMap((entry, index) => {
     const code = codes[index];
     if (code === undefined || code === null) return [];
-    const link = whatsappLinkTarget({ displayNumber, text: `${START_PREFILLED_TEXT[entry.locale]} ${code}` });
+    const link = whatsappLinkTarget({ displayNumber, text: `${START_PREFILLED_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[entry.locale]]} ${code}` });
     if (link === null) throw new Error('the invite link has no target');
     return [{ email: entry.email, link }];
   });

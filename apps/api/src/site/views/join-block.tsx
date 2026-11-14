@@ -1,4 +1,4 @@
-import { type OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WAITLIST_EMAIL_MAX_LENGTH } from '@zapbip/types';
+import { type WebLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WAITLIST_EMAIL_MAX_LENGTH } from '@zapbip/types';
 import { ShellTheme } from '../../web-shell/shell-theme';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { type JoinFormState, JoinState, type PageModel } from '../page-model';
@@ -30,7 +30,7 @@ const CLIENT_NOTICES: { id: string; variant: NoticeVariant; copyKey: SiteCopyKey
   { id: 'notice-offline', variant: NoticeVariant.Warning, copyKey: SiteCopyKey.JoinOffline },
 ];
 
-function PrivacyNote(props: { locale: OwnerLocale }) {
+function PrivacyNote(props: { locale: WebLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <p class="privacy-note">

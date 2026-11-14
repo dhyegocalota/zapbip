@@ -7,7 +7,7 @@ import {
   PRICING_PRO_INCLUDED_MESSAGES,
   PRICING_PRO_MONTHLY_CENTS,
 } from './constants';
-import { OwnerLocale, PricingCurrency } from './enums';
+import { PricingCurrency, WebLocale } from './enums';
 
 describe('the pricing constants', () => {
   it('give the free plan five messages to try, once', () => {
@@ -24,10 +24,16 @@ describe('the pricing constants', () => {
     expect(PRICING_OVERAGE_BLOCK_MESSAGES).toBe(1000);
   });
 
-  it('follow the language: English pays in dollars, Portuguese in reais', () => {
+  it('follow the language: Portuguese pays in reais and every other language in dollars', () => {
     expect(PRICING_CURRENCY_BY_LOCALE).toEqual({
-      [OwnerLocale.EnglishUs]: PricingCurrency.Usd,
-      [OwnerLocale.PortugueseBrazil]: PricingCurrency.Brl,
+      [WebLocale.EnglishUs]: PricingCurrency.Usd,
+      [WebLocale.PortugueseBrazil]: PricingCurrency.Brl,
+      [WebLocale.Spanish]: PricingCurrency.Usd,
+      [WebLocale.German]: PricingCurrency.Usd,
+      [WebLocale.French]: PricingCurrency.Usd,
+      [WebLocale.Japanese]: PricingCurrency.Usd,
+      [WebLocale.Korean]: PricingCurrency.Usd,
+      [WebLocale.ChineseSimplified]: PricingCurrency.Usd,
     });
   });
 });
