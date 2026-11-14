@@ -43,6 +43,7 @@ export enum LogEvent {
   BackofficeAgentKeyRejected = 'backoffice.agent_key_rejected',
   BackofficeAgentToolCall = 'backoffice.agent_tool_call',
   SiteTurnstileFailed = 'site.turnstile_failed',
+  SiteRepositoryStarsFailed = 'site.repository_stars_failed',
   SiteError = 'site.error',
   ClientAppError = 'client_app.error',
   PackageUnavailable = 'package_unavailable',

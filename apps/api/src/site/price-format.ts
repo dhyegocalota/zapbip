@@ -29,7 +29,9 @@ export function formatCount(input: { count: number; locale: OwnerLocale }): stri
 }
 
 export function formatCompactCount(input: { count: number; locale: OwnerLocale }): string {
-  throw new Error(`formatCompactCount is not implemented for ${input.locale}`);
+  return new Intl.NumberFormat(formattingLocaleOf({ locale: input.locale }), { notation: 'compact', maximumFractionDigits: 1 }).format(
+    input.count,
+  );
 }
 
 export type PricingValues = { free: string; included: string; block: string; price: string; overage: string };
