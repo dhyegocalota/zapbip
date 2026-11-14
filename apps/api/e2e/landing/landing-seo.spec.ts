@@ -44,9 +44,8 @@ test.describe('pt-BR browser', () => {
 
 test('every language serves its own social image', async ({ page, request }) => {
   await page.goto('/');
-  const paths = (await page
-    .locator('link[rel="alternate"][hreflang]')
-    .evaluateAll('links => links.map((link) => new URL(link.href).pathname)')) as string[];
+  const links = await page.locator('link[rel="alternate"][hreflang]').all();
+  const paths = await Promise.all(links.map(async (link) => new URL((await link.getAttribute('href'))!).pathname));
   await paths.reduce(async (previous, path) => {
     await previous;
     const html = await (await request.get(path)).text();

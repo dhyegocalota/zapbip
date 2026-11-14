@@ -29,7 +29,7 @@ const SCROLL_TO_END_SCRIPT = 'window.scrollTo(0, document.body.scrollHeight)';
 const TURNSTILE_ADDRESS = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
 const POSTER_IS_LARGEST_SCRIPT = "window.largest !== null && window.largest.className.includes('demo-poster')";
 
-test.use({ ...devices['Pixel 5'], locale: 'en-US' });
+test.use({ ...devices['Pixel 5'], locale: 'en-US', bypassCSP: true });
 
 test('LCP under 2.0 s on mobile, the poster is the LCP element and the video waits', async ({ page, request }) => {
   const session = await page.context().newCDPSession(page);
