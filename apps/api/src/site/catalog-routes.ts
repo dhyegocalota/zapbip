@@ -49,7 +49,6 @@ function pricingOf(input: { locale: OwnerLocale; origin: string }): object {
     },
     billing: translate(SiteCopyKey.PricingBilling),
     messageDefinition: translate(SiteCopyKey.PricingMessageDefinition),
-    requestAccess: `${origin}${SitePath.RequestAccess}`,
     contact: COMPANY.contactEmail,
   };
 }
@@ -95,7 +94,6 @@ export function quickStartHandler(context: Context<SiteEnv>): Response {
       setupUrl: setupUrlOf({ locale, origin }),
       isExample: true,
       caption: translate(SiteCopyKey.StartExampleCaption),
-      requestAccess: `${origin}${SitePath.RequestAccess}`,
     },
   });
 }

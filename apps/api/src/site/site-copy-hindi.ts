@@ -244,7 +244,7 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FinalButtonInvite]: 'दोस्त को बुलाएँ',
   [SiteCopyKey.AgentsTitle]: 'AI एजेंटों के लिए',
   [SiteCopyKey.AgentsBody]:
-    'कोई एजेंट कैप्चा के बिना उस व्यक्ति के लिए एक्सेस माँग सकता है जिसके लिए वह काम करता है: {endpoint} पर JSON body {"email", "language"} के साथ एक POST भेजें। यही टूल्स हर पेज पर WebMCP के ज़रिए भी रजिस्टर हैं।',
+    'कोई एजेंट उस व्यक्ति को वेटलिस्ट में जुड़ने में मदद कर सकता है जिसके लिए वह काम करता है, लेकिन बटन वही व्यक्ति दबाता है: फ़ॉर्म में कैप्चा है जिसे सिर्फ़ इंसान हल कर सकता है। {joinLink} खोलें और name@example.com की जगह उस व्यक्ति का ईमेल रखें, ताकि फ़ॉर्म पहले से भरा हुआ खुले, फिर उनसे फ़ॉर्म का बटन दबाने को कहें। यही मदद हर पेज पर WebMCP टूल के रूप में भी है।',
   [SiteCopyKey.FooterProduct]: 'प्रोडक्ट',
   [SiteCopyKey.FooterCompany]: 'कंपनी',
   [SiteCopyKey.FooterPricing]: 'कीमत',

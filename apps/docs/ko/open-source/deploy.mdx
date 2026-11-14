@@ -1,9 +1,9 @@
 ---
 title: 'Cloudflare에 배포하기'
-description: '내 Meta 앱으로 zapbip을 Cloudflare 프로덕션에서 실행하는 방법과 다른 호스트에 대한 안내입니다.'
+description: '내 Meta 앱으로 zapbip을 Cloudflare 프로덕션에서 실행하는 방법과 다른 호스트에 대한 안내예요.'
 ---
 
-프로덕션 zapbip은 Durable Objects, D1, R2를 쓰는 Cloudflare Worker이며 Meta의 WhatsApp Cloud API와 통신합니다.
+프로덕션 zapbip은 Durable Objects, D1, R2를 쓰는 Cloudflare Worker이며 Meta의 WhatsApp Cloud API와 통신해요.
 
 ## 필요한 것
 
@@ -13,7 +13,7 @@ description: '내 Meta 앱으로 zapbip을 Cloudflare 프로덕션에서 실행�
 
 ## 단계
 
-저장소의 runbook은 계정이 하나도 없는 상태에서 서비스 시작까지의 정확한 경로입니다. 각 단계에는 기대 결과와 "실패하면" 줄이 있습니다. 영어로 작성되어 있습니다.
+저장소의 runbook은 계정이 하나도 없는 상태에서 서비스 시작까지의 정확한 경로예요. 각 단계에는 기대 결과와 "실패하면" 줄이 있어요. 영어로 작성되어 있어요.
 
 | Runbook                                                                                                | 다루는 내용                                     |
 | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
@@ -24,10 +24,10 @@ description: '내 Meta 앱으로 zapbip을 Cloudflare 프로덕션에서 실행�
 | [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend와 환영 이메일                            |
 | [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | 시크릿, 마이그레이션, 배포, 스모크 테스트, 롤백 |
 
-호스팅 서비스의 식별자를 내 것으로 바꾸세요. `apps/api/wrangler.jsonc`의 라우트와 리소스 ID, `libs/types`의 존과 Meta 상수, 법적 고지 페이지의 회사 정보입니다.
+호스팅 서비스의 식별자를 내 것으로 바꾸세요. `apps/api/wrangler.jsonc`의 라우트와 리소스 ID, `libs/types`의 존과 Meta 상수, 법적 고지 페이지의 회사 정보예요.
 
 ## 다른 호스트
 
-Railway, Heroku, Fly.io, Render, 일반 서버에서는 프로덕션 zapbip을 실행할 수 없습니다. Cloudflare에만 있는 Durable Objects, D1, R2가 필요하며, 저장소에는 다른 런타임용 포팅이 없습니다.
+Railway, Heroku, Fly.io, Render, 일반 서버에서는 프로덕션 zapbip을 실행할 수 없어요. Cloudflare에만 있는 Durable Objects, D1, R2가 필요하고, 저장소에는 다른 런타임용 포팅이 없어요.
 
-Docker 이미지는 개발용 샌드박스만 실행합니다. 어떤 컨테이너 호스트에서든 zapbip을 써 보는 용도로만 쓰고, 프로덕션으로는 쓰지 마세요. 실제 WhatsApp 번호에 연결되어 있지 않습니다.
+Docker 이미지는 개발용 샌드박스만 실행해요. 어떤 컨테이너 호스트에서든 zapbip을 써 보는 용도로만 쓰고, 프로덕션으로는 쓰지 마세요. 실제 WhatsApp 번호에 연결되어 있지 않아요.

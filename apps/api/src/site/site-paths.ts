@@ -20,7 +20,6 @@ export enum SitePath {
   McpServerCard = '/.well-known/mcp/server-card.json',
   AgentCard = '/.well-known/agent-card.json',
   SecurityText = '/.well-known/security.txt',
-  RequestAccess = '/api/request-access',
   Pricing = '/api/pricing',
   QuickStart = '/api/quick-start',
   Stylesheet = '/site/site.css',

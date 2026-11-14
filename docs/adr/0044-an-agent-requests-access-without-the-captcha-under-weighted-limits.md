@@ -1,6 +1,6 @@
 # 0044. An agent requests access without the captcha, under weighted limits
 
-- Status: Accepted
+- Status: Superseded by [0062](0062-an-agent-opens-the-form-already-filled-in-and-the-person-presses-the-button.md)
 - Date: 2026-11-13
 - Deciders: Dhyego Calota (owner, delegated 2026-11-13); Claude (advisor)
 - Inspired by: the owner's order of 2026-11-13 ("ABSOLUTELY THE WHOLE EXPERIENCE MUST BE AGENTIC"); [ADR 0039](0039-the-public-waitlist-is-guarded-by-turnstile-and-fails-closed.md) (Turnstile fails closed); [ADR 0040](0040-the-waitlist-and-the-referral-cap-live-in-d1-and-the-cap-is-a-settings-row.md) (the waitlist in D1); [ADR 0041](0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) (host dispatch); the WebMCP explainer at `webmachinelearning/webmcp` (checked 2026-11-13, last commit 2026-11-13); llmstxt.org; the A2A agent card (`/.well-known/agent-card.json`); RFC 9116 (`security.txt`)

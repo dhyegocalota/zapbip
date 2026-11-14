@@ -5,7 +5,6 @@ import { jsonResponse } from './agentic-answer';
 import { pricingHandler, quickStartHandler } from './catalog-routes';
 import { llmsFullTextOf, llmsTextOf } from './llms-files';
 import { markdownResponse, markdownTwinRoutes } from './page-twins';
-import { requestAccessHandler } from './request-access-route';
 import { setupMarkdownOf } from './setup-markdown';
 import { MARKDOWN_CONTENT_TYPE, PAGE_CACHE_CONTROL, PAGE_VARY, TEXT_CONTENT_TYPE } from './site-constants';
 import type { SiteEnv } from './site-env';
@@ -69,4 +68,3 @@ agenticRoutes.get(SitePath.SecurityText, (context) =>
 );
 agenticRoutes.get(SitePath.Pricing, pricingHandler);
 agenticRoutes.get(SitePath.QuickStart, quickStartHandler);
-agenticRoutes.post(SitePath.RequestAccess, requestAccessHandler);

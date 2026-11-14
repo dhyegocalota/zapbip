@@ -1,6 +1,13 @@
 import { DOCS_LANGUAGE_OF_OWNER_LOCALE, type OwnerLocale, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import type { InstallClient } from '@zapbip/agents/install';
-import { JOIN_FRAGMENT, START_FRAGMENT, SITE_AGENT_PARAMETER, SITE_REFERRAL_PARAMETER } from './site-constants';
+import {
+  JOIN_FRAGMENT,
+  START_FRAGMENT,
+  SITE_AGENT_PARAMETER,
+  SITE_EMAIL_PARAMETER,
+  SITE_EXAMPLE_EMAIL,
+  SITE_REFERRAL_PARAMETER,
+} from './site-constants';
 import type { SiteStartTab } from './site-agents';
 import { legalPathOf, legalUrlOf } from './legal-links';
 import type { PageModel } from './page-model';
@@ -25,6 +32,10 @@ export function canonicalUrlOf(input: { origin: string; locale: OwnerLocale }): 
 
 export function agentPathOf(input: { agent: InstallClient; locale: OwnerLocale; referralCode: string | null }): string {
   return `${pagePathOf({ locale: input.locale, agent: input.agent, referralCode: input.referralCode })}${JOIN_FRAGMENT}`;
+}
+
+export function joinLinkOf(input: { locale: OwnerLocale; origin: string }): string {
+  return `${input.origin}${localePathOf({ locale: input.locale })}?${SITE_EMAIL_PARAMETER}=${SITE_EXAMPLE_EMAIL}${JOIN_FRAGMENT}`;
 }
 
 export function joinPathOf(input: { locale: OwnerLocale; referralCode: string | null }): string {

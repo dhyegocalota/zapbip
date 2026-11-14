@@ -64,7 +64,7 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0041](0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) | The public site is served by the API Worker, selected by host, next to the backoffice | Accepted | 2026-11-12 |
 | [0042](0042-the-customer-web-app-signs-in-with-a-one-time-link-sent-over-whatsapp.md) | The customer web app signs in with a one-time link sent over WhatsApp | Accepted | 2026-11-13 |
 | [0043](0043-access-opens-in-batches-from-the-backoffice.md) | Access opens in batches from the backoffice | Accepted | 2026-11-13 |
-| [0044](0044-an-agent-requests-access-without-the-captcha-under-weighted-limits.md) | An agent requests access without the captcha, under weighted limits | Accepted | 2026-11-13 |
+| [0044](0044-an-agent-requests-access-without-the-captcha-under-weighted-limits.md) | An agent requests access without the captcha, under weighted limits | Superseded by [0062](0062-an-agent-opens-the-form-already-filled-in-and-the-person-presses-the-button.md) | 2026-11-13 |
 | [0045](0045-an-agent-manages-the-account-through-mcp-with-the-owner-approving-on-whatsapp.md) | An agent manages the account through MCP, with the owner approving on WhatsApp | Accepted | 2026-11-13 |
 | [0046](0046-an-operator-agent-runs-the-backoffice-through-mcp-with-a-scoped-key.md) | An operator agent runs the backoffice through MCP with a scoped key | Accepted | 2026-11-13 |
 | [0047](0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md) | The web surfaces speak eight languages through a web locale, while the WhatsApp copy stays in two | Superseded by [0051](0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md) | 2026-11-13 |
@@ -82,3 +82,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0059](0059-pull-request-media-is-attached-with-the-github-cli.md) | Pull request media is attached with the GitHub CLI | Accepted | 2026-11-14 |
 | [0060](0060-the-site-shows-the-github-star-count-the-worker-reads-and-caches-and-says-it-is-open-source.md) | The site shows the GitHub star count the Worker reads and caches, and says it is open source | Accepted | 2026-11-14 |
 | [0061](0061-the-public-docs-carry-an-open-source-section-and-link-the-runbooks.md) | The public docs carry an open source section and link the runbooks | Accepted | 2026-11-14 |
+| [0062](0062-an-agent-opens-the-form-already-filled-in-and-the-person-presses-the-button.md) | An agent opens the form already filled in and the person presses the button | Accepted | 2026-11-14 |

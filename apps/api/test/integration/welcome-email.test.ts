@@ -145,22 +145,3 @@ describe('the welcome after a site join', () => {
     expect(emailSender.sentMessages()).toHaveLength(1);
   });
 });
-
-describe('the welcome after an agent requests access', () => {
-  it('sends one welcome in the language the agent asked for', async () => {
-    const emailSender = createFakeEmailSender();
-    const executionContext = createExecutionContext();
-    await siteFetch({
-      path: '/api/request-access',
-      method: 'POST',
-      body: JSON.stringify({ email: MARIA, language: 'pt-BR' }),
-      headers: JSON_HEADERS,
-      emailSender,
-      executionContext,
-    });
-    await waitOnExecutionContext(executionContext);
-    expect(emailSender.sentMessages().map((message) => [message.to, message.subject])).toEqual([
-      [MARIA, subjectOf({ locale: OwnerLocale.PortugueseBrazil })],
-    ]);
-  });
-});

@@ -1,11 +1,10 @@
 import { InstallClient } from '@zapbip/agents/install';
 import type { Page } from '@playwright/test';
-import { WaitlistSource } from '@zapbip/types';
 import { expect, test } from './fixtures';
-import { rowOf } from './support/landing-database';
+import { waitlistRows } from './support/landing-database';
 
 const AGENT_EMAIL = 'agent@example.com';
-const TOOL_NAMES = ['request_access', 'get_pricing', 'get_quick_start', 'switch_language'];
+const TOOL_NAMES = ['fill_join_form', 'get_pricing', 'get_quick_start', 'switch_language'];
 const FIRST_AGENT = Object.values(InstallClient)[0]!;
 const REGISTERED_NAMES_SCRIPT = 'window.registeredTools.map((tool) => tool.name)';
 const REGISTERED_COUNT_SCRIPT = 'window.registeredTools.length';
@@ -58,23 +57,21 @@ test('every tool has a description and an object schema', async ({ page }) => {
   });
 });
 
-test('request_access adds the email to the waitlist with source agent', async ({ page }) => {
+test('fill_join_form fills the email into the form and leaves the waitlist untouched', async ({ page }) => {
   await stubModelContext({ page, holder: 'document' });
   await page.goto('/');
   await expect.poll(() => page.evaluate(REGISTERED_COUNT_SCRIPT)).toBe(TOOL_NAMES.length);
-  const { result, data } = await callTool({ page, name: 'request_access', parameters: { email: AGENT_EMAIL, language: 'en' } });
+  const { result, data } = await callTool({ page, name: 'fill_join_form', parameters: { email: AGENT_EMAIL } });
   expect(result.isError).toBeUndefined();
-  expect(data.status).toBe('requested');
-  expect(rowOf({ email: AGENT_EMAIL })).toMatchObject({ source: WaitlistSource.Agent, referred_by: null, credited: 0 });
+  expect(data.status).toBe('filled');
+  await expect(page.locator('#join-email')).toHaveValue(AGENT_EMAIL);
+  await expect(page.locator('.join-form button')).toBeFocused();
+  expect(waitlistRows().map((row) => row.email)).not.toContain(AGENT_EMAIL);
 });
 
-test('request_access reports a bad email as a tool error', async ({ page }) => {
-  await stubModelContext({ page, holder: 'document' });
-  await page.goto('/');
-  await expect.poll(() => page.evaluate(REGISTERED_COUNT_SCRIPT)).toBe(TOOL_NAMES.length);
-  const { result, data } = await callTool({ page, name: 'request_access', parameters: { email: 'nope' } });
-  expect(result.isError).toBe(true);
-  expect(data.status).toBe('invalid_email');
+test('the page opens with the form already filled in by the email of the link', async ({ page }) => {
+  await page.goto(`/?email=${AGENT_EMAIL}`);
+  await expect(page.locator('#join-email')).toHaveValue(AGENT_EMAIL);
 });
 
 test('get_pricing and get_quick_start return the data of the endpoints', async ({ page }) => {

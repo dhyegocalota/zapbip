@@ -24,11 +24,6 @@ const FULL_SEPARATOR = '\n';
 type LinkEntry = { title: string; url: string; description: string };
 
 const INTERFACES: { path: SitePath; title: string; description: string }[] = [
-  {
-    path: SitePath.RequestAccess,
-    title: 'Request access',
-    description: 'POST a JSON body {"email", "language"} to add a person to the early access list; no captcha',
-  },
   { path: SitePath.Pricing, title: 'Pricing', description: 'GET the plans as JSON; add ?language= for another language' },
   { path: SitePath.QuickStart, title: 'Quick start', description: 'GET the connection steps of one agent as JSON; add ?agent=' },
   { path: SitePath.McpServerCard, title: 'MCP server card', description: 'Where the zapbip MCP server lives and how it authenticates' },

@@ -30,11 +30,12 @@ type AgentSkill = { id: string; name: string; description: string; tags: string[
 
 const AGENT_SKILLS: AgentSkill[] = [
   {
-    id: 'request_access',
-    name: 'Request access',
-    description: `Add a person to the zapbip early access list without a captcha: POST ${SitePath.RequestAccess} with a JSON body {"email", "language"}.`,
+    id: 'help_join',
+    name: 'Help a person join',
+    description:
+      'Open the home page with ?email=<address> so the early access form is already filled in, then ask the person to press its button: the form has a captcha only a human can pass.',
     tags: ['waitlist', 'access'],
-    examples: ['Request zapbip access for maria@example.com'],
+    examples: ['Help maria@example.com join the zapbip early access list'],
   },
   {
     id: 'get_pricing',

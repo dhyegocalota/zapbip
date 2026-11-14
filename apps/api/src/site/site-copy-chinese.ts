@@ -259,5 +259,5 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: '找不到页面',
   [SiteCopyKey.AgentsTitle]: '面向 AI 智能体',
   [SiteCopyKey.AgentsBody]:
-    '智能体可以不经验证码，替它所服务的人申请使用：向 {endpoint} 发送一个 POST，请求体为 JSON {"email", "language"}。同样的工具也通过 WebMCP 注册在每个页面上。',
+    '智能体可以帮它所服务的人加入等候名单，但按下按钮的必须是本人：表单有只有人类才能通过的验证码。打开 {joinLink}，把 name@example.com 换成本人的邮箱，表单就会预先填好，然后请本人点击表单上的按钮。同样的帮助也以 WebMCP 工具的形式出现在每个页面上。',
 };

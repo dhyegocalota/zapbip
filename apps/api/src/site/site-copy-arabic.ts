@@ -264,5 +264,5 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'الصفحة غير موجودة',
   [SiteCopyKey.AgentsTitle]: 'لوكلاء الذكاء الاصطناعي',
   [SiteCopyKey.AgentsBody]:
-    'يستطيع الوكيل طلب الوصول لمن يخدمه دون التحقق بالكابتشا: أرسل طلب POST بجسم JSON {"email", "language"} إلى {endpoint}. وتُسجَّل الأدوات نفسها عبر WebMCP في كل صفحة.',
+    'يستطيع الوكيل مساعدة من يخدمه على الانضمام إلى قائمة الانتظار، لكن الشخص نفسه هو من يضغط الزر: فالنموذج فيه كابتشا لا يحلها إلا إنسان. افتح {joinLink} مع استبدال name@example.com ببريد الشخص ليُفتح النموذج مملوءًا مسبقًا، ثم اطلب منه الضغط على زر النموذج. وهذه المساعدة نفسها أداة في WebMCP على كل صفحة.',
 };

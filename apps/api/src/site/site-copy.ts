@@ -253,7 +253,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FinalButtonInvite]: 'Invite a friend',
     [SiteCopyKey.AgentsTitle]: 'For AI agents',
     [SiteCopyKey.AgentsBody]:
-      'An agent can request access for its person without the captcha: send a POST with a JSON body {"email", "language"} to {endpoint}. The same tools are registered through WebMCP on every page.',
+      'An agent can help its person join the waitlist, but the person must press the button: the form has a captcha only a human can pass. Open {joinLink}, replacing name@example.com with the address of the person, so the form opens already filled in, then ask the person to press the button of the form. The same help is a tool in WebMCP on every page.',
     [SiteCopyKey.FooterProduct]: 'Product',
     [SiteCopyKey.FooterCompany]: 'Company',
     [SiteCopyKey.FooterPricing]: 'Pricing',
@@ -525,7 +525,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FinalButtonInvite]: 'Convidar um amigo',
     [SiteCopyKey.AgentsTitle]: 'Para agentes de IA',
     [SiteCopyKey.AgentsBody]:
-      'Um agente pode pedir acesso para a pessoa para quem trabalha sem o captcha: envie um POST com um corpo JSON {"email", "language"} para {endpoint}. As mesmas ferramentas são registradas por WebMCP em todas as páginas.',
+      'Um agente pode ajudar a pessoa para quem trabalha a entrar na lista, mas é a pessoa que aperta o botão: o formulário tem um captcha que só um humano resolve. Abra {joinLink}, trocando name@example.com pelo e-mail da pessoa, para o formulário abrir já preenchido, e peça que ela aperte o botão do formulário. A mesma ajuda é uma ferramenta do WebMCP em todas as páginas.',
     [SiteCopyKey.FooterProduct]: 'Produto',
     [SiteCopyKey.FooterCompany]: 'Empresa',
     [SiteCopyKey.FooterPricing]: 'Preços',
