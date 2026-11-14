@@ -4,7 +4,7 @@ const ALEF_MAKSURA_PATTERN = /ى/g;
 const YEH = 'ي';
 const TEH_MARBUTA_PATTERN = /ة/g;
 const HEH = 'ه';
-const DIACRITICS_AND_TATWEEL_PATTERN = /[ً-ٰٟـ]/g;
+const DIACRITICS_AND_TATWEEL_PATTERN = /[\u064B-\u065F\u0670\u0640]/g;
 const ARABIC_QUESTION_MARK_PATTERN = /؟/g;
 const QUESTION_MARK = '?';
 

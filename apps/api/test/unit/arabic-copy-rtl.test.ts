@@ -56,6 +56,12 @@ describe('the Arabic copy that carries left-to-right text', () => {
     expect(text).not.toContain(LEFT_TO_RIGHT_ISOLATE);
   });
 
+  it('isolates the pull request and the branch name inside the merge question', () => {
+    const text = renderSiteCopy({ key: SiteCopyKey.CapabilityButtonsChatQuestion, locale: OwnerLocale.Arabic });
+    expect(text).toContain(`${LEFT_TO_RIGHT_ISOLATE}PR #42${POP_DIRECTIONAL_ISOLATE}`);
+    expect(text).toContain(`${LEFT_TO_RIGHT_ISOLATE}main${POP_DIRECTIONAL_ISOLATE}`);
+  });
+
   it('names the demo file with a single left-to-right token', () => {
     expect(renderSiteCopy({ key: SiteCopyKey.CapabilityMediaChatFile, locale: OwnerLocale.Arabic })).toMatch(ASCII_ONLY_PATTERN);
   });

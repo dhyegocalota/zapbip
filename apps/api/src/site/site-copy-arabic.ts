@@ -98,7 +98,7 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.CapabilitiesLead]: 'يحظى وكيلك بمحادثة حقيقية معك، لا بتنبيه في اتجاه واحد.',
   [SiteCopyKey.CapabilityButtonsTitle]: 'اسأل بالأزرار',
   [SiteCopyKey.CapabilityButtonsBody]: 'نعم أو لا، انشر أو انتظر. زر واحد ويحصل الوكيل على جوابه.',
-  [SiteCopyKey.CapabilityButtonsChatQuestion]: 'هل أدمج PR #42 في main؟',
+  [SiteCopyKey.CapabilityButtonsChatQuestion]: 'هل أدمج \u2066PR #42\u2069 في \u2066main\u2069؟',
   [SiteCopyKey.CapabilityButtonsChatYes]: 'ادمج',
   [SiteCopyKey.CapabilityButtonsChatNo]: 'ليس بعد',
   [SiteCopyKey.CapabilityListTitle]: 'اختر من قائمة',

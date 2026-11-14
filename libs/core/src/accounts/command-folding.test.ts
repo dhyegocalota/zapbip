@@ -22,7 +22,7 @@ describe('foldCommandText', () => {
     expect(foldCommandText({ text })).toBe(folded);
   });
 
-  it.each(['revoke Claude', 'revogar Foo', 'agents?', 'ログイン', '登录', '새 에이전트 Foo', 'Ünïcode', ''])(
+  it.each(['revoke Claude', 'revogar Foo', 'agents?', 'ログイン', '登录', '새 에이전트 Foo', 'Ünïcode', '', '٠١٢٣٤٥٦٧٨٩', '٪ ٫ ٬ ٭'])(
     'leaves %j as it is',
     (text) => {
       expect(foldCommandText({ text })).toBe(text);
@@ -31,6 +31,10 @@ describe('foldCommandText', () => {
 });
 
 describe('the Arabic commands', () => {
+  it('reads a delete phrase followed by an Arabic-Indic digit as an ordinary message', () => {
+    expect(say('حذف الحساب٢')).toBeNull();
+  });
+
   it.each([
     ['إبطال claude', CommandKind.RevokeAgent, 'claude'],
     ['ابطال claude', CommandKind.RevokeAgent, 'claude'],
