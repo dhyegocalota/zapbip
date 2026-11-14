@@ -17,6 +17,7 @@ const WHATSAPP_COMMANDS_TITLE: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: 'WhatsApp のコマンド',
   [DocsPageLanguage.Korean]: 'WhatsApp 명령어',
   [DocsPageLanguage.Chinese]: 'WhatsApp 命令',
+  [DocsPageLanguage.Arabic]: 'أوامر WhatsApp',
 };
 const REACT_PROPS_KEY_PREFIX = '__reactProps$';
 const LANGUAGE_NAMES: Record<DocsPageLanguage, string> = {
@@ -28,6 +29,7 @@ const LANGUAGE_NAMES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '日本語',
   [DocsPageLanguage.Korean]: '한국어',
   [DocsPageLanguage.Chinese]: '简体中文',
+  [DocsPageLanguage.Arabic]: 'العربية',
 };
 const OVERVIEW_FIRST_HEADING: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'Why zapbip exists',
@@ -38,6 +40,7 @@ const OVERVIEW_FIRST_HEADING: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: 'zapbip が生まれた理由',
   [DocsPageLanguage.Korean]: 'zapbip가 존재하는 이유',
   [DocsPageLanguage.Chinese]: '为什么有 zapbip',
+  [DocsPageLanguage.Arabic]: 'لماذا zapbip',
 };
 const ZERO_WIDTH_SPACE = /​/g;
 

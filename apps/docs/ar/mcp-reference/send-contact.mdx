@@ -1,0 +1,23 @@
+---
+title: 'send_contact'
+description: 'أرسل بطاقة جهة اتصال إلى المالك.'
+---
+
+أرسل بطاقة جهة اتصال إلى المالك.
+
+## المدخلات
+
+| الحقل      | النوع               | الوصف                                                               |
+| ---------- | ------------------- | ------------------------------------------------------------------- |
+| `contacts` | مصفوفة حتى 10 عناصر | يحمل كل عنصر `name` و`phones`، واختياريًا `emails` و`organization`. |
+| `reply_to` | string، اختياري     | معرّف الرسالة المراد اقتباسها.                                      |
+
+## المخرجات
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. ويعني `queued` أن [نافذة الـ24 ساعة](/ar/concepts/24-hour-window) مغلقة.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

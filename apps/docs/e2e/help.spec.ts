@@ -16,6 +16,7 @@ const DAYS_WORD: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '日',
   [DocsPageLanguage.Korean]: '일',
   [DocsPageLanguage.Chinese]: '天',
+  [DocsPageLanguage.Arabic]: 'أيام|يومًا',
 };
 const WAITLIST_QUESTION: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'What if my account is on the waitlist?',
@@ -26,6 +27,7 @@ const WAITLIST_QUESTION: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: 'アカウントがウェイトリストにある場合は？',
   [DocsPageLanguage.Korean]: '계정이 대기자 명단에 있으면 어떻게 되나요?',
   [DocsPageLanguage.Chinese]: '如果我的账号在候补名单上会怎样？',
+  [DocsPageLanguage.Arabic]: 'ماذا لو كان حسابي في قائمة الانتظار؟',
 };
 const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['zapbip team', 'help'],
@@ -36,6 +38,7 @@ const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Japanese]: ['zapbip チーム', 'help'],
   [DocsPageLanguage.Korean]: ['zapbip 팀', 'help'],
   [DocsPageLanguage.Chinese]: ['zapbip 团队', 'help'],
+  [DocsPageLanguage.Arabic]: ['فريق zapbip', 'help'],
 };
 const REVOKE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['revoke', 'rotate', 'once'],
@@ -46,6 +49,7 @@ const REVOKE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Japanese]: ['revoke', 'rotate', '1 回'],
   [DocsPageLanguage.Korean]: ['revoke', 'rotate', '한 번'],
   [DocsPageLanguage.Chinese]: ['revoke', 'rotate', '一次'],
+  [DocsPageLanguage.Arabic]: ['revoke', 'rotate', 'مرة واحدة'],
 };
 const DELETE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'waitlist'],
@@ -56,6 +60,7 @@ const DELETE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Japanese]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'ウェイトリスト'],
   [DocsPageLanguage.Korean]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', '대기자 명단'],
   [DocsPageLanguage.Chinese]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', '候补名单'],
+  [DocsPageLanguage.Arabic]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'قائمة الانتظار'],
 };
 const PRIVACY_KINDS = Object.values(DocsRetentionKind);
 const PRIVACY_TOKENS = ['Meta', 'Cloudflare'];
@@ -84,7 +89,7 @@ for (const language of Object.values(DocsPageLanguage)) {
       await page.goto(urlOf({ path: 'privacy-and-security', language }));
       const content = page.locator('#content-area');
       for (const kind of PRIVACY_KINDS) {
-        await expect(content).toContainText(new RegExp(`${RETENTION_DAYS[kind]}\\s*${DAYS_WORD[language]}`));
+        await expect(content).toContainText(new RegExp(`${RETENTION_DAYS[kind]}\\s*(?:${DAYS_WORD[language]})`));
       }
       for (const token of PRIVACY_TOKENS) await expect(content).toContainText(token);
     });

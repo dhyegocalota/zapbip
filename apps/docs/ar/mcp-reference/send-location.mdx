@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'أرسل نقطة موقع إلى المالك.'
+---
+
+أرسل نقطة موقع إلى المالك.
+
+## المدخلات
+
+| الحقل       | النوع           | الوصف                          |
+| ----------- | --------------- | ------------------------------ |
+| `latitude`  | number          |                                |
+| `longitude` | number          |                                |
+| `name`      | string، اختياري |                                |
+| `address`   | string، اختياري |                                |
+| `reply_to`  | string، اختياري | معرّف الرسالة المراد اقتباسها. |
+
+## المخرجات
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. ويعني `queued` أن [نافذة الـ24 ساعة](/ar/concepts/24-hour-window) مغلقة.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

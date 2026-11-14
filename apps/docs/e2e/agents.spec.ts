@@ -32,6 +32,7 @@ const SECONDS_WORD: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '秒',
   [DocsPageLanguage.Korean]: '초',
   [DocsPageLanguage.Chinese]: '秒',
+  [DocsPageLanguage.Arabic]: 'ثوانٍ',
 };
 const HOURLY_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'hour',
@@ -42,6 +43,7 @@ const HOURLY_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '時間',
   [DocsPageLanguage.Korean]: '시간',
   [DocsPageLanguage.Chinese]: '小时',
+  [DocsPageLanguage.Arabic]: 'ساعة',
 };
 
 const agentIds: AgentId[] = Object.values(AgentId);

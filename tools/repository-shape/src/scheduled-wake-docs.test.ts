@@ -16,6 +16,7 @@ const ONE_HOP_PHRASES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '待機の接続が別の待機の接続へ転送することはありません',
   [DocsPageLanguage.Korean]: '대기 연결은 다른 대기 연결로 전달하지 않습니다',
   [DocsPageLanguage.Chinese]: '待命连接绝不会转发给另一个待命连接',
+  [DocsPageLanguage.Arabic]: 'لا يُحوَّل اتصال احتياطي أبدًا إلى اتصال احتياطي آخر',
 };
 const ONE_HOP_WORDS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'one hop',
@@ -26,6 +27,7 @@ const ONE_HOP_WORDS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '1 ホップ',
   [DocsPageLanguage.Korean]: '1홉',
   [DocsPageLanguage.Chinese]: '一跳',
+  [DocsPageLanguage.Arabic]: 'قفزة واحدة',
 };
 const TOOL_FIELD_PATTERN = /mode:\s*local|"mode"|interval_minutes|standby_agent/;
 

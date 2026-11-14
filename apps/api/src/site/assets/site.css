@@ -935,11 +935,11 @@ details[open] > summary::before {
   transform: rotate(90deg);
 }
 
-:root[dir='rtl'] summary::before {
+html[dir='rtl'] summary::before {
   content: '\2039';
 }
 
-:root[dir='rtl'] details[open] > summary::before {
+html[dir='rtl'] details[open] > summary::before {
   transform: rotate(-90deg);
 }
 
@@ -1255,11 +1255,11 @@ a:hover {
   transform: translateX(0.25rem);
 }
 
-:root[dir='rtl'] .button-arrow::after {
+html[dir='rtl'] .button-arrow::after {
   content: '\2190';
 }
 
-:root[dir='rtl'] .button-arrow:hover::after {
+html[dir='rtl'] .button-arrow:hover::after {
   transform: translateX(-0.25rem);
 }
 
