@@ -3,7 +3,11 @@
   "theme": "mint",
   "name": "zapbip",
   "favicon": "/favicon.svg",
-  "logo": { "light": "/logo/light.svg", "dark": "/logo/dark.svg", "href": "/" },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "/"
+  },
   "errors": {
     "404": {
       "redirect": false,
@@ -17,15 +21,25 @@
     "dark": "#08564D"
   },
   "background": {
-    "color": { "light": "#F6F8F5", "dark": "#07120F" },
+    "color": {
+      "light": "#F6F8F5",
+      "dark": "#07120F"
+    },
     "decoration": "gradient"
   },
-  "appearance": { "default": "system" },
+  "appearance": {
+    "default": "system"
+  },
   "footer": {
     "links": [
       {
         "header": "Logic Bit",
-        "items": [{ "label": "zapbip · Logic Bit", "href": "/help/about" }]
+        "items": [
+          {
+            "label": "zapbip · Logic Bit",
+            "href": "/open-source/license"
+          }
+        ]
       }
     ]
   },
@@ -37,6 +51,31 @@
           {
             "group": "Get started",
             "pages": ["index", "get-started/how-to-start"]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "concepts/inbox",
+              "concepts/questions",
+              "concepts/24-hour-window",
+              "concepts/routing",
+              "concepts/wake-ladder",
+              "concepts/whatsapp-channel",
+              "concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "features/send-messages-and-media",
+              "features/ask-with-buttons-and-lists",
+              "features/owner-starts-conversations",
+              "features/manage-your-agents",
+              "features/let-your-ai-manage-zapbip",
+              "features/many-agents-on-one-number",
+              "features/whatsapp-commands",
+              "features/web-app"
+            ]
           },
           {
             "group": "Agents",
@@ -56,50 +95,13 @@
             ]
           },
           {
-            "group": "Features",
-            "pages": [
-              "features/send-messages-and-media",
-              "features/ask-with-buttons-and-lists",
-              "features/owner-starts-conversations",
-              "features/manage-your-agents",
-              "features/let-your-ai-manage-zapbip",
-              "features/many-agents-on-one-number",
-              "features/whatsapp-commands",
-              "features/web-app",
-              "features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "Help",
-            "pages": [
-              "help/troubleshooting",
-              "help/faq",
-              "help/privacy-and-security",
-              "help/revoke-and-rotate-keys",
-              "help/delete-your-account",
-              "help/about"
-            ]
-          },
-          {
-            "group": "For developers",
+            "group": "Developers",
             "pages": [
               "developers/any-mcp-client",
               "developers/errors",
               "developers/local-connector",
               "developers/background-running",
               "developers/webhook-wake",
-              {
-                "group": "Concepts",
-                "pages": [
-                  "concepts/inbox",
-                  "concepts/questions",
-                  "concepts/24-hour-window",
-                  "concepts/routing",
-                  "concepts/wake-ladder",
-                  "concepts/whatsapp-channel",
-                  "concepts/owner-notices"
-                ]
-              },
               {
                 "group": "MCP tools",
                 "pages": [
@@ -125,7 +127,17 @@
           },
           {
             "group": "Open source",
-            "pages": ["open-source/overview", "open-source/run-locally", "open-source/deploy"]
+            "pages": ["open-source/self-hosting", "open-source/run-locally", "open-source/deploy", "open-source/license"]
+          },
+          {
+            "group": "Help",
+            "pages": [
+              "help/troubleshooting",
+              "help/faq",
+              "help/privacy-and-security",
+              "help/revoke-and-rotate-keys",
+              "help/delete-your-account"
+            ]
           }
         ]
       },
@@ -135,6 +147,31 @@
           {
             "group": "Primeiros passos",
             "pages": ["pt-br/index", "pt-br/get-started/how-to-start"]
+          },
+          {
+            "group": "Conceitos",
+            "pages": [
+              "pt-br/concepts/inbox",
+              "pt-br/concepts/questions",
+              "pt-br/concepts/24-hour-window",
+              "pt-br/concepts/routing",
+              "pt-br/concepts/wake-ladder",
+              "pt-br/concepts/whatsapp-channel",
+              "pt-br/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "Guias",
+            "pages": [
+              "pt-br/features/send-messages-and-media",
+              "pt-br/features/ask-with-buttons-and-lists",
+              "pt-br/features/owner-starts-conversations",
+              "pt-br/features/manage-your-agents",
+              "pt-br/features/let-your-ai-manage-zapbip",
+              "pt-br/features/many-agents-on-one-number",
+              "pt-br/features/whatsapp-commands",
+              "pt-br/features/web-app"
+            ]
           },
           {
             "group": "IAs",
@@ -154,50 +191,13 @@
             ]
           },
           {
-            "group": "Funcionalidades",
-            "pages": [
-              "pt-br/features/send-messages-and-media",
-              "pt-br/features/ask-with-buttons-and-lists",
-              "pt-br/features/owner-starts-conversations",
-              "pt-br/features/manage-your-agents",
-              "pt-br/features/let-your-ai-manage-zapbip",
-              "pt-br/features/many-agents-on-one-number",
-              "pt-br/features/whatsapp-commands",
-              "pt-br/features/web-app",
-              "pt-br/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "Ajuda",
-            "pages": [
-              "pt-br/help/troubleshooting",
-              "pt-br/help/faq",
-              "pt-br/help/privacy-and-security",
-              "pt-br/help/revoke-and-rotate-keys",
-              "pt-br/help/delete-your-account",
-              "pt-br/help/about"
-            ]
-          },
-          {
-            "group": "Para desenvolvedores",
+            "group": "Desenvolvedores",
             "pages": [
               "pt-br/developers/any-mcp-client",
               "pt-br/developers/errors",
               "pt-br/developers/local-connector",
               "pt-br/developers/background-running",
               "pt-br/developers/webhook-wake",
-              {
-                "group": "Conceitos",
-                "pages": [
-                  "pt-br/concepts/inbox",
-                  "pt-br/concepts/questions",
-                  "pt-br/concepts/24-hour-window",
-                  "pt-br/concepts/routing",
-                  "pt-br/concepts/wake-ladder",
-                  "pt-br/concepts/whatsapp-channel",
-                  "pt-br/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "Ferramentas MCP",
                 "pages": [
@@ -223,7 +223,22 @@
           },
           {
             "group": "Código aberto",
-            "pages": ["pt-br/open-source/overview", "pt-br/open-source/run-locally", "pt-br/open-source/deploy"]
+            "pages": [
+              "pt-br/open-source/self-hosting",
+              "pt-br/open-source/run-locally",
+              "pt-br/open-source/deploy",
+              "pt-br/open-source/license"
+            ]
+          },
+          {
+            "group": "Ajuda",
+            "pages": [
+              "pt-br/help/troubleshooting",
+              "pt-br/help/faq",
+              "pt-br/help/privacy-and-security",
+              "pt-br/help/revoke-and-rotate-keys",
+              "pt-br/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -233,6 +248,31 @@
           {
             "group": "Primeros pasos",
             "pages": ["es/index", "es/get-started/how-to-start"]
+          },
+          {
+            "group": "Conceptos",
+            "pages": [
+              "es/concepts/inbox",
+              "es/concepts/questions",
+              "es/concepts/24-hour-window",
+              "es/concepts/routing",
+              "es/concepts/wake-ladder",
+              "es/concepts/whatsapp-channel",
+              "es/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "Guías",
+            "pages": [
+              "es/features/send-messages-and-media",
+              "es/features/ask-with-buttons-and-lists",
+              "es/features/owner-starts-conversations",
+              "es/features/manage-your-agents",
+              "es/features/let-your-ai-manage-zapbip",
+              "es/features/many-agents-on-one-number",
+              "es/features/whatsapp-commands",
+              "es/features/web-app"
+            ]
           },
           {
             "group": "IAs",
@@ -252,50 +292,13 @@
             ]
           },
           {
-            "group": "Funciones",
-            "pages": [
-              "es/features/send-messages-and-media",
-              "es/features/ask-with-buttons-and-lists",
-              "es/features/owner-starts-conversations",
-              "es/features/manage-your-agents",
-              "es/features/let-your-ai-manage-zapbip",
-              "es/features/many-agents-on-one-number",
-              "es/features/whatsapp-commands",
-              "es/features/web-app",
-              "es/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "Ayuda",
-            "pages": [
-              "es/help/troubleshooting",
-              "es/help/faq",
-              "es/help/privacy-and-security",
-              "es/help/revoke-and-rotate-keys",
-              "es/help/delete-your-account",
-              "es/help/about"
-            ]
-          },
-          {
-            "group": "Para desarrolladores",
+            "group": "Desarrolladores",
             "pages": [
               "es/developers/any-mcp-client",
               "es/developers/errors",
               "es/developers/local-connector",
               "es/developers/background-running",
               "es/developers/webhook-wake",
-              {
-                "group": "Conceptos",
-                "pages": [
-                  "es/concepts/inbox",
-                  "es/concepts/questions",
-                  "es/concepts/24-hour-window",
-                  "es/concepts/routing",
-                  "es/concepts/wake-ladder",
-                  "es/concepts/whatsapp-channel",
-                  "es/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "Herramientas MCP",
                 "pages": [
@@ -321,7 +324,17 @@
           },
           {
             "group": "Código abierto",
-            "pages": ["es/open-source/overview", "es/open-source/run-locally", "es/open-source/deploy"]
+            "pages": ["es/open-source/self-hosting", "es/open-source/run-locally", "es/open-source/deploy", "es/open-source/license"]
+          },
+          {
+            "group": "Ayuda",
+            "pages": [
+              "es/help/troubleshooting",
+              "es/help/faq",
+              "es/help/privacy-and-security",
+              "es/help/revoke-and-rotate-keys",
+              "es/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -331,6 +344,31 @@
           {
             "group": "Erste Schritte",
             "pages": ["de/index", "de/get-started/how-to-start"]
+          },
+          {
+            "group": "Konzepte",
+            "pages": [
+              "de/concepts/inbox",
+              "de/concepts/questions",
+              "de/concepts/24-hour-window",
+              "de/concepts/routing",
+              "de/concepts/wake-ladder",
+              "de/concepts/whatsapp-channel",
+              "de/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "Anleitungen",
+            "pages": [
+              "de/features/send-messages-and-media",
+              "de/features/ask-with-buttons-and-lists",
+              "de/features/owner-starts-conversations",
+              "de/features/manage-your-agents",
+              "de/features/let-your-ai-manage-zapbip",
+              "de/features/many-agents-on-one-number",
+              "de/features/whatsapp-commands",
+              "de/features/web-app"
+            ]
           },
           {
             "group": "KIs",
@@ -350,50 +388,13 @@
             ]
           },
           {
-            "group": "Funktionen",
-            "pages": [
-              "de/features/send-messages-and-media",
-              "de/features/ask-with-buttons-and-lists",
-              "de/features/owner-starts-conversations",
-              "de/features/manage-your-agents",
-              "de/features/let-your-ai-manage-zapbip",
-              "de/features/many-agents-on-one-number",
-              "de/features/whatsapp-commands",
-              "de/features/web-app",
-              "de/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "Hilfe",
-            "pages": [
-              "de/help/troubleshooting",
-              "de/help/faq",
-              "de/help/privacy-and-security",
-              "de/help/revoke-and-rotate-keys",
-              "de/help/delete-your-account",
-              "de/help/about"
-            ]
-          },
-          {
-            "group": "Für Entwickler",
+            "group": "Entwickler",
             "pages": [
               "de/developers/any-mcp-client",
               "de/developers/errors",
               "de/developers/local-connector",
               "de/developers/background-running",
               "de/developers/webhook-wake",
-              {
-                "group": "Konzepte",
-                "pages": [
-                  "de/concepts/inbox",
-                  "de/concepts/questions",
-                  "de/concepts/24-hour-window",
-                  "de/concepts/routing",
-                  "de/concepts/wake-ladder",
-                  "de/concepts/whatsapp-channel",
-                  "de/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "MCP-Werkzeuge",
                 "pages": [
@@ -419,7 +420,17 @@
           },
           {
             "group": "Open Source",
-            "pages": ["de/open-source/overview", "de/open-source/run-locally", "de/open-source/deploy"]
+            "pages": ["de/open-source/self-hosting", "de/open-source/run-locally", "de/open-source/deploy", "de/open-source/license"]
+          },
+          {
+            "group": "Hilfe",
+            "pages": [
+              "de/help/troubleshooting",
+              "de/help/faq",
+              "de/help/privacy-and-security",
+              "de/help/revoke-and-rotate-keys",
+              "de/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -429,6 +440,31 @@
           {
             "group": "Premiers pas",
             "pages": ["fr/index", "fr/get-started/how-to-start"]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "fr/concepts/inbox",
+              "fr/concepts/questions",
+              "fr/concepts/24-hour-window",
+              "fr/concepts/routing",
+              "fr/concepts/wake-ladder",
+              "fr/concepts/whatsapp-channel",
+              "fr/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "fr/features/send-messages-and-media",
+              "fr/features/ask-with-buttons-and-lists",
+              "fr/features/owner-starts-conversations",
+              "fr/features/manage-your-agents",
+              "fr/features/let-your-ai-manage-zapbip",
+              "fr/features/many-agents-on-one-number",
+              "fr/features/whatsapp-commands",
+              "fr/features/web-app"
+            ]
           },
           {
             "group": "IA",
@@ -448,50 +484,13 @@
             ]
           },
           {
-            "group": "Fonctionnalités",
-            "pages": [
-              "fr/features/send-messages-and-media",
-              "fr/features/ask-with-buttons-and-lists",
-              "fr/features/owner-starts-conversations",
-              "fr/features/manage-your-agents",
-              "fr/features/let-your-ai-manage-zapbip",
-              "fr/features/many-agents-on-one-number",
-              "fr/features/whatsapp-commands",
-              "fr/features/web-app",
-              "fr/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "Aide",
-            "pages": [
-              "fr/help/troubleshooting",
-              "fr/help/faq",
-              "fr/help/privacy-and-security",
-              "fr/help/revoke-and-rotate-keys",
-              "fr/help/delete-your-account",
-              "fr/help/about"
-            ]
-          },
-          {
-            "group": "Pour les développeurs",
+            "group": "Développeurs",
             "pages": [
               "fr/developers/any-mcp-client",
               "fr/developers/errors",
               "fr/developers/local-connector",
               "fr/developers/background-running",
               "fr/developers/webhook-wake",
-              {
-                "group": "Concepts",
-                "pages": [
-                  "fr/concepts/inbox",
-                  "fr/concepts/questions",
-                  "fr/concepts/24-hour-window",
-                  "fr/concepts/routing",
-                  "fr/concepts/wake-ladder",
-                  "fr/concepts/whatsapp-channel",
-                  "fr/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "Outils MCP",
                 "pages": [
@@ -517,7 +516,17 @@
           },
           {
             "group": "Open source",
-            "pages": ["fr/open-source/overview", "fr/open-source/run-locally", "fr/open-source/deploy"]
+            "pages": ["fr/open-source/self-hosting", "fr/open-source/run-locally", "fr/open-source/deploy", "fr/open-source/license"]
+          },
+          {
+            "group": "Aide",
+            "pages": [
+              "fr/help/troubleshooting",
+              "fr/help/faq",
+              "fr/help/privacy-and-security",
+              "fr/help/revoke-and-rotate-keys",
+              "fr/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -527,6 +536,31 @@
           {
             "group": "はじめに",
             "pages": ["ja/index", "ja/get-started/how-to-start"]
+          },
+          {
+            "group": "コンセプト",
+            "pages": [
+              "ja/concepts/inbox",
+              "ja/concepts/questions",
+              "ja/concepts/24-hour-window",
+              "ja/concepts/routing",
+              "ja/concepts/wake-ladder",
+              "ja/concepts/whatsapp-channel",
+              "ja/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "ガイド",
+            "pages": [
+              "ja/features/send-messages-and-media",
+              "ja/features/ask-with-buttons-and-lists",
+              "ja/features/owner-starts-conversations",
+              "ja/features/manage-your-agents",
+              "ja/features/let-your-ai-manage-zapbip",
+              "ja/features/many-agents-on-one-number",
+              "ja/features/whatsapp-commands",
+              "ja/features/web-app"
+            ]
           },
           {
             "group": "AI",
@@ -546,31 +580,6 @@
             ]
           },
           {
-            "group": "機能",
-            "pages": [
-              "ja/features/send-messages-and-media",
-              "ja/features/ask-with-buttons-and-lists",
-              "ja/features/owner-starts-conversations",
-              "ja/features/manage-your-agents",
-              "ja/features/let-your-ai-manage-zapbip",
-              "ja/features/many-agents-on-one-number",
-              "ja/features/whatsapp-commands",
-              "ja/features/web-app",
-              "ja/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "ヘルプ",
-            "pages": [
-              "ja/help/troubleshooting",
-              "ja/help/faq",
-              "ja/help/privacy-and-security",
-              "ja/help/revoke-and-rotate-keys",
-              "ja/help/delete-your-account",
-              "ja/help/about"
-            ]
-          },
-          {
             "group": "開発者向け",
             "pages": [
               "ja/developers/any-mcp-client",
@@ -578,18 +587,6 @@
               "ja/developers/local-connector",
               "ja/developers/background-running",
               "ja/developers/webhook-wake",
-              {
-                "group": "コンセプト",
-                "pages": [
-                  "ja/concepts/inbox",
-                  "ja/concepts/questions",
-                  "ja/concepts/24-hour-window",
-                  "ja/concepts/routing",
-                  "ja/concepts/wake-ladder",
-                  "ja/concepts/whatsapp-channel",
-                  "ja/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "MCP ツール",
                 "pages": [
@@ -615,7 +612,17 @@
           },
           {
             "group": "オープンソース",
-            "pages": ["ja/open-source/overview", "ja/open-source/run-locally", "ja/open-source/deploy"]
+            "pages": ["ja/open-source/self-hosting", "ja/open-source/run-locally", "ja/open-source/deploy", "ja/open-source/license"]
+          },
+          {
+            "group": "ヘルプ",
+            "pages": [
+              "ja/help/troubleshooting",
+              "ja/help/faq",
+              "ja/help/privacy-and-security",
+              "ja/help/revoke-and-rotate-keys",
+              "ja/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -625,6 +632,31 @@
           {
             "group": "시작하기",
             "pages": ["ko/index", "ko/get-started/how-to-start"]
+          },
+          {
+            "group": "개념",
+            "pages": [
+              "ko/concepts/inbox",
+              "ko/concepts/questions",
+              "ko/concepts/24-hour-window",
+              "ko/concepts/routing",
+              "ko/concepts/wake-ladder",
+              "ko/concepts/whatsapp-channel",
+              "ko/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "가이드",
+            "pages": [
+              "ko/features/send-messages-and-media",
+              "ko/features/ask-with-buttons-and-lists",
+              "ko/features/owner-starts-conversations",
+              "ko/features/manage-your-agents",
+              "ko/features/let-your-ai-manage-zapbip",
+              "ko/features/many-agents-on-one-number",
+              "ko/features/whatsapp-commands",
+              "ko/features/web-app"
+            ]
           },
           {
             "group": "AI",
@@ -644,31 +676,6 @@
             ]
           },
           {
-            "group": "기능",
-            "pages": [
-              "ko/features/send-messages-and-media",
-              "ko/features/ask-with-buttons-and-lists",
-              "ko/features/owner-starts-conversations",
-              "ko/features/manage-your-agents",
-              "ko/features/let-your-ai-manage-zapbip",
-              "ko/features/many-agents-on-one-number",
-              "ko/features/whatsapp-commands",
-              "ko/features/web-app",
-              "ko/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "도움말",
-            "pages": [
-              "ko/help/troubleshooting",
-              "ko/help/faq",
-              "ko/help/privacy-and-security",
-              "ko/help/revoke-and-rotate-keys",
-              "ko/help/delete-your-account",
-              "ko/help/about"
-            ]
-          },
-          {
             "group": "개발자용",
             "pages": [
               "ko/developers/any-mcp-client",
@@ -676,18 +683,6 @@
               "ko/developers/local-connector",
               "ko/developers/background-running",
               "ko/developers/webhook-wake",
-              {
-                "group": "개념",
-                "pages": [
-                  "ko/concepts/inbox",
-                  "ko/concepts/questions",
-                  "ko/concepts/24-hour-window",
-                  "ko/concepts/routing",
-                  "ko/concepts/wake-ladder",
-                  "ko/concepts/whatsapp-channel",
-                  "ko/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "MCP 도구",
                 "pages": [
@@ -713,7 +708,17 @@
           },
           {
             "group": "오픈 소스",
-            "pages": ["ko/open-source/overview", "ko/open-source/run-locally", "ko/open-source/deploy"]
+            "pages": ["ko/open-source/self-hosting", "ko/open-source/run-locally", "ko/open-source/deploy", "ko/open-source/license"]
+          },
+          {
+            "group": "도움말",
+            "pages": [
+              "ko/help/troubleshooting",
+              "ko/help/faq",
+              "ko/help/privacy-and-security",
+              "ko/help/revoke-and-rotate-keys",
+              "ko/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -723,6 +728,31 @@
           {
             "group": "快速开始",
             "pages": ["zh/index", "zh/get-started/how-to-start"]
+          },
+          {
+            "group": "概念",
+            "pages": [
+              "zh/concepts/inbox",
+              "zh/concepts/questions",
+              "zh/concepts/24-hour-window",
+              "zh/concepts/routing",
+              "zh/concepts/wake-ladder",
+              "zh/concepts/whatsapp-channel",
+              "zh/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "指南",
+            "pages": [
+              "zh/features/send-messages-and-media",
+              "zh/features/ask-with-buttons-and-lists",
+              "zh/features/owner-starts-conversations",
+              "zh/features/manage-your-agents",
+              "zh/features/let-your-ai-manage-zapbip",
+              "zh/features/many-agents-on-one-number",
+              "zh/features/whatsapp-commands",
+              "zh/features/web-app"
+            ]
           },
           {
             "group": "AI",
@@ -742,31 +772,6 @@
             ]
           },
           {
-            "group": "功能",
-            "pages": [
-              "zh/features/send-messages-and-media",
-              "zh/features/ask-with-buttons-and-lists",
-              "zh/features/owner-starts-conversations",
-              "zh/features/manage-your-agents",
-              "zh/features/let-your-ai-manage-zapbip",
-              "zh/features/many-agents-on-one-number",
-              "zh/features/whatsapp-commands",
-              "zh/features/web-app",
-              "zh/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "帮助",
-            "pages": [
-              "zh/help/troubleshooting",
-              "zh/help/faq",
-              "zh/help/privacy-and-security",
-              "zh/help/revoke-and-rotate-keys",
-              "zh/help/delete-your-account",
-              "zh/help/about"
-            ]
-          },
-          {
             "group": "开发者",
             "pages": [
               "zh/developers/any-mcp-client",
@@ -774,18 +779,6 @@
               "zh/developers/local-connector",
               "zh/developers/background-running",
               "zh/developers/webhook-wake",
-              {
-                "group": "概念",
-                "pages": [
-                  "zh/concepts/inbox",
-                  "zh/concepts/questions",
-                  "zh/concepts/24-hour-window",
-                  "zh/concepts/routing",
-                  "zh/concepts/wake-ladder",
-                  "zh/concepts/whatsapp-channel",
-                  "zh/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "MCP 工具",
                 "pages": [
@@ -811,7 +804,17 @@
           },
           {
             "group": "开源",
-            "pages": ["zh/open-source/overview", "zh/open-source/run-locally", "zh/open-source/deploy"]
+            "pages": ["zh/open-source/self-hosting", "zh/open-source/run-locally", "zh/open-source/deploy", "zh/open-source/license"]
+          },
+          {
+            "group": "帮助",
+            "pages": [
+              "zh/help/troubleshooting",
+              "zh/help/faq",
+              "zh/help/privacy-and-security",
+              "zh/help/revoke-and-rotate-keys",
+              "zh/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -821,6 +824,31 @@
           {
             "group": "البدء",
             "pages": ["ar/index", "ar/get-started/how-to-start"]
+          },
+          {
+            "group": "المفاهيم",
+            "pages": [
+              "ar/concepts/inbox",
+              "ar/concepts/questions",
+              "ar/concepts/24-hour-window",
+              "ar/concepts/routing",
+              "ar/concepts/wake-ladder",
+              "ar/concepts/whatsapp-channel",
+              "ar/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "الأدلة",
+            "pages": [
+              "ar/features/send-messages-and-media",
+              "ar/features/ask-with-buttons-and-lists",
+              "ar/features/owner-starts-conversations",
+              "ar/features/manage-your-agents",
+              "ar/features/let-your-ai-manage-zapbip",
+              "ar/features/many-agents-on-one-number",
+              "ar/features/whatsapp-commands",
+              "ar/features/web-app"
+            ]
           },
           {
             "group": "الذكاء الاصطناعي",
@@ -840,31 +868,6 @@
             ]
           },
           {
-            "group": "الميزات",
-            "pages": [
-              "ar/features/send-messages-and-media",
-              "ar/features/ask-with-buttons-and-lists",
-              "ar/features/owner-starts-conversations",
-              "ar/features/manage-your-agents",
-              "ar/features/let-your-ai-manage-zapbip",
-              "ar/features/many-agents-on-one-number",
-              "ar/features/whatsapp-commands",
-              "ar/features/web-app",
-              "ar/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "المساعدة",
-            "pages": [
-              "ar/help/troubleshooting",
-              "ar/help/faq",
-              "ar/help/privacy-and-security",
-              "ar/help/revoke-and-rotate-keys",
-              "ar/help/delete-your-account",
-              "ar/help/about"
-            ]
-          },
-          {
             "group": "للمطورين",
             "pages": [
               "ar/developers/any-mcp-client",
@@ -872,18 +875,6 @@
               "ar/developers/local-connector",
               "ar/developers/background-running",
               "ar/developers/webhook-wake",
-              {
-                "group": "المفاهيم",
-                "pages": [
-                  "ar/concepts/inbox",
-                  "ar/concepts/questions",
-                  "ar/concepts/24-hour-window",
-                  "ar/concepts/routing",
-                  "ar/concepts/wake-ladder",
-                  "ar/concepts/whatsapp-channel",
-                  "ar/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "أدوات MCP",
                 "pages": [
@@ -909,7 +900,17 @@
           },
           {
             "group": "المصدر المفتوح",
-            "pages": ["ar/open-source/overview", "ar/open-source/run-locally", "ar/open-source/deploy"]
+            "pages": ["ar/open-source/self-hosting", "ar/open-source/run-locally", "ar/open-source/deploy", "ar/open-source/license"]
+          },
+          {
+            "group": "المساعدة",
+            "pages": [
+              "ar/help/troubleshooting",
+              "ar/help/faq",
+              "ar/help/privacy-and-security",
+              "ar/help/revoke-and-rotate-keys",
+              "ar/help/delete-your-account"
+            ]
           }
         ]
       },
@@ -919,6 +920,31 @@
           {
             "group": "शुरुआत",
             "pages": ["hi/index", "hi/get-started/how-to-start"]
+          },
+          {
+            "group": "कॉन्सेप्ट",
+            "pages": [
+              "hi/concepts/inbox",
+              "hi/concepts/questions",
+              "hi/concepts/24-hour-window",
+              "hi/concepts/routing",
+              "hi/concepts/wake-ladder",
+              "hi/concepts/whatsapp-channel",
+              "hi/concepts/owner-notices"
+            ]
+          },
+          {
+            "group": "गाइड",
+            "pages": [
+              "hi/features/send-messages-and-media",
+              "hi/features/ask-with-buttons-and-lists",
+              "hi/features/owner-starts-conversations",
+              "hi/features/manage-your-agents",
+              "hi/features/let-your-ai-manage-zapbip",
+              "hi/features/many-agents-on-one-number",
+              "hi/features/whatsapp-commands",
+              "hi/features/web-app"
+            ]
           },
           {
             "group": "AI",
@@ -938,31 +964,6 @@
             ]
           },
           {
-            "group": "फ़ीचर",
-            "pages": [
-              "hi/features/send-messages-and-media",
-              "hi/features/ask-with-buttons-and-lists",
-              "hi/features/owner-starts-conversations",
-              "hi/features/manage-your-agents",
-              "hi/features/let-your-ai-manage-zapbip",
-              "hi/features/many-agents-on-one-number",
-              "hi/features/whatsapp-commands",
-              "hi/features/web-app",
-              "hi/features/the-24-hour-window"
-            ]
-          },
-          {
-            "group": "मदद",
-            "pages": [
-              "hi/help/troubleshooting",
-              "hi/help/faq",
-              "hi/help/privacy-and-security",
-              "hi/help/revoke-and-rotate-keys",
-              "hi/help/delete-your-account",
-              "hi/help/about"
-            ]
-          },
-          {
             "group": "डेवलपर्स के लिए",
             "pages": [
               "hi/developers/any-mcp-client",
@@ -970,18 +971,6 @@
               "hi/developers/local-connector",
               "hi/developers/background-running",
               "hi/developers/webhook-wake",
-              {
-                "group": "कॉन्सेप्ट",
-                "pages": [
-                  "hi/concepts/inbox",
-                  "hi/concepts/questions",
-                  "hi/concepts/24-hour-window",
-                  "hi/concepts/routing",
-                  "hi/concepts/wake-ladder",
-                  "hi/concepts/whatsapp-channel",
-                  "hi/concepts/owner-notices"
-                ]
-              },
               {
                 "group": "MCP टूल्स",
                 "pages": [
@@ -1007,10 +996,172 @@
           },
           {
             "group": "ओपन सोर्स",
-            "pages": ["hi/open-source/overview", "hi/open-source/run-locally", "hi/open-source/deploy"]
+            "pages": ["hi/open-source/self-hosting", "hi/open-source/run-locally", "hi/open-source/deploy", "hi/open-source/license"]
+          },
+          {
+            "group": "मदद",
+            "pages": [
+              "hi/help/troubleshooting",
+              "hi/help/faq",
+              "hi/help/privacy-and-security",
+              "hi/help/revoke-and-rotate-keys",
+              "hi/help/delete-your-account"
+            ]
           }
         ]
       }
     ]
-  }
+  },
+  "redirects": [
+    {
+      "source": "/help/about",
+      "destination": "/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/features/the-24-hour-window",
+      "destination": "/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/open-source/overview",
+      "destination": "/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/pt-br/help/about",
+      "destination": "/pt-br/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/pt-br/features/the-24-hour-window",
+      "destination": "/pt-br/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/pt-br/open-source/overview",
+      "destination": "/pt-br/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/es/help/about",
+      "destination": "/es/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/es/features/the-24-hour-window",
+      "destination": "/es/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/es/open-source/overview",
+      "destination": "/es/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/de/help/about",
+      "destination": "/de/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/de/features/the-24-hour-window",
+      "destination": "/de/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/de/open-source/overview",
+      "destination": "/de/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/fr/help/about",
+      "destination": "/fr/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/fr/features/the-24-hour-window",
+      "destination": "/fr/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/fr/open-source/overview",
+      "destination": "/fr/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/ja/help/about",
+      "destination": "/ja/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/ja/features/the-24-hour-window",
+      "destination": "/ja/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/ja/open-source/overview",
+      "destination": "/ja/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/ko/help/about",
+      "destination": "/ko/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/ko/features/the-24-hour-window",
+      "destination": "/ko/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/ko/open-source/overview",
+      "destination": "/ko/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/zh/help/about",
+      "destination": "/zh/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/zh/features/the-24-hour-window",
+      "destination": "/zh/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/zh/open-source/overview",
+      "destination": "/zh/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/ar/help/about",
+      "destination": "/ar/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/ar/features/the-24-hour-window",
+      "destination": "/ar/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/ar/open-source/overview",
+      "destination": "/ar/open-source/self-hosting",
+      "permanent": true
+    },
+    {
+      "source": "/hi/help/about",
+      "destination": "/hi/open-source/license",
+      "permanent": true
+    },
+    {
+      "source": "/hi/features/the-24-hour-window",
+      "destination": "/hi/concepts/24-hour-window",
+      "permanent": true
+    },
+    {
+      "source": "/hi/open-source/overview",
+      "destination": "/hi/open-source/self-hosting",
+      "permanent": true
+    }
+  ]
 }

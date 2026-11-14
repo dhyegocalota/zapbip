@@ -14,7 +14,7 @@ const AGENTS_GROUP_OF = Object.fromEntries(LANGUAGES.map((language) => [language
 >;
 const MATRIX_PAGE = `${AGENTS_DIRECTORY}/supported-agents`;
 const NAVIGATION_ORDER = [...SAMPLE_IDS_IN_ORDER].reverse();
-const OTHER_GROUP = { group: 'Help', pages: ['help/about', { group: 'Nested', pages: ['x'] }] };
+const OTHER_GROUP = { group: 'Help', pages: ['help/faq', { group: 'Nested', pages: ['x'] }] };
 
 function sourceWith(input: { pagesOf: (language: DocsPageLanguage) => unknown[] }): string {
   const navigation = {

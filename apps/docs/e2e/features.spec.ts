@@ -11,7 +11,6 @@ const FEATURE_PAGES = [
   'features/owner-starts-conversations',
   'features/many-agents-on-one-number',
   'features/whatsapp-commands',
-  'features/the-24-hour-window',
 ];
 const LISTEN_DELAY_SECONDS = ['7', '6', '9', '16'];
 const WAKE_RUNG_WORDS: Record<DocsPageLanguage, string[]> = {

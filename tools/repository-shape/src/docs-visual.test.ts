@@ -68,7 +68,7 @@ const LIGHT_HERO_END = '#F1F7F3';
 const DARK_HERO_BASE = '#0D1B17';
 const DARK_PREFIX = '.dark ';
 const PROSE_MEASURE_SELECTOR = `.mdx-content > span[data-as='p'],\n.mdx-content > ul,\n.mdx-content > ol`;
-const AGENT_GROUP_INDEX = 1;
+const AGENT_GROUP_INDEX = 3;
 const TRANSLATED_LANGUAGES = Object.values(DocsPageLanguage).filter((language) => language !== DocsPageLanguage.English);
 const MATRIX_PAGE = 'agents/supported-agents';
 const BASELINE_REFERENCE = 'origin/main';
@@ -88,6 +88,7 @@ type DocsVisualConfig = {
   background?: { color?: { light?: string; dark?: string }; decoration?: string };
   appearance?: { default?: string };
   navigation?: unknown;
+  redirects: { source: string; destination: string }[];
 };
 
 function docsVisualConfig(): DocsVisualConfig {
@@ -100,12 +101,6 @@ function baselineConfig(): DocsVisualConfig {
   return JSON.parse(shown.stdout);
 }
 
-function withoutAgentPages({ value }: { value: unknown }): unknown {
-  const agentGroups = Object.values(DOCS_GROUPS).map((groups) => groups[AGENT_GROUP_INDEX]);
-  const isAgentGroup = typeof value === 'object' && value !== null && agentGroups.includes((value as { group?: string }).group as string);
-  return isAgentGroup ? { ...value, pages: [] } : value;
-}
-
 function pagesOf({ navigation }: { navigation: unknown }): Set<string> {
   const pages = new Set<string>();
   JSON.stringify(navigation, (key, value) => {
@@ -115,33 +110,8 @@ function pagesOf({ navigation }: { navigation: unknown }): Set<string> {
   return pages;
 }
 
-function isAddedGroup({ entry, knownPages }: { entry: unknown; knownPages: Set<string> }): boolean {
-  const pages = (entry as { pages?: unknown[] }).pages;
-  if (!Array.isArray(pages) || pages.length === 0) return false;
-  return pages.every((page) => typeof page === 'string' && !knownPages.has(page));
-}
-
-function withoutAddedPages({ key, value, knownPages }: { key: string; value: unknown; knownPages: Set<string> }): unknown {
-  if (key === 'groups' && Array.isArray(value)) return value.filter((entry) => !isAddedGroup({ entry, knownPages }));
-  if (key !== 'pages' || !Array.isArray(value)) return value;
-  return value.filter((page) => typeof page !== 'string' || knownPages.has(page));
-}
-
-function knownLanguagesOf({ navigation }: { navigation: unknown }): unknown[] {
-  return (navigation as { languages: unknown[] }).languages;
-}
-
-function navigationFingerprintOf({
-  navigation,
-  knownPages,
-  knownLanguages,
-}: {
-  navigation: unknown;
-  knownPages: Set<string>;
-  knownLanguages: string[];
-}): string {
-  const languages = knownLanguagesOf({ navigation }).filter((entry) => knownLanguages.includes((entry as { language: string }).language));
-  return JSON.stringify(languages, (key, value) => withoutAddedPages({ key, value: withoutAgentPages({ value }), knownPages }));
+function languagesOf({ navigation }: { navigation: unknown }): string[] {
+  return (navigation as { languages: { language: string }[] }).languages.map((entry) => entry.language);
 }
 
 function requiredColour({ colour, name }: { colour?: string; name: string }): string {
@@ -309,15 +279,20 @@ describe('docs visual: theme', () => {
     expect(config.theme).toBe('mint');
   });
 
-  test('the favicon and the navigation are unchanged from the baseline, apart from the pages added since', () => {
+  test('the favicon is unchanged and the languages keep their order', () => {
     const config = docsVisualConfig();
     const baseline = baselineConfig();
     expect(config.favicon).toBe(baseline.favicon);
-    const knownPages = pagesOf({ navigation: baseline.navigation });
-    const knownLanguages = knownLanguagesOf({ navigation: baseline.navigation }).map((entry) => (entry as { language: string }).language);
-    expect(navigationFingerprintOf({ navigation: config.navigation, knownPages, knownLanguages })).toBe(
-      navigationFingerprintOf({ navigation: baseline.navigation, knownPages, knownLanguages }),
-    );
+    expect(languagesOf({ navigation: config.navigation })).toEqual(languagesOf({ navigation: baseline.navigation }));
+  });
+
+  test('every page that leaves the navigation keeps its old address as a redirect', () => {
+    const config = docsVisualConfig();
+    const baselinePages = pagesOf({ navigation: baselineConfig().navigation });
+    const currentPages = pagesOf({ navigation: config.navigation });
+    const redirectSources = config.redirects.map((redirect) => redirect.source);
+    const unredirected = [...baselinePages].filter((page) => !currentPages.has(page) && !redirectSources.includes(`/${page}`));
+    expect(unredirected).toEqual([]);
   });
 });
 
