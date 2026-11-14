@@ -41,3 +41,36 @@ test.describe('pt-BR browser', () => {
     await expect(page.locator('.cf-turnstile')).toHaveAttribute('data-language', 'pt-br');
   });
 });
+
+test('every language serves its own social image', async ({ page, request }) => {
+  await page.goto('/');
+  const paths = (await page
+    .locator('link[rel="alternate"][hreflang]')
+    .evaluateAll('links => links.map((link) => new URL(link.href).pathname)')) as string[];
+  await paths.reduce(async (previous, path) => {
+    await previous;
+    const html = await (await request.get(path)).text();
+    const imageUrl = /<meta property="og:image" content="([^"]+)"/.exec(html)![1]!;
+    const image = await request.get(new URL(imageUrl).pathname);
+    expect(image.status()).toBe(200);
+    expect(image.headers()['content-type']).toBe('image/png');
+    expect((await image.body()).readUInt32BE(WIDTH_OFFSET)).toBe(OPEN_GRAPH_WIDTH);
+  }, Promise.resolve());
+});
+
+test('the JSON-LD graph is data: it parses and the policy blocks nothing', async ({ page }) => {
+  const policyErrors: string[] = [];
+  page.on(
+    'console',
+    (message) => message.type() === 'error' && /Content Security Policy/i.test(message.text()) && policyErrors.push(message.text()),
+  );
+  await page.goto('/', { waitUntil: 'networkidle' });
+  const text = (await page.locator('script[type="application/ld+json"]').textContent())!;
+  expect(JSON.parse(text)['@graph'].map((node: { '@type': string }) => node['@type'])).toEqual([
+    'Organization',
+    'WebSite',
+    'WebApplication',
+    'FAQPage',
+  ]);
+  expect(policyErrors).toEqual([]);
+});

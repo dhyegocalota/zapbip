@@ -10,7 +10,6 @@ import {
   DEMO_IMAGE_SIZE,
   THEME_COLOR_DARK,
   THEME_COLOR_LIGHT,
-  TURNSTILE_SCRIPT_URL,
   JOIN_FRAGMENT,
   THEME_SWITCH_ID,
   PRICING_FRAGMENT,
@@ -201,7 +200,6 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
           />
         ) : null}
         <script src={SITE_SCRIPT_HREF} defer />
-        {hasForm ? <script src={TURNSTILE_SCRIPT_URL} async defer /> : null}
       </head>
       <body>
         <a href={skipLink.href} class="skip-link">
