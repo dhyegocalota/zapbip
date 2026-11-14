@@ -30,6 +30,14 @@ function requestOf(input: { fetchImplementation: typeof fetch }): { url: string;
 afterEach(() => vi.restoreAllMocks());
 
 describe('the Resend email sender', () => {
+  it('calls fetch without a receiver, as workerd requires', async () => {
+    const fetchImplementation = vi.fn(function (this: unknown) {
+      if (this !== undefined) throw new TypeError('Illegal invocation: function called with incorrect `this` reference');
+      return Promise.resolve(new Response('{"id":"email-id"}'));
+    }) as unknown as typeof fetch;
+    await expect(createResendEmailSender({ apiKey: API_KEY, fetchImplementation }).send(MESSAGE)).resolves.toBe(EmailSendOutcome.Sent);
+  });
+
   it('posts the message to the Resend emails endpoint', async () => {
     const fetchImplementation = respondingWith({ status: 200 });
     await createResendEmailSender({ apiKey: API_KEY, fetchImplementation }).send(MESSAGE);
