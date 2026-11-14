@@ -8,6 +8,7 @@ import {
   formatRouteOptionId,
   INLINE_IMAGE_MAX_BYTES,
   NOTICE_QUICK_REPLY_ID,
+  RATE_LIMIT_PERIOD_MS,
   renderCopy,
   STICKER_MAX_BYTES,
   WINDOW_MS,
@@ -37,6 +38,7 @@ const TEXT_LIMIT = 4096;
 const SHORT_WAIT_SECONDS = 1;
 const TAP_DELAY_MS = SECOND_MS;
 const HELD_CALL_TIMEOUT_MS = 55 * SECOND_MS;
+const APPROVAL_TEST_TIMEOUT_MS = HELD_CALL_TIMEOUT_MS + RATE_LIMIT_PERIOD_MS;
 const SMALL_IMAGE_BYTES = 100_000;
 const OVERSIZED_IMAGE_BYTES = INLINE_IMAGE_MAX_BYTES + 100_000;
 const PNG_TYPE = 'image/png';
@@ -387,6 +389,7 @@ describe('MCP client against wrangler dev', () => {
   test(
     'E2E-24 connect_agent asks on the screen, an Allow tap connects the agent and the install link reaches the owner, not the result',
     async () => {
+      await delay(RATE_LIMIT_PERIOD_MS);
       await openWindow();
       const held = callTool({ client: alpha, name: McpToolName.ConnectAgent, arguments: { name: NEW_AGENT } });
       await heldApproval({ client: alpha });
@@ -402,7 +405,7 @@ describe('MCP client against wrangler dev', () => {
       expect((await readScreen()).some((entry) => entry.text.includes(INSTALL_LINK_MARKER))).toBe(true);
       expect(listOf({ result: listed, key: 'agents' }).map((agent) => agent.name)).toContain(NEW_AGENT);
     },
-    HELD_CALL_TIMEOUT_MS,
+    APPROVAL_TEST_TIMEOUT_MS,
   );
 
   test(
