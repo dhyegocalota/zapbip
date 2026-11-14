@@ -1590,6 +1590,7 @@ summary::before {
 
 .code-bar::before {
   content: '';
+  display: none;
   flex: none;
   width: 0.625rem;
   height: 0.625rem;
@@ -1608,6 +1609,15 @@ summary::before {
   font-family: var(--font-mono);
   font-size: var(--text-small);
   overflow-wrap: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 40rem) {
+  .code-bar::before {
+    display: block;
+  }
 }
 
 .start-copy {
