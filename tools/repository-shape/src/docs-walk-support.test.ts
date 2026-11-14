@@ -40,7 +40,7 @@ describe('docs walk support', () => {
     });
   });
 
-  test('the locales are the browser locales of the nine languages', () => {
+  test('the locales are the browser locales of every language', () => {
     expect(DOCS_LOCALE_OF).toEqual({
       [DocsPageLanguage.English]: 'en-US',
       [DocsPageLanguage.PortugueseBrazil]: 'pt-BR',
@@ -51,6 +51,7 @@ describe('docs walk support', () => {
       [DocsPageLanguage.Korean]: 'ko-KR',
       [DocsPageLanguage.Chinese]: 'zh-CN',
       [DocsPageLanguage.Arabic]: 'ar-SA',
+      [DocsPageLanguage.Hindi]: 'hi-IN',
     });
   });
 

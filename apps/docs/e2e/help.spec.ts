@@ -17,6 +17,7 @@ const DAYS_WORD: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: '일',
   [DocsPageLanguage.Chinese]: '天',
   [DocsPageLanguage.Arabic]: 'أيام|يومًا',
+  [DocsPageLanguage.Hindi]: 'दिन',
 };
 const WAITLIST_QUESTION: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'What if my account is on the waitlist?',
@@ -28,6 +29,7 @@ const WAITLIST_QUESTION: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: '계정이 대기자 명단에 있으면 어떻게 되나요?',
   [DocsPageLanguage.Chinese]: '如果我的账号在候补名单上会怎样？',
   [DocsPageLanguage.Arabic]: 'ماذا لو كان حسابي في قائمة الانتظار؟',
+  [DocsPageLanguage.Hindi]: 'अगर मेरा अकाउंट वेटलिस्ट में है तो?',
 };
 const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['zapbip team', 'help'],
@@ -39,6 +41,7 @@ const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['zapbip 팀', 'help'],
   [DocsPageLanguage.Chinese]: ['zapbip 团队', 'help'],
   [DocsPageLanguage.Arabic]: ['فريق zapbip', 'مساعدة'],
+  [DocsPageLanguage.Hindi]: ['zapbip टीम', 'मदद'],
 };
 const REVOKE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['revoke', 'rotate', 'once'],
@@ -50,6 +53,7 @@ const REVOKE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['폐기', '재발급', '한 번'],
   [DocsPageLanguage.Chinese]: ['撤销', '轮换', '一次'],
   [DocsPageLanguage.Arabic]: ['إبطال', 'تجديد رابط', 'مرة واحدة'],
+  [DocsPageLanguage.Hindi]: ['एजेंट हटाएँ', 'लिंक बदलें', 'एक ही बार'],
 };
 const DELETE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'waitlist'],
@@ -61,6 +65,7 @@ const DELETE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['계정 삭제', '계정 영구 삭제', 'Meta', 'Cloudflare', '대기자 명단'],
   [DocsPageLanguage.Chinese]: ['删除账户', '永久删除账户', 'Meta', 'Cloudflare', '候补名单'],
   [DocsPageLanguage.Arabic]: ['حذف الحساب', 'حذف الحساب نهائيا', 'Meta', 'Cloudflare', 'قائمة الانتظار'],
+  [DocsPageLanguage.Hindi]: ['अकाउंट डिलीट करें', 'अकाउंट हमेशा के लिए डिलीट करें', 'Meta', 'Cloudflare', 'वेटलिस्ट'],
 };
 const PRIVACY_KINDS = Object.values(DocsRetentionKind);
 const PRIVACY_TOKENS = ['Meta', 'Cloudflare'];

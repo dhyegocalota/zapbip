@@ -65,6 +65,12 @@ const OPENCLAW_TEXT: Record<OwnerLocale, OpenClawText> = {
       'يقرأ المكوّن الإضافي zapbip رسائلك الموجّهة إلى هذا الوكيل من zapbip وينشر ردود الوكيل عائدةً إليها، ولا يفعل شيئًا غير ذلك. هل أستطيع تثبيته؟',
     pollCost: 'الفحص كل دقيقة يستهلك استدعاءات للنموذج.',
   },
+  [OwnerLocale.Hindi]: {
+    wakeNote: 'प्लगइन हर संदेश तुरंत पहुँचाता है; प्लगइन के बिना OpenClaw हर मिनट इनबॉक्स देखता है।',
+    pluginPermission:
+      'zapbip प्लगइन इस एजेंट के लिए आए आपके संदेश zapbip से पढ़ता है और एजेंट के जवाब वापस भेजता है। इसके अलावा यह कुछ नहीं करता। क्या मैं इसे इंस्टॉल करूँ?',
+    pollCost: 'हर मिनट इनबॉक्स देखने पर मॉडल कॉल का खर्च आता है।',
+  },
 };
 
 export const OPENCLAW_COPY = localizeCopy({
@@ -106,6 +112,7 @@ const OPENCLAW_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'OpenClaw 설정에서 mcp.servers.zapbip 아래에',
   [OwnerLocale.ChineseSimplified]: '在 OpenClaw 配置中，放在 mcp.servers.zapbip 下',
   [OwnerLocale.Arabic]: 'في إعدادات OpenClaw، تحت mcp.servers.zapbip',
+  [OwnerLocale.Hindi]: 'OpenClaw के config में, mcp.servers.zapbip के नीचे',
 };
 
 export const OPENCLAW_QUICK_START = quickStartOf({

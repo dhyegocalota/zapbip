@@ -1,0 +1,13 @@
+| प्रकार     | एजेंट से आप तक                                                                       | आपसे एजेंट तक                                                                |
+| ---------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `text`     | [send_message](/hi/mcp-reference/send-message)                                       | टेक्स्ट                                                                      |
+| `image`    | [send_media](/hi/mcp-reference/send-media), 5 MB तक                                  | 1 MB तक हो तो इमेज सीधे, वरना एक साइन किया हुआ लिंक                          |
+| `video`    | [send_media](/hi/mcp-reference/send-media), 16 MB तक                                 | साइन किया हुआ लिंक                                                           |
+| `audio`    | [send_media](/hi/mcp-reference/send-media), 16 MB तक, वॉइस नोट के लिए `voice`        | साइन किया हुआ लिंक                                                           |
+| `document` | [send_media](/hi/mcp-reference/send-media), 100 MB तक                                | साइन किया हुआ लिंक, फ़ाइल का नाम और MIME टाइप                                |
+| `sticker`  | [send_media](/hi/mcp-reference/send-media)                                           | साइन किया हुआ लिंक                                                           |
+| `location` | [send_location](/hi/mcp-reference/send-location)                                     | अक्षांश, देशांतर, नाम और पता                                                 |
+| `contacts` | [send_contact](/hi/mcp-reference/send-contact)                                       | संपर्क कार्ड                                                                 |
+| `reaction` | [react](/hi/mcp-reference/react)                                                     | `message_id` और `emoji`, उस एजेंट तक पहुँचाए जाते हैं जिसने वह संदेश भेजा था |
+| `choice`   | [ask](/hi/mcp-reference/ask), 3 तक विकल्प बटन के रूप में और 4 से 10 लिस्ट के रूप में | `option_id`, `title` और वैकल्पिक `description`                               |
+| कोट        | हर भेजे गए संदेश पर `reply_to`                                                       | `reply_to`, उस एजेंट तक पहुँचाया जाता है जिसने कोट किया गया संदेश भेजा था    |

@@ -12,6 +12,7 @@ export const WHATSAPP_TEMPLATE_BODIES: Record<WhatsAppTemplateName, Record<Whats
     [WhatsAppLanguageCode.Korean]: '메시지가 도착했어요. {{1}}님의 메시지: {{2}} — 열기를 눌러 읽어 보세요.',
     [WhatsAppLanguageCode.ChineseSimplified]: '来自 {{1}} 的消息：{{2}} — 点击“打开”查看。',
     [WhatsAppLanguageCode.Arabic]: 'رسالة من {{1}}: {{2}} — اضغط «فتح» لقراءتها.',
+    [WhatsAppLanguageCode.Hindi]: 'आपके लिए {{1}} का संदेश: {{2}} — पढ़ने के लिए "खोलें" पर टैप करें।',
   },
   [WhatsAppTemplateName.AgentQuestion]: {
     [WhatsAppLanguageCode.PortugueseBrazil]: 'Pergunta de {{1}}: {{2}} — toque em Responder para ver as opções.',
@@ -23,6 +24,7 @@ export const WHATSAPP_TEMPLATE_BODIES: Record<WhatsAppTemplateName, Record<Whats
     [WhatsAppLanguageCode.Korean]: '질문이 도착했어요. {{1}}님의 질문: {{2}} — 답장을 눌러 선택지를 확인하세요.',
     [WhatsAppLanguageCode.ChineseSimplified]: '来自 {{1}} 的提问：{{2}} — 点击“回复”查看选项。',
     [WhatsAppLanguageCode.Arabic]: 'سؤال من {{1}}: {{2}} — اضغط «رد» لعرض الخيارات.',
+    [WhatsAppLanguageCode.Hindi]: 'आपके लिए {{1}} का सवाल: {{2}} — विकल्प देखने के लिए "जवाब दें" पर टैप करें।',
   },
 };
 export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, string>> = {
@@ -36,6 +38,7 @@ export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Recor
     [WhatsAppLanguageCode.Korean]: '열기',
     [WhatsAppLanguageCode.ChineseSimplified]: '打开',
     [WhatsAppLanguageCode.Arabic]: 'فتح',
+    [WhatsAppLanguageCode.Hindi]: 'खोलें',
   },
   [WhatsAppTemplateName.AgentQuestion]: {
     [WhatsAppLanguageCode.PortugueseBrazil]: 'Responder',
@@ -47,6 +50,7 @@ export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Recor
     [WhatsAppLanguageCode.Korean]: '답장',
     [WhatsAppLanguageCode.ChineseSimplified]: '回复',
     [WhatsAppLanguageCode.Arabic]: 'رد',
+    [WhatsAppLanguageCode.Hindi]: 'जवाब दें',
   },
 };
 export const WHATSAPP_TEMPLATE_SAMPLES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, readonly [string, string]>> = {
@@ -60,6 +64,7 @@ export const WHATSAPP_TEMPLATE_SAMPLES: Record<WhatsAppTemplateName, Record<What
     [WhatsAppLanguageCode.Korean]: ['테스트 에이전트', '예시 메시지'],
     [WhatsAppLanguageCode.ChineseSimplified]: ['测试智能体', '示例消息'],
     [WhatsAppLanguageCode.Arabic]: ['وكيل تجريبي', 'رسالة مثال'],
+    [WhatsAppLanguageCode.Hindi]: ['टेस्ट एजेंट', 'उदाहरण संदेश'],
   },
   [WhatsAppTemplateName.AgentQuestion]: {
     [WhatsAppLanguageCode.PortugueseBrazil]: ['Agente de teste', 'Pergunta de exemplo'],
@@ -71,9 +76,10 @@ export const WHATSAPP_TEMPLATE_SAMPLES: Record<WhatsAppTemplateName, Record<What
     [WhatsAppLanguageCode.Korean]: ['테스트 에이전트', '예시 질문'],
     [WhatsAppLanguageCode.ChineseSimplified]: ['测试智能体', '示例问题'],
     [WhatsAppLanguageCode.Arabic]: ['وكيل تجريبي', 'سؤال مثال'],
+    [WhatsAppLanguageCode.Hindi]: ['टेस्ट एजेंट', 'उदाहरण सवाल'],
   },
 };
-// NB ADR 0051: a language sends the template of its row; the seven new languages send the English one until Meta approves theirs and the row is flipped.
+// NB ADR 0051: a language sends the template of its row; every language beyond English and Portuguese sends the English one until Meta approves its own and the row is flipped.
 export const OWNER_LOCALE_TO_LANGUAGE_CODE: Record<OwnerLocale, WhatsAppLanguageCode> = {
   [OwnerLocale.PortugueseBrazil]: WhatsAppLanguageCode.PortugueseBrazil,
   [OwnerLocale.EnglishUs]: WhatsAppLanguageCode.EnglishUs,
@@ -84,6 +90,7 @@ export const OWNER_LOCALE_TO_LANGUAGE_CODE: Record<OwnerLocale, WhatsAppLanguage
   [OwnerLocale.Korean]: WhatsAppLanguageCode.EnglishUs,
   [OwnerLocale.ChineseSimplified]: WhatsAppLanguageCode.EnglishUs,
   [OwnerLocale.Arabic]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.Hindi]: WhatsAppLanguageCode.EnglishUs,
 };
 export const TEMPLATE_NAME_BY_KIND: Record<TemplateKind, WhatsAppTemplateName> = {
   [TemplateKind.Notice]: WhatsAppTemplateName.AgentNotice,

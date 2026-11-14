@@ -42,6 +42,7 @@ const NOTICE_RETRY_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['5분', '6시간'],
   [DocsPageLanguage.Chinese]: ['5 分钟', '6 小时'],
   [DocsPageLanguage.Arabic]: ['5 دقائق', '6 ساعات'],
+  [DocsPageLanguage.Hindi]: ['5 मिनट', '6 घंटे'],
 };
 const QUICK_REPLIES: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['Open', 'Reply'],
@@ -53,6 +54,7 @@ const QUICK_REPLIES: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['Open', 'Reply'],
   [DocsPageLanguage.Chinese]: ['Open', 'Reply'],
   [DocsPageLanguage.Arabic]: ['Open', 'Reply'],
+  [DocsPageLanguage.Hindi]: ['Open', 'Reply'],
 };
 const CHANNEL_HEADINGS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['Inbound', 'Outbound', 'Delivery'],
@@ -64,6 +66,7 @@ const CHANNEL_HEADINGS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['수신 메시지', '발신 메시지', '전달'],
   [DocsPageLanguage.Chinese]: ['入站消息', '出站消息', '投递'],
   [DocsPageLanguage.Arabic]: ['الرسائل الواردة', 'الرسائل الصادرة', 'حالة التسليم'],
+  [DocsPageLanguage.Hindi]: ['आने वाले संदेश', 'जाने वाले संदेश', 'डिलीवरी'],
 };
 
 function urlOf(input: { path: string; language: DocsPageLanguage }): string {

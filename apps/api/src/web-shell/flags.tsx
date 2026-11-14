@@ -32,6 +32,9 @@ const ARABIC_MOON_CENTER = { x: 9, y: 7 };
 const ARABIC_MOON_RADIUS = 4.2;
 const ARABIC_BITE_CENTER = { x: 10.6 };
 const ARABIC_BITE_RADIUS = 3.5;
+const INDIA_STRIPE_HEIGHT = FLAG_HEIGHT / 3;
+const INDIA_WHEEL_RADIUS = 1.8;
+const INDIA_WHEEL_STROKE = 0.45;
 
 type FlagFrameProps = { name: string; children: Child };
 
@@ -136,6 +139,17 @@ function ArabicFlag() {
   );
 }
 
+function IndiaFlag() {
+  return (
+    <FlagFrame name="in">
+      <rect width={FLAG_WIDTH} height={INDIA_STRIPE_HEIGHT} fill="#ff9933" />
+      <rect y={INDIA_STRIPE_HEIGHT} width={FLAG_WIDTH} height={INDIA_STRIPE_HEIGHT} fill="#ffffff" />
+      <rect y={INDIA_STRIPE_HEIGHT * 2} width={FLAG_WIDTH} height={INDIA_STRIPE_HEIGHT} fill="#138808" />
+      <circle cx="10" cy="7" r={INDIA_WHEEL_RADIUS} fill="none" stroke="#000080" stroke-width={INDIA_WHEEL_STROKE} />
+    </FlagFrame>
+  );
+}
+
 const FLAGS: Record<OwnerLocale, FC> = {
   [OwnerLocale.EnglishUs]: UnitedStatesFlag,
   [OwnerLocale.PortugueseBrazil]: BrazilFlag,
@@ -146,6 +160,7 @@ const FLAGS: Record<OwnerLocale, FC> = {
   [OwnerLocale.Korean]: KoreaFlag,
   [OwnerLocale.ChineseSimplified]: ChinaFlag,
   [OwnerLocale.Arabic]: ArabicFlag,
+  [OwnerLocale.Hindi]: IndiaFlag,
 };
 
 export function Flag(props: { locale: OwnerLocale }) {

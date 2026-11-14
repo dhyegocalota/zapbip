@@ -18,6 +18,8 @@ describe('foldCommandText', () => {
     ['مســـاعدة', 'مساعده'],
     ['مُسَاعَدَة', 'مساعده'],
     ['مساعدة؟', 'مساعده?'],
+    ['एजेंट हटाएँ', 'एजेंट हटाएं'],
+    ['हाँ', 'हां'],
   ])('folds %s into %s', (text, folded) => {
     expect(foldCommandText({ text })).toBe(folded);
   });
@@ -68,6 +70,41 @@ describe('the Arabic commands', () => {
   );
 });
 
+describe('the Hindi commands', () => {
+  it.each([
+    ['नया एजेंट claude', CommandKind.CreateAgent, 'claude'],
+    ['एजेंट हटाएँ claude', CommandKind.RevokeAgent, 'claude'],
+    ['एजेंट हटाएं claude', CommandKind.RevokeAgent, 'claude'],
+    ['लिंक बदलें  Claude', CommandKind.RotateAgent, 'Claude'],
+    ['भाषा बदलें en', CommandKind.SetLanguage, 'en'],
+  ])('reads %j as %s for %j', (text, kind, rawName) => {
+    expect(say(text)).toEqual({ kind, rawName, locale: OwnerLocale.Hindi });
+  });
+
+  it.each([
+    ['मेरे एजेंट', CommandKind.ListAgents],
+    ['मदद', CommandKind.Help],
+    ['मेनू', CommandKind.Help],
+    ['लॉगिन', CommandKind.Login],
+    ['अकाउंट डिलीट करें', CommandKind.RequestDeletion],
+    ['अकाउंट हमेशा के लिए डिलीट करें', CommandKind.ConfirmDeletion],
+  ])('reads the whole message %j as %s', (text, kind) => {
+    expect(say(text)?.kind).toBe(kind);
+  });
+
+  it.each([
+    'मदद चाहिए',
+    'मेरे एजेंट कहाँ हैं?',
+    'नया लिंक भेजो',
+    'भाषा अच्छी है',
+    'लॉगिन नहीं हो रहा',
+    'अकाउंट डिलीट करें क्या?',
+    'लिंक बदलें?',
+  ])('keeps %j an ordinary message', (text) => {
+    expect(say(text)).toBeNull();
+  });
+});
+
 describe('the other languages', () => {
   it.each([
     ['revoke Claude', CommandKind.RevokeAgent, 'Claude', OwnerLocale.EnglishUs],
@@ -75,6 +112,7 @@ describe('the other languages', () => {
     ['renovar  Foo', CommandKind.RotateAgent, 'Foo', OwnerLocale.PortugueseBrazil],
     ['新規エージェント Foo', CommandKind.CreateAgent, 'Foo', OwnerLocale.Japanese],
     ['새 에이전트 Foo', CommandKind.CreateAgent, 'Foo', OwnerLocale.Korean],
+    ['language hi', CommandKind.SetLanguage, 'hi', OwnerLocale.EnglishUs],
   ])('still reads %j as %s', (text, kind, rawName, locale) => {
     expect(say(text)).toEqual({ kind, rawName, locale });
   });

@@ -186,7 +186,8 @@
   }
 }
 
-html[lang='ar'] .zapbip-hero-eyebrow {
+html[lang='ar'] .zapbip-hero-eyebrow,
+html[lang='hi'] .zapbip-hero-eyebrow {
   letter-spacing: normal;
   text-transform: none;
 }

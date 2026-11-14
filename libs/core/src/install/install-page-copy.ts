@@ -72,4 +72,12 @@ export const INSTALL_PAGE_COPY: Record<OwnerLocale, InstallPageTexts> = {
     notFound: 'غير موجود.',
     footer: `zapbip منتج من ${COMPANY.tradeName}`,
   },
+  [OwnerLocale.Hindi]: {
+    ownerLanguage: 'Hindi',
+    unsupportedProduct: 'zapbip अभी इस प्रोडक्ट को नहीं पहचानता, इसलिए इसे इंस्टॉल नहीं किया जा सका।',
+    expired:
+      'इस लिंक की समय-सीमा खत्म हो गई है या यह पहले ही इस्तेमाल हो चुका है। WhatsApp पर zapbip से नया लिंक माँगें: `लिंक बदलें <नाम>` भेजें।',
+    notFound: 'नहीं मिला।',
+    footer: `zapbip, ${COMPANY.tradeName} का प्रोडक्ट है`,
+  },
 };

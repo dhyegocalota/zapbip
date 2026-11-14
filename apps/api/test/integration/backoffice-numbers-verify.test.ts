@@ -26,6 +26,7 @@ const CLOSED_PORT_BASE_URL = 'http://127.0.0.1:1';
 const NUMBER_PATH = `/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`;
 const TEMPLATES_PATH = `/${GRAPH_API_VERSION}/${WABA_ID}/message_templates`;
 const copy = BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil];
+const CHECKED_TEMPLATE_ROWS = Object.values(WhatsAppTemplateName).length * Object.values(WhatsAppLanguageCode).length;
 const fakeGraph = new FakeGraph({
   baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl,
   resourceIds: [PHONE_NUMBER_ID, WABA_ID],
@@ -113,7 +114,7 @@ describe('verifying a number with Meta', () => {
     expect(body.split(`name="returnTo" value="${path}"`)).toHaveLength(3);
   });
 
-  test('redirects to the stored result, sets verified_at and shows the four template rows', async () => {
+  test('redirects to the stored result, sets verified_at and shows one template row per name and language', async () => {
     await answerNumber({ reportedDisplayNumber: REPORTED_DISPLAY_NUMBER });
     await answerTemplates();
     const response = await verify({});
@@ -124,7 +125,7 @@ describe('verifying a number with Meta', () => {
     expect(body).toContain(copy[BackofficeCopyKey.VerifyOk]);
     expect(body).toContain(VERIFIED_NAME);
     expect(body).toContain(QUALITY_RATING);
-    expect(body.match(/class="template-row"/g)).toHaveLength(4);
+    expect(body.match(/class="template-row"/g)).toHaveLength(CHECKED_TEMPLATE_ROWS);
     expect(body).toContain(copy[BackofficeCopyKey.VerifyTemplateStatusApproved]);
     expect(body).toContain(copy[BackofficeCopyKey.VerifyTemplateStatusPending]);
     expect(body).toContain(copy[BackofficeCopyKey.VerifyTemplateStatusRejected]);
@@ -137,7 +138,8 @@ describe('verifying a number with Meta', () => {
     await answerTemplates();
     await verify({});
     const requests = await fakeGraph.requests();
-    expect(requests.map((request) => request.headers.authorization)).toEqual([`Bearer ${ACCESS_TOKEN}`, `Bearer ${ACCESS_TOKEN}`]);
+    expect(requests.length).toBeGreaterThan(1);
+    expect(requests.filter((request) => request.headers.authorization !== `Bearer ${ACCESS_TOKEN}`)).toEqual([]);
     const row = await testEnv.CONNECTIONS.prepare('SELECT verification_snapshot AS snapshot FROM whatsapp_numbers WHERE id = ?')
       .bind(NUMBER_ID)
       .first<{ snapshot: string }>();

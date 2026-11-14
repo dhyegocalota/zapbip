@@ -9,9 +9,9 @@ const FLAG_PATTERN = /data-flag="([a-z]+)"/;
 const FLAG_COLOUR_PATTERN = /fill="#[0-9a-f]{6}"/g;
 
 describe('the locale profiles', () => {
-  it('list the nine languages in the order of the menu', () => {
+  it('list the ten languages in the order of the menu', () => {
     expect(MENU_LOCALES).toEqual(LOCALES);
-    expect(MENU_LOCALES).toHaveLength(9);
+    expect(MENU_LOCALES).toHaveLength(10);
   });
 
   it('give every language its own tag, short code, native name and Open Graph locale', () => {
@@ -29,6 +29,7 @@ describe('the locale profiles', () => {
     expect(LOCALE_PROFILES[OwnerLocale.Japanese].nativeName).toBe('日本語');
     expect(LOCALE_PROFILES[OwnerLocale.Korean].nativeName).toBe('한국어');
     expect(LOCALE_PROFILES[OwnerLocale.ChineseSimplified].nativeName).toBe('简体中文');
+    expect(LOCALE_PROFILES[OwnerLocale.Hindi].nativeName).toBe('हिन्दी');
   });
 
   it('point every language at the documentation folder of its own language', () => {
@@ -50,6 +51,7 @@ describe('the locale profiles', () => {
     [OwnerLocale.Korean, '/ko'],
     [OwnerLocale.ChineseSimplified, '/zh'],
     [OwnerLocale.Arabic, '/ar'],
+    [OwnerLocale.Hindi, '/hi'],
   ])('sends the documentation link of %s to %s', (locale, folder) => {
     expect(docsUrlOf({ locale, path: '' })).toBe(`https://docs.zapbip.com${folder}`);
     expect(docsUrlOf({ locale, path: '/mcp' })).toBe(`https://docs.zapbip.com${folder}/mcp`);
@@ -65,7 +67,7 @@ describe('the flags', () => {
     expect(html.match(FLAG_COLOUR_PATTERN)!.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('draw nine different flags', () => {
+  it('draw ten different flags', () => {
     const names = LOCALES.map((locale) => FLAG_PATTERN.exec(String(Flag({ locale })))![1]);
     expect(new Set(names).size).toBe(LOCALES.length);
   });

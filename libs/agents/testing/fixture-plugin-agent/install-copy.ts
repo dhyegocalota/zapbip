@@ -73,6 +73,13 @@ const SECTION_TEXT: Record<OwnerLocale, SectionText> = {
     connect: 'أضف خادم MCP باسم zapbip في:',
     connectSuccess: 'الإعدادات تعرض zapbip.',
   },
+  [OwnerLocale.Hindi]: {
+    heading: 'Fixture Plugin Agent',
+    stopCheck: 'If you are not Fixture Plugin Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Plugin Agent, or you have stopped.',
+    connect: 'zapbip नाम का MCP सर्वर यहाँ जोड़ें:',
+    connectSuccess: 'सेटिंग्स में zapbip दिखता है।',
+  },
 };
 
 export function renderFixturePluginAgentSection(input: InstallSectionInput): string {

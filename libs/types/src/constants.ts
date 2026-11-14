@@ -20,6 +20,7 @@ export const CLIENT_APP_LOCALE_PATH_PREFIXES: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '/ko',
   [OwnerLocale.ChineseSimplified]: '/zh',
   [OwnerLocale.Arabic]: '/ar',
+  [OwnerLocale.Hindi]: '/hi',
 };
 export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.EnglishUs]: 'login',
@@ -31,6 +32,7 @@ export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '로그인',
   [OwnerLocale.ChineseSimplified]: '登录',
   [OwnerLocale.Arabic]: 'دخول',
+  [OwnerLocale.Hindi]: 'लॉगिन',
 };
 export const CLIENT_APP_TOKEN_BYTES = 32;
 export const CLIENT_APP_TOKEN_LENGTH = 43;
@@ -50,6 +52,7 @@ export const INSTALL_SELF_TEST_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '✅ 설치 완료',
   [OwnerLocale.ChineseSimplified]: '✅ 安装完成',
   [OwnerLocale.Arabic]: '✅ تم التثبيت',
+  [OwnerLocale.Hindi]: '✅ इंस्टॉल हो गया',
 };
 export const BYTES_PER_KILOBYTE = 1_000;
 export const COMPANY_FACT_UNSET = 'COMPANY_FACT_UNSET';
@@ -87,6 +90,7 @@ export const DOCS_LANGUAGE_FOLDERS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: 'ko',
   [DocsPageLanguage.Chinese]: 'zh',
   [DocsPageLanguage.Arabic]: 'ar',
+  [DocsPageLanguage.Hindi]: 'hi',
 };
 export const DOCS_OWNER_LOCALES: Record<DocsPageLanguage, OwnerLocale> = {
   [DocsPageLanguage.English]: OwnerLocale.EnglishUs,
@@ -98,6 +102,7 @@ export const DOCS_OWNER_LOCALES: Record<DocsPageLanguage, OwnerLocale> = {
   [DocsPageLanguage.Korean]: OwnerLocale.Korean,
   [DocsPageLanguage.Chinese]: OwnerLocale.ChineseSimplified,
   [DocsPageLanguage.Arabic]: OwnerLocale.Arabic,
+  [DocsPageLanguage.Hindi]: OwnerLocale.Hindi,
 };
 export const OWNER_LOCALE_BY_CALLING_CODE: Record<string, OwnerLocale> = {
   '55': OwnerLocale.PortugueseBrazil,
@@ -164,6 +169,7 @@ export const DOCS_LANGUAGE_OF_OWNER_LOCALE: Record<OwnerLocale, DocsPageLanguage
   [OwnerLocale.Korean]: DocsPageLanguage.Korean,
   [OwnerLocale.ChineseSimplified]: DocsPageLanguage.Chinese,
   [OwnerLocale.Arabic]: DocsPageLanguage.Arabic,
+  [OwnerLocale.Hindi]: DocsPageLanguage.Hindi,
 };
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
 export const PRODUCTION_ZONE = 'zapbip.com';
@@ -183,6 +189,7 @@ export const ONBOARDING_SETUP_LINKS: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: `${DOCS_ORIGIN}/ko/get-started/how-to-start`,
   [OwnerLocale.ChineseSimplified]: `${DOCS_ORIGIN}/zh/get-started/how-to-start`,
   [OwnerLocale.Arabic]: `${DOCS_ORIGIN}/ar/get-started/how-to-start`,
+  [OwnerLocale.Hindi]: `${DOCS_ORIGIN}/hi/get-started/how-to-start`,
 };
 export const ONBOARDING_REQUEST_ACCESS_LINKS: Record<OwnerLocale, string> = {
   [OwnerLocale.EnglishUs]: SITE_ORIGIN,
@@ -194,6 +201,7 @@ export const ONBOARDING_REQUEST_ACCESS_LINKS: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: `${SITE_ORIGIN}/ko`,
   [OwnerLocale.ChineseSimplified]: `${SITE_ORIGIN}/zh`,
   [OwnerLocale.Arabic]: `${SITE_ORIGIN}/ar`,
+  [OwnerLocale.Hindi]: `${SITE_ORIGIN}/hi`,
 };
 export const WHATSAPP_LINK_ORIGIN = 'https://wa.me';
 export const WHATSAPP_LINK_TEXT_PARAMETER = 'text';
@@ -207,6 +215,7 @@ export const START_PREFILLED_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '안녕하세요! 제 AI 에이전트를 zapbip에 연결하고 싶어요.',
   [OwnerLocale.ChineseSimplified]: '你好！我想把我的 AI 智能体连接到 zapbip。',
   [OwnerLocale.Arabic]: 'مرحبًا! أريد ربط وكلاء الذكاء الاصطناعي الخاصين بي بـ zapbip.',
+  [OwnerLocale.Hindi]: 'नमस्ते! मुझे अपने AI एजेंट zapbip से जोड़ने हैं।',
 };
 export const CLOUDFLARE_NAMESERVER_SUFFIX = '.ns.cloudflare.com';
 export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
@@ -248,4 +257,5 @@ export const PRICING_CURRENCY_BY_LOCALE: Record<OwnerLocale, PricingCurrency> = 
   [OwnerLocale.Korean]: PricingCurrency.Usd,
   [OwnerLocale.ChineseSimplified]: PricingCurrency.Usd,
   [OwnerLocale.Arabic]: PricingCurrency.Usd,
+  [OwnerLocale.Hindi]: PricingCurrency.Usd,
 };

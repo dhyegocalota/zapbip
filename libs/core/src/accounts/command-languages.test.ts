@@ -45,6 +45,15 @@ const ORDINARY_MESSAGES = [
   'اللغة العربية جميلة',
   'تجديد الاشتراك',
   'تجديد الاشتراك السنوي',
+  'हाँ',
+  'नहीं',
+  'ठीक है',
+  'धन्यवाद',
+  'शुक्रिया',
+  'मदद करो',
+  'नया लिंक भेजो',
+  'एजेंट अच्छा है',
+  'भाषा हिंदी है',
 ];
 
 function kindsOfText(words: string): Set<CommandKind> {
@@ -55,7 +64,7 @@ function localesOfText(words: string): OwnerLocale[] {
   return COMMAND_WORDS.filter((entry) => entry.words === words).map((entry) => entry.locale);
 }
 
-describe('the command words of the eight languages', () => {
+describe('the command words of every language', () => {
   it.each(LOCALES)('gives %s a word for every command', (locale) => {
     const kinds = COMMAND_WORDS.filter((entry) => entry.locale === locale).map((entry) => entry.kind);
     expect(SPOKEN_KINDS.filter((kind) => !kinds.includes(kind))).toEqual([]);

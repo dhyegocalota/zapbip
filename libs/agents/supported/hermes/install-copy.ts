@@ -47,6 +47,10 @@ const HERMES_TEXT: Record<OwnerLocale, HermesText> = {
     wakeNote: 'يسلّم المكوّن الإضافي كل رسالة فورًا؛ ومن دونه يفحص Hermes صندوق الوارد كل دقيقة.',
     pollCost: 'الفحص كل دقيقة يستهلك استدعاءات للنموذج.',
   },
+  [OwnerLocale.Hindi]: {
+    wakeNote: 'प्लगइन हर संदेश तुरंत पहुँचाता है; प्लगइन के बिना Hermes हर मिनट इनबॉक्स देखता है।',
+    pollCost: 'हर मिनट इनबॉक्स देखने पर मॉडल कॉल का खर्च आता है।',
+  },
 };
 
 export const HERMES_COPY = localizeCopy({
@@ -88,6 +92,7 @@ const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: 'Hermes의 config.yaml에서 mcp_servers 아래에',
   [OwnerLocale.ChineseSimplified]: '在 Hermes 的 config.yaml 中，放在 mcp_servers 下',
   [OwnerLocale.Arabic]: 'في ملف config.yaml الخاص بـ Hermes، تحت mcp_servers',
+  [OwnerLocale.Hindi]: 'Hermes के config.yaml में, mcp_servers के नीचे',
 };
 
 export const HERMES_QUICK_START = quickStartOf({

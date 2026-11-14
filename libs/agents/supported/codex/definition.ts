@@ -18,6 +18,7 @@ export const definition: AgentDefinition = {
       [DocsPageLanguage.Korean]: ['900', '한 번의 호출'],
       [DocsPageLanguage.Chinese]: ['900', '一次调用'],
       [DocsPageLanguage.Arabic]: ['900', 'استدعاء واحد'],
+      [DocsPageLanguage.Hindi]: ['900', 'एक ही कॉल'],
     },
     speakerNames: ['Codex'],
   },

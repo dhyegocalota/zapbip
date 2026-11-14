@@ -58,6 +58,7 @@ const GONE_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.Korean]: '재발급 <이름>',
   [OwnerLocale.ChineseSimplified]: '轮换 <名称>',
   [OwnerLocale.Arabic]: 'تجديد رابط <الاسم>',
+  [OwnerLocale.Hindi]: 'लिंक बदलें <नाम>',
 };
 
 const LINK_PREVIEW_USER_AGENTS = [

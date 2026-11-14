@@ -63,7 +63,7 @@ describe('the legal copy', () => {
         const sections = legalTextOf({ document, locale }).sections;
         return sections
           .flatMap((section) => section.paragraphs)
-          .filter((paragraph) => /portug|ポルトガル|포르투갈|葡萄牙|البرتغالية/i.test(paragraph))
+          .filter((paragraph) => /portug|ポルトガル|포르투갈|葡萄牙|البرتغالية|पुर्तगाली/i.test(paragraph))
           .join('\n');
       };
       expect(closing(LegalDocument.Terms)).not.toBe('');

@@ -72,6 +72,12 @@ export const AGENT_PAGE_HEADINGS: Record<DocsPageLanguage, Record<AgentPageSecti
     [AgentPageSection.SetupFromZero]: 'الإعداد من الصفر',
     [AgentPageSection.CheckItWorks]: 'تحقق من أنه يعمل',
   },
+  [DocsPageLanguage.Hindi]: {
+    [AgentPageSection.WhatWorks]: 'क्या-क्या काम करता है',
+    [AgentPageSection.HowItListens]: 'यह कैसे सुनता है',
+    [AgentPageSection.SetupFromZero]: 'शुरू से सेटअप करें',
+    [AgentPageSection.CheckItWorks]: 'जाँचें कि यह काम करता है',
+  },
 };
 
 export const WAKE_RUNG_LABELS: Record<DocsPageLanguage, Record<WakeRung, string>> = {
@@ -138,6 +144,13 @@ export const WAKE_RUNG_LABELS: Record<DocsPageLanguage, Record<WakeRung, string>
     [WakeRung.Scheduled]: 'مجدول',
     [WakeRung.Standby]: 'احتياطي',
   },
+  [DocsPageLanguage.Hindi]: {
+    [WakeRung.Inbox]: 'इनबॉक्स',
+    [WakeRung.Local]: 'लोकल',
+    [WakeRung.Webhook]: 'Webhook',
+    [WakeRung.Scheduled]: 'शेड्यूल्ड',
+    [WakeRung.Standby]: 'स्टैंडबाय',
+  },
 };
 
 export const LISTEN_STATEMENT_TOKENS: Record<DocsPageLanguage, { pending: string; recallsUntilAnswered: string; noTimeLimit: string }> = {
@@ -150,6 +163,7 @@ export const LISTEN_STATEMENT_TOKENS: Record<DocsPageLanguage, { pending: string
   [DocsPageLanguage.Korean]: { pending: '보류 중', recallsUntilAnswered: '다시', noTimeLimit: '시간 제한 없이' },
   [DocsPageLanguage.Chinese]: { pending: '待处理', recallsUntilAnswered: '再次', noTimeLimit: '没有时间限制' },
   [DocsPageLanguage.Arabic]: { pending: 'قيد الانتظار', recallsUntilAnswered: 'مرة أخرى', noTimeLimit: 'دون حد زمني' },
+  [DocsPageLanguage.Hindi]: { pending: 'पेंडिंग', recallsUntilAnswered: 'फिर से', noTimeLimit: 'कोई समय-सीमा नहीं' },
 };
 
 export const AGENTS_GROUP_INDEX = 1;
@@ -164,6 +178,7 @@ export const DOCS_GROUPS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['시작하기', 'AI', '기능', '도움말', '개발자용'],
   [DocsPageLanguage.Chinese]: ['快速开始', 'AI', '功能', '帮助', '开发者'],
   [DocsPageLanguage.Arabic]: ['البدء', 'الذكاء الاصطناعي', 'الميزات', 'المساعدة', 'للمطورين'],
+  [DocsPageLanguage.Hindi]: ['शुरुआत', 'AI', 'फ़ीचर', 'मदद', 'डेवलपर्स के लिए'],
 };
 
 export function perLanguage<Value>(input: { valueOf: (language: DocsPageLanguage) => Value }): Record<DocsPageLanguage, Value> {

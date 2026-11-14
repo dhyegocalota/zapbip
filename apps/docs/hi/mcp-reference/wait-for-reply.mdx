@@ -1,0 +1,23 @@
+---
+title: 'wait_for_reply'
+description: 'किसी जवाब या ओनर के अगले संदेश का इंतज़ार करें।'
+---
+
+किसी जवाब या ओनर के अगले संदेश का इंतज़ार करें।
+
+## इनपुट
+
+| फ़ील्ड            | टाइप             | नोट                          |
+| ----------------- | ---------------- | ---------------------------- |
+| `question_id`     | string, वैकल्पिक | जिस सवाल का इंतज़ार करना है। |
+| `timeout_seconds` | number, वैकल्पिक | 50 तक।                       |
+
+## आउटपुट
+
+`question_id` के साथ: जवाब, जैसा [ask](/hi/mcp-reference/ask) में, जब तक सवाल रखा हुआ है हर बार। इसके बिना: `{ "status": "message", "messages": [...] }`। समय खत्म होने पर: `{ "status": "timeout" }`।
+
+## संदेशों के प्रकार
+
+import MessageKinds from '/snippets/hi/message-kinds.mdx';
+
+<MessageKinds />

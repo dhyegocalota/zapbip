@@ -16,6 +16,7 @@ const HEADER: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Korean]: ['AI', '깨우기 방식', '예상 지연', '페이지'],
   [DocsPageLanguage.Chinese]: ['AI', '唤醒方式', '预期延迟', '页面'],
   [DocsPageLanguage.Arabic]: ['الذكاء الاصطناعي', 'نوع الإيقاظ', 'التأخير المتوقع', 'الصفحة'],
+  [DocsPageLanguage.Hindi]: ['AI', 'जगाने का तरीका', 'अनुमानित देरी', 'पेज'],
 };
 const ROW_FOR_ONE_AGENT: Record<DocsPageLanguage, string[][]> = {
   [DocsPageLanguage.English]: [
@@ -62,6 +63,11 @@ const ROW_FOR_ONE_AGENT: Record<DocsPageLanguage, string[][]> = {
     ['Alpha Agent', 'محلي', '7 ثوان', '[Alpha Agent](/ar/agents/alpha-agent)'],
     ['Beta Agent', 'محلي', 'لم يُقَس', '[Beta Agent](/ar/agents/beta-agent)'],
     ['Gamma Agent', 'مجدول', 'ساعة', '[Gamma Agent](/ar/agents/gamma-agent)'],
+  ],
+  [DocsPageLanguage.Hindi]: [
+    ['Alpha Agent', 'लोकल', '7 सेकंड', '[Alpha Agent](/hi/agents/alpha-agent)'],
+    ['Beta Agent', 'लोकल', 'मापा नहीं गया', '[Beta Agent](/hi/agents/beta-agent)'],
+    ['Gamma Agent', 'शेड्यूल्ड', '1 घंटा', '[Gamma Agent](/hi/agents/gamma-agent)'],
   ],
 };
 
