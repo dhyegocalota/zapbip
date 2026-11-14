@@ -1108,6 +1108,15 @@ details p {
     background: transparent;
   }
 
+  .join-row input:focus-visible {
+    outline: none;
+  }
+
+  .join-row:has(input:focus-visible) {
+    outline: var(--size-focus-ring) solid var(--color-focus);
+    outline-offset: var(--size-focus-offset);
+  }
+
   .join-row .button {
     min-height: 3rem;
   }
@@ -1252,6 +1261,16 @@ a:hover {
 
 .join-row input[aria-invalid='true'] {
   border: 2px solid var(--color-danger);
+}
+
+@media (min-width: 40rem) {
+  .join-row input[aria-invalid='true'] {
+    border: 0;
+  }
+
+  .join-row:has(input[aria-invalid='true']) {
+    border-color: var(--color-danger);
+  }
 }
 
 .join-row input[readonly] {

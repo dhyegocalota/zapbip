@@ -87,3 +87,16 @@ describe('the site stylesheet', () => {
     expect([...new Set(used)].filter((name) => !declared.has(name) && !THIRD_PARTY_CLASSES.includes(name))).toEqual([]);
   });
 });
+
+describe('the join field focus', () => {
+  it('rings the whole pill, not the field inside it, when the email field takes focus', () => {
+    expect(SITE_STYLESHEET).toMatch(/\.join-row input:focus-visible \{[^}]*outline: none;/);
+    expect(SITE_STYLESHEET).toMatch(
+      /\.join-row:has\(input:focus-visible\) \{[^}]*outline: var\(--size-focus-ring\) solid var\(--color-focus\);/,
+    );
+  });
+
+  it('marks an invalid email on the pill, not with a border inside it', () => {
+    expect(SITE_STYLESHEET).toMatch(/\.join-row:has\(input\[aria-invalid='true'\]\) \{[^}]*border-color: var\(--color-danger\);/);
+  });
+});
