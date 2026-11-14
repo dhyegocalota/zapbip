@@ -1,3 +1,5 @@
+import { escapeHtml } from './escape-html';
+
 export enum EmailSlot {
   Email = 'email',
   ReferralLink = 'referralLink',
@@ -13,14 +15,15 @@ export enum EmailSlot {
 
 export type EmailSlotValues = Partial<Record<EmailSlot, string>>;
 
-export function slotOf(_slot: EmailSlot): string {
-  throw new Error('slotOf is not implemented');
+export function slotOf(slot: EmailSlot): string {
+  return `{{${slot}}}`;
 }
 
-export function filledTextOf(_input: { text: string; values: EmailSlotValues }): string {
-  throw new Error('filledTextOf is not implemented');
+export function filledTextOf(input: { text: string; values: EmailSlotValues }): string {
+  return Object.entries(input.values).reduce((text, [slot, value]) => text.replaceAll(slotOf(slot as EmailSlot), value), input.text);
 }
 
-export function filledHtmlOf(_input: { html: string; values: EmailSlotValues }): string {
-  throw new Error('filledHtmlOf is not implemented');
+export function filledHtmlOf(input: { html: string; values: EmailSlotValues }): string {
+  const escaped = Object.fromEntries(Object.entries(input.values).map(([slot, value]) => [slot, escapeHtml({ text: value })]));
+  return filledTextOf({ text: input.html, values: escaped });
 }

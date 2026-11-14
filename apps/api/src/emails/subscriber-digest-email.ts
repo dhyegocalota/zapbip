@@ -1,6 +1,4 @@
-import { Heading, Text } from '@react-email/components';
-import { OwnerLocale, WaitlistSource } from '@zapbip/types';
-import { createElement, type ReactElement } from 'react';
+import { WaitlistSource } from '@zapbip/types';
 import { utcDay } from '../account-inbox/usage-meter';
 import type { DigestSubscriber, SubscriberDigestFacts } from '../operations/subscriber-digest-queries';
 import { formattingLocaleOf, LOCALE_PROFILES } from '../web-shell/locale-profiles';
@@ -9,15 +7,16 @@ import {
   EMAIL_SENDER,
   OWNER_TIME_ZONE,
   SUBSCRIBER_DIGEST_IDEMPOTENCY_PREFIX,
+  SUBSCRIBER_DIGEST_LOCALE,
   SUBSCRIBER_DIGEST_RECIPIENT,
 } from './email-constants';
-import { EmailLayout } from './email-layout';
 import { EmailKind, type EmailMessage } from './email-sender';
-import { HEADING_STYLE, LINE_STYLE, SUBHEADING_STYLE } from './email-style';
-import { renderEmail } from './render-email';
+import { EmailSlot, type EmailSlotValues, filledHtmlOf, filledTextOf } from './email-slot';
+import { SUBSCRIBER_DIGEST_EMAIL } from './generated/email-templates';
 import { renderSubscriberDigestCopy, SubscriberDigestCopyKey } from './subscriber-digest-email-copy';
 
-export const SUBSCRIBER_DIGEST_LOCALE = OwnerLocale.PortugueseBrazil;
+const TEXT_ROW_SEPARATOR = '\n\n';
+const HTML_ROW_SEPARATOR = '';
 
 const DAY_FORMAT = new Intl.DateTimeFormat(formattingLocaleOf({ locale: SUBSCRIBER_DIGEST_LOCALE }), {
   timeZone: OWNER_TIME_ZONE,
@@ -37,13 +36,15 @@ const SOURCE_COPY_KEYS: Record<WaitlistSource, SubscriberDigestCopyKey> = {
   [WaitlistSource.Agent]: SubscriberDigestCopyKey.SourceAgent,
 };
 
-export type SubscriberDigestEmailProps = { facts: SubscriberDigestFacts; now: number };
+type RowSlot = EmailSlot.NewSubscriberRows | EmailSlot.LocaleRows | EmailSlot.ReferrerRows;
+
+export type SubscriberDigestInput = { facts: SubscriberDigestFacts; now: number };
 
 function copy(key: SubscriberDigestCopyKey, values?: Record<string, string>): string {
   return renderSubscriberDigestCopy({ key, values });
 }
 
-function subjectOf(input: SubscriberDigestEmailProps): string {
+function subjectOf(input: SubscriberDigestInput): string {
   const date = DAY_FORMAT.format(new Date(input.now));
   if (input.facts.newCount === 1) return copy(SubscriberDigestCopyKey.SubjectOne, { date });
   return copy(SubscriberDigestCopyKey.SubjectMany, { count: String(input.facts.newCount), date });
@@ -61,66 +62,75 @@ function subscriberLineOf(input: { subscriber: DigestSubscriber }): string {
   return copy(SubscriberDigestCopyKey.ReferredSubscriberLine, { ...values, referrer: subscriber.referrerEmail });
 }
 
-function line(text: string): ReactElement {
-  return createElement(Text, { style: LINE_STYLE }, text);
-}
-
-function subheading(text: string): ReactElement {
-  return createElement(Heading, { as: 'h2', style: SUBHEADING_STYLE }, text);
-}
-
-function newSubscriberLinesOf(input: { facts: SubscriberDigestFacts }): ReactElement[] {
+function newSubscriberLinesOf(input: { facts: SubscriberDigestFacts }): string[] {
   const { facts } = input;
-  if (facts.newSubscribers.length === 0) return [line(copy(SubscriberDigestCopyKey.NoNewSubscribers))];
-  const lines = facts.newSubscribers.map((subscriber) => line(subscriberLineOf({ subscriber })));
+  if (facts.newSubscribers.length === 0) return [copy(SubscriberDigestCopyKey.NoNewSubscribers)];
+  const lines = facts.newSubscribers.map((subscriber) => subscriberLineOf({ subscriber }));
   const hiddenCount = facts.newCount - facts.newSubscribers.length;
   if (hiddenCount <= 0) return lines;
-  return [...lines, line(copy(SubscriberDigestCopyKey.MoreSubscribers, { count: String(hiddenCount) }))];
+  return [...lines, copy(SubscriberDigestCopyKey.MoreSubscribers, { count: String(hiddenCount) })];
 }
 
-function referrerLinesOf(input: { facts: SubscriberDigestFacts }): ReactElement[] {
-  if (input.facts.topReferrers.length === 0) return [line(copy(SubscriberDigestCopyKey.NoReferrers))];
+function localeLinesOf(input: { facts: SubscriberDigestFacts }): string[] {
+  return input.facts.localeTotals.map((entry) =>
+    copy(SubscriberDigestCopyKey.LocaleLine, { language: LOCALE_PROFILES[entry.locale].nativeName, total: String(entry.total) }),
+  );
+}
+
+function referrerLinesOf(input: { facts: SubscriberDigestFacts }): string[] {
+  if (input.facts.topReferrers.length === 0) return [copy(SubscriberDigestCopyKey.NoReferrers)];
   return input.facts.topReferrers.map((referrer) =>
-    line(copy(SubscriberDigestCopyKey.ReferrerLine, { email: referrer.email, count: String(referrer.total) })),
+    copy(SubscriberDigestCopyKey.ReferrerLine, { email: referrer.email, count: String(referrer.total) }),
   );
 }
 
-export function SubscriberDigestEmail(props: SubscriberDigestEmailProps): ReactElement {
-  const { facts } = props;
-  return createElement(
-    EmailLayout,
-    {
-      locale: SUBSCRIBER_DIGEST_LOCALE,
-      title: subjectOf(props),
-      preview: copy(SubscriberDigestCopyKey.Preview),
-      footer: copy(SubscriberDigestCopyKey.Footer, { recipient: SUBSCRIBER_DIGEST_RECIPIENT }),
-    },
-    createElement(Heading, { as: 'h1', style: HEADING_STYLE }, copy(SubscriberDigestCopyKey.Heading)),
-    subheading(copy(SubscriberDigestCopyKey.NewTitle)),
-    ...newSubscriberLinesOf({ facts }),
-    subheading(copy(SubscriberDigestCopyKey.TotalsTitle)),
-    line(copy(SubscriberDigestCopyKey.TotalLine, { total: String(facts.total) })),
-    subheading(copy(SubscriberDigestCopyKey.LocalesTitle)),
-    ...facts.localeTotals.map((entry) =>
-      line(copy(SubscriberDigestCopyKey.LocaleLine, { language: LOCALE_PROFILES[entry.locale].nativeName, total: String(entry.total) })),
-    ),
-    subheading(copy(SubscriberDigestCopyKey.WelcomeTitle)),
-    line(copy(SubscriberDigestCopyKey.WelcomeSentLine, { count: String(facts.welcomesSent) })),
-    line(copy(SubscriberDigestCopyKey.WelcomeFailedLine, { count: String(facts.welcomesFailed) })),
-    subheading(copy(SubscriberDigestCopyKey.ReferrersTitle)),
-    ...referrerLinesOf({ facts }),
+function rowLinesOf(input: { facts: SubscriberDigestFacts }): Record<RowSlot, string[]> {
+  return {
+    [EmailSlot.NewSubscriberRows]: newSubscriberLinesOf(input),
+    [EmailSlot.LocaleRows]: localeLinesOf(input),
+    [EmailSlot.ReferrerRows]: referrerLinesOf(input),
+  };
+}
+
+function rowsHtmlOf(input: { rows: Record<RowSlot, string[]> }): EmailSlotValues {
+  const { row } = SUBSCRIBER_DIGEST_EMAIL;
+  return Object.fromEntries(
+    Object.entries(input.rows).map(([slot, lines]) => [
+      slot,
+      lines.map((line) => filledHtmlOf({ html: row.html, values: { [EmailSlot.Line]: line } })).join(HTML_ROW_SEPARATOR),
+    ]),
   );
 }
 
-export async function subscriberDigestMessageOf(input: SubscriberDigestEmailProps): Promise<EmailMessage> {
-  const rendered = await renderEmail({ element: createElement(SubscriberDigestEmail, input) });
+function rowsTextOf(input: { rows: Record<RowSlot, string[]> }): EmailSlotValues {
+  const { row } = SUBSCRIBER_DIGEST_EMAIL;
+  return Object.fromEntries(
+    Object.entries(input.rows).map(([slot, lines]) => [
+      slot,
+      lines.map((line) => filledTextOf({ text: row.text, values: { [EmailSlot.Line]: line } })).join(TEXT_ROW_SEPARATOR),
+    ]),
+  );
+}
+
+export async function subscriberDigestMessageOf(input: SubscriberDigestInput): Promise<EmailMessage> {
+  const { facts } = input;
+  const { shell } = SUBSCRIBER_DIGEST_EMAIL;
+  const subject = subjectOf(input);
+  const scalars = {
+    [EmailSlot.Subject]: subject,
+    [EmailSlot.Total]: String(facts.total),
+    [EmailSlot.WelcomesSent]: String(facts.welcomesSent),
+    [EmailSlot.WelcomesFailed]: String(facts.welcomesFailed),
+  };
+  const rows = rowLinesOf({ facts });
   return {
     kind: EmailKind.SubscriberDigest,
     from: EMAIL_SENDER,
     to: SUBSCRIBER_DIGEST_RECIPIENT,
     replyTo: EMAIL_REPLY_TO,
-    subject: subjectOf(input),
-    ...rendered,
+    subject,
+    html: filledTextOf({ text: filledHtmlOf({ html: shell.html, values: scalars }), values: rowsHtmlOf({ rows }) }),
+    text: filledTextOf({ text: filledTextOf({ text: shell.text, values: scalars }), values: rowsTextOf({ rows }) }),
     idempotencyKey: `${SUBSCRIBER_DIGEST_IDEMPOTENCY_PREFIX}${utcDay({ now: input.now })}`,
   };
 }

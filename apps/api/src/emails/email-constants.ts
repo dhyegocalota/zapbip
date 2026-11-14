@@ -1,4 +1,4 @@
-import { COMPANY, PRODUCTION_ZONE, SECOND_MS } from '@zapbip/types';
+import { COMPANY, OwnerLocale, PRODUCTION_ZONE, SECOND_MS } from '@zapbip/types';
 
 export const RESEND_EMAILS_URL = 'https://api.resend.com/emails';
 export const EMAIL_SEND_TIMEOUT_MS = 10 * SECOND_MS;
@@ -9,3 +9,4 @@ export const SUBSCRIBER_DIGEST_RECIPIENT = COMPANY.contactEmail;
 export const WELCOME_IDEMPOTENCY_PREFIX = 'welcome-';
 export const SUBSCRIBER_DIGEST_IDEMPOTENCY_PREFIX = 'subscriber-digest-';
 export const OWNER_TIME_ZONE = 'America/Sao_Paulo';
+export const SUBSCRIBER_DIGEST_LOCALE = OwnerLocale.PortugueseBrazil;

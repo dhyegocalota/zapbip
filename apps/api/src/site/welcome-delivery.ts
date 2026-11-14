@@ -4,7 +4,6 @@ import { LogEvent } from '../contract/log';
 import { EmailKind, type EmailSender, EmailSendOutcome } from '../emails/email-sender';
 import { welcomeMessageOf } from '../emails/welcome-email';
 import { logEvent } from '../log';
-import { REFERRAL_SHARING_OPEN } from './site-constants';
 import type { SiteEnv } from './site-env';
 import { pagePathOf } from './site-links';
 
@@ -18,7 +17,7 @@ type WelcomeDelivery = {
   sender: EmailSender;
   email: string;
   locale: OwnerLocale;
-  referralLink: string | null;
+  referralLink: string;
   now: number;
 };
 
@@ -51,8 +50,7 @@ async function sendWelcomeEmail(input: WelcomeDelivery): Promise<void> {
   await deliverWelcome(input).catch((error: unknown) => failureOf({ error }));
 }
 
-function welcomeReferralLinkOf(input: { siteOrigin: string; locale: OwnerLocale; referralCode: string }): string | null {
-  if (!REFERRAL_SHARING_OPEN) return null;
+function welcomeReferralLinkOf(input: { siteOrigin: string; locale: OwnerLocale; referralCode: string }): string {
   return `${input.siteOrigin}${pagePathOf({ locale: input.locale, agent: null, referralCode: input.referralCode })}`;
 }
 
