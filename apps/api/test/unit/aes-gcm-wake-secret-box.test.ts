@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createAesGcmWakeSecretBox } from '../../src/adapters/wake/aes-gcm-wake-secret-box';
 
 const BASE64 = 'base64';
-const PLAIN = '{"url":"https://api2.cursor.sh/automations/webhook/abc12345","token":"token-with-sixteen-chars"}';
+const PLAIN = '{"url":"https://hooks.example.com/abc12345","token":"token-with-sixteen-chars"}';
 const ASSOCIATED_DATA = 'acc_1:agent-a';
 const OTHER_ASSOCIATED_DATA = 'acc_1:agent-b';
 const UNSUPPORTED_KEY_VERSION = 2;

@@ -35,6 +35,7 @@ import { McpToolName } from '../../src/contract/tool-definitions';
 import { type IsolatedStack, startIsolatedStack } from './isolated-stack';
 import type { StackContext, WakeAccount } from './global-setup';
 import { callTool, mcpUrl } from './stack';
+import { FIRST_PINNED_URL } from '../support/pinned-wake';
 
 const isolated = vi.hoisted(() => ({ context: null as StackContext | null }));
 
@@ -158,8 +159,8 @@ async function awaitLog(input: { container: Container; pattern: string | RegExp;
   );
 }
 
-const WEBHOOK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
-const WEBHOOK_TOKEN = 'grok-token-sixteen-chars';
+const WEBHOOK_URL = FIRST_PINNED_URL;
+const WEBHOOK_TOKEN = 'pinned-token-sixteen-chars';
 const POLL_TICK_MS = 2 * SECOND_MS;
 const REPLACED_CLOSE_CODE_VALUE = 4001;
 const ASK_TIMEOUT_SECONDS = 2;

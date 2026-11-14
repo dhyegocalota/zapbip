@@ -8,11 +8,12 @@ import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { advanceClock, readScreen } from './inbox-session';
 import { applyDirectoryMigration, seedAccount } from './seed';
 import { accountInboxStub, connectionOf } from './workers-env';
+import { FIRST_PINNED_URL } from './pinned-wake';
 
 export const WAKE_ACCOUNT = 'acc_wake';
 export const WAKE_AGENT = 'alpha';
-export const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abc12345';
-export const GROK_TOKEN = 'grok-token-sixteen-chars';
+export const PINNED_WAKE_URL = FIRST_PINNED_URL;
+export const PINNED_WAKE_TOKEN = 'pinned-token-sixteen-chars';
 export const DEBOUNCE_ADVANCE_MS = 3_000;
 export const ACCEPTED: ScriptedWakeResponse = { statusCode: 200, errorName: null, retryAfterMs: null };
 export const UNAVAILABLE: ScriptedWakeResponse = { statusCode: 503, errorName: null, retryAfterMs: null };
@@ -55,17 +56,17 @@ export function expectOk<Value>(outcome: CallOutcome<Value>): Value {
   return outcome.value;
 }
 
-export async function enableGrokWake(input: {
+export async function enablePinnedWake(input: {
   stub: DurableObjectStub<AccountInbox>;
   agent?: AgentName;
   token?: string;
 }): Promise<SetWakeResult> {
   const agent = input.agent === undefined ? WAKE_AGENT : input.agent;
-  const token = input.token === undefined ? GROK_TOKEN : input.token;
+  const token = input.token === undefined ? PINNED_WAKE_TOKEN : input.token;
   return expectOk(
     await input.stub.setWake({
       connection: connectionOf({ accountId: WAKE_ACCOUNT, agent }),
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token, intervalMinutes: null, standbyAgent: null },
+      setting: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token, intervalMinutes: null, standbyAgent: null },
     }),
   );
 }

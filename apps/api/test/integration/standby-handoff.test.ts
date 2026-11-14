@@ -10,7 +10,7 @@ import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
   WAKE_ACCOUNT,
-  enableGrokWake,
+  enablePinnedWake,
   expectOk,
   readRequests,
   wakeStub,
@@ -82,7 +82,7 @@ beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});
-  await enableGrokWake({ stub, agent: STANDBY });
+  await enablePinnedWake({ stub, agent: STANDBY });
   await stub.devScriptWake({ agent: STANDBY, responses: [ACCEPTED, ACCEPTED] });
   await setStandby({ agent: PRIMARY, standbyAgent: STANDBY });
 });
@@ -151,7 +151,7 @@ describe('standby handoff', () => {
   });
 
   it('keeps the message with the primary and tells the owner when the standby became a standby itself', async () => {
-    await enableGrokWake({ stub, agent: THIRD });
+    await enablePinnedWake({ stub, agent: THIRD });
     await setStandby({ agent: STANDBY, standbyAgent: THIRD });
     await ownerWrites({ text: OWNER_TEXT });
     const primaryInbox = await checkInbox({ agent: PRIMARY });

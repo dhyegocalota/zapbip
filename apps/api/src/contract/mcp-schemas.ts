@@ -15,7 +15,6 @@ import {
   ReplyStatus,
   SetWakeStatus,
   WakeMode,
-  WakeProvider,
   WakeRung,
 } from '@zapbip/types';
 
@@ -166,7 +165,7 @@ export const setWakeOutputShape = {
   status: z.enum(SetWakeStatus),
   wake_mode: z.enum(WakeMode),
   effective_rung: z.enum(WakeRung),
-  provider: z.enum(WakeProvider).nullable(),
+  provider: z.string().nullable(),
 };
 
 export const listAgentsInputShape = {};

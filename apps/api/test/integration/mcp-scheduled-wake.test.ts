@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { InboxStatus, MessageKind, SetWakeStatus, WakeMode, WakeProvider, WakeRung } from '@zapbip/types';
+import { InboxStatus, MessageKind, SetWakeStatus, WakeMode, WakeRung } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
 import { callTool, connectClient, ownerText, ownerWrites, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
+import { FIRST_PINNED_URL, FIRST_PINNED_PROVIDER } from '../support/pinned-wake';
 
 const ACCOUNT_ID = 'acc_1';
 const OTHER_ACCOUNT_ID = 'acc_2';
@@ -13,7 +14,7 @@ const CALLER = 'agent-nine';
 const STANDBY_AGENT = 'agent-eight';
 const SECOND_STANDBY_AGENT = 'agent-ten';
 const OTHER_ACCOUNT_AGENT = 'stranger';
-const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
+const PINNED_WAKE_URL = FIRST_PINNED_URL;
 const PINNED_TOKEN = 'p'.repeat(16);
 const INTERVAL_MINUTES = 60;
 const MIN_INTERVAL_MINUTES = 1;
@@ -47,7 +48,7 @@ describe('set_wake and check_inbox over MCP for the scheduled and standby modes'
     await callTool({
       client: input.agentClient,
       name: McpToolName.SetWake,
-      arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN },
+      arguments: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_TOKEN },
     });
   }
 
@@ -96,12 +97,12 @@ describe('set_wake and check_inbox over MCP for the scheduled and standby modes'
   });
 
   it('pin: set_wake webhook still answers the webhook rung', async () => {
-    const result = await setWake({ mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN });
+    const result = await setWake({ mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_TOKEN });
     expect(result.structuredContent).toEqual({
       status: SetWakeStatus.Saved,
       wake_mode: WakeMode.Webhook,
       effective_rung: WakeRung.Webhook,
-      provider: WakeProvider.GrokRoutine,
+      provider: FIRST_PINNED_PROVIDER,
     });
   });
 

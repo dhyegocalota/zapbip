@@ -1,7 +1,8 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_NOTIFICATION_METHOD, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
+import { MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { buildChannelNotification, buildOwnerNotice, formatListenLine } from '../../src/owner-notice';
+import { CHANNEL_PROTOCOL } from '../../src/channel-protocol';
 
 function textMessage(input: { text: string }): Message {
   return {
@@ -94,7 +95,7 @@ describe('formatListenLine', () => {
 describe('buildChannelNotification', () => {
   test('uses the channel method with the text as content and the verified owner as meta', () => {
     expect(buildChannelNotification({ message: textMessage({ text: 'Oi' }) })).toEqual({
-      method: CHANNEL_NOTIFICATION_METHOD,
+      method: CHANNEL_PROTOCOL.notificationMethod,
       params: { content: 'Oi', meta: { sender: 'owner', verified: 'true', forwarded: 'false' } },
     });
   });

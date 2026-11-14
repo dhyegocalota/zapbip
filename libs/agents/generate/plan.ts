@@ -8,6 +8,7 @@ import type { DiscoveredAgent } from './discover';
 import { formatted } from './format';
 import { loadAgent, registryEntriesOf, type LoadedAgent } from './load';
 import { DOCS_CONFIG, GENERATED_FOLDER, MATRIX_SNIPPETS, PAGE_DIRECTORIES, WORKFLOW_FILE } from './paths';
+import { renderChannelRegistry } from './render-channel';
 import { renderConnectorRegistry } from './render-connector';
 import { renderDefinitions } from './render-definitions';
 import { renderIds } from './render-ids';
@@ -16,6 +17,7 @@ import { renderMatrix } from './render-matrix';
 import { listedAgentSlugsOf, orphanPagesOf, renderNavigation } from './render-navigation';
 import { planPages } from './render-pages';
 import { renderPluginRegistry } from './render-plugins';
+import { renderWakeRegistry } from './render-wake';
 import { renderWorkflow } from './render-workflow';
 
 export type GeneratedFile = { path: string; content: string };
@@ -44,6 +46,8 @@ function generatedModules(input: { agents: ResolvedAgent[] }): GeneratedFile[] {
     { path: `${GENERATED_FOLDER}/install.ts`, content: renderInstallRegistry(input) },
     { path: `${GENERATED_FOLDER}/connector.ts`, content: renderConnectorRegistry(input) },
     { path: `${GENERATED_FOLDER}/plugins.ts`, content: renderPluginRegistry(input) },
+    { path: `${GENERATED_FOLDER}/wake.ts`, content: renderWakeRegistry(input) },
+    { path: `${GENERATED_FOLDER}/channel.ts`, content: renderChannelRegistry(input) },
   ];
 }
 

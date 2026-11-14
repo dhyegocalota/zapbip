@@ -2,7 +2,7 @@ import { WakeMode, WakeRung } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { attachLocalConnector, detachLocalConnector } from './local-connector';
 import type { StoredWake } from './wake-setting';
-import { addUnreadOwnerMessage, CLAUDE_URL, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
+import { addUnreadOwnerMessage, BETA_URL, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
 import { wakeRungFor } from './wake-rung';
 import { storedWakeOf } from './testing/wake-doubles';
 
@@ -94,7 +94,7 @@ describe('attachLocalConnector after the user changed the setting', () => {
     const wakeEnvironment = await createWakeEnvironment();
     await setWebhook({ wakeEnvironment, agent: AGENT });
     await attach({ wakeEnvironment });
-    await setWebhook({ wakeEnvironment, agent: AGENT, url: CLAUDE_URL });
+    await setWebhook({ wakeEnvironment, agent: AGENT, url: BETA_URL });
     const newer = await wakeEnvironment.wake.repository.findWake({ agent: AGENT });
     await attach({ wakeEnvironment });
     expect(await wakeEnvironment.wake.repository.findLocalRestore({ agent: AGENT })).toEqual(newer);

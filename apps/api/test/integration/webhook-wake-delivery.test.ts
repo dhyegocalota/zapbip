@@ -8,12 +8,12 @@ import { advanceClock, readScreen, receiveOwnerText } from '../support/inbox-ses
 import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
-  GROK_TOKEN,
+  PINNED_WAKE_TOKEN,
   UNAUTHORIZED,
   UNAVAILABLE,
   WAKE_ACCOUNT,
   WAKE_AGENT,
-  enableGrokWake,
+  enablePinnedWake,
   mentionText,
   expectOk,
   readRequests,
@@ -70,7 +70,7 @@ beforeEach(async () => {
   const frozenNowMs = Date.now();
   vi.spyOn(Date, 'now').mockReturnValue(frozenNowMs);
   stub = wakeStub({});
-  await enableGrokWake({ stub });
+  await enablePinnedWake({ stub });
 });
 
 afterEach(async () => {
@@ -105,7 +105,7 @@ describe('webhook wake delivery', () => {
     await alarmAfter({ advanceMs: 3_000 });
     const [request] = await readRequests({ stub });
     expect(request?.body).toBe(WAKE_SIGNAL_BODY);
-    expect(request?.headers.authorization).toBe(`Bearer ${GROK_TOKEN}`);
+    expect(request?.headers.authorization).toBe(`Bearer ${PINNED_WAKE_TOKEN}`);
     const row = await readWakeRow({ stub });
     expect(row.status).toBe(WakeStatus.Active);
     expect(row.last_delivered_at).not.toBeNull();

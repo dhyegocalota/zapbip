@@ -1,23 +1,24 @@
 import { createHmac } from 'node:crypto';
 import { WAKE_REQUEST_TIMEOUT_MS, WAKE_SIGNAL_BODY, signWakeRequest, type WakeAttemptResult, type WakeTarget } from '@zapbip/core';
-import { SECOND_MS, WakeAttemptOutcome, WakeProvider } from '@zapbip/types';
+import { SECOND_MS, WakeAttemptOutcome, GENERIC_WAKE_PROVIDER } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFetchWakeTransport } from '../../src/adapters/wake/fetch-wake-transport';
+import { FIRST_PINNED_RULE, FIRST_PINNED_URL, SECOND_PINNED_RULE, SECOND_PINNED_URL } from '../support/pinned-wake';
 
 const AGENT = 'alpha';
 const TOKEN = 'token-with-sixteen-chars';
 const GENERIC_TOKEN = 'generic-token-with-thirty-two-chars';
-const GROK_TARGET: WakeTarget = {
-  provider: WakeProvider.GrokRoutine,
-  url: 'https://api2.cursor.sh/automations/webhook/abc12345',
+const FIRST_PINNED_TARGET: WakeTarget = {
+  provider: FIRST_PINNED_RULE.providerId,
+  url: FIRST_PINNED_URL,
   token: TOKEN,
 };
-const CLAUDE_TARGET: WakeTarget = {
-  provider: WakeProvider.ClaudeRoutine,
-  url: 'https://api.anthropic.com/v1/claude_code/routines/trig_abc123/fire',
+const SECOND_PINNED_TARGET: WakeTarget = {
+  provider: SECOND_PINNED_RULE.providerId,
+  url: SECOND_PINNED_URL,
   token: TOKEN,
 };
-const GENERIC_TARGET: WakeTarget = { provider: WakeProvider.GenericWebhook, url: 'https://hooks.example.com/wake', token: GENERIC_TOKEN };
+const GENERIC_TARGET: WakeTarget = { provider: GENERIC_WAKE_PROVIDER, url: 'https://hooks.example.com/wake', token: GENERIC_TOKEN };
 const GENERIC_NOW_MS = 1_767_225_600_500;
 const GENERIC_TIMESTAMP_SECONDS = 1_767_225_600;
 const NOW_MS = 1_800_000_000_000;
@@ -33,7 +34,7 @@ function respond(input: { status: number; headers?: Record<string, string> }) {
 function send(input: { target?: WakeTarget; nowMs?: number }): Promise<WakeAttemptResult> {
   return createFetchWakeTransport().send({
     agent: AGENT,
-    target: input.target === undefined ? GROK_TARGET : input.target,
+    target: input.target === undefined ? FIRST_PINNED_TARGET : input.target,
     body: WAKE_SIGNAL_BODY,
     nowMs: input.nowMs === undefined ? NOW_MS : input.nowMs,
   });
@@ -55,27 +56,30 @@ afterEach(() => {
 });
 
 describe('createFetchWakeTransport requests', () => {
-  it('posts the signal to a Grok target with a bearer token and no signature headers', async () => {
+  it('posts the signal to a pinned target with the headers of its provider and no signature headers', async () => {
     const fetchSpy = respond({ status: 200 });
     await send({});
     const { url, init, headers } = sentRequest({ fetchSpy });
-    expect(url).toBe(GROK_TARGET.url);
+    expect(url).toBe(FIRST_PINNED_TARGET.url);
     expect(init.method).toBe('POST');
     expect(init.redirect).toBe('manual');
     expect(init.body).toBe(WAKE_SIGNAL_BODY);
-    expect(headers).toEqual({ authorization: `Bearer ${TOKEN}`, 'content-type': 'application/json' });
+    expect(headers).toEqual(FIRST_PINNED_RULE.buildHeaders({ token: TOKEN }));
+    expect(headers).not.toHaveProperty('X-Zapbip-Signature');
   });
 
-  it('adds the routine headers to a Claude target', async () => {
+  it('sends the headers of the second pinned provider to its target', async () => {
     const fetchSpy = respond({ status: 200 });
-    await send({ target: CLAUDE_TARGET });
+    await send({ target: SECOND_PINNED_TARGET });
     const { headers } = sentRequest({ fetchSpy });
-    expect(headers).toEqual({
-      authorization: `Bearer ${TOKEN}`,
-      'content-type': 'application/json',
-      'anthropic-beta': 'experimental-cc-routine-2026-04-01',
-      'anthropic-version': '2023-06-01',
-    });
+    expect(headers).toEqual(SECOND_PINNED_RULE.buildHeaders({ token: TOKEN }));
+  });
+
+  it('refuses a provider the registry does not know and records the attempt as retryable', async () => {
+    respond({ status: 200 });
+    const result = await send({ target: { ...FIRST_PINNED_TARGET, provider: 'unknown_provider' } });
+    expect(result.outcome).toBe(WakeAttemptOutcome.Retry);
+    expect(result.statusCode).toBeNull();
   });
 
   it('signs a generic target with the timestamp and the body, and sends no bearer token', async () => {

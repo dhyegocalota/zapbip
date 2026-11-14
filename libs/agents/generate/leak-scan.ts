@@ -6,9 +6,15 @@ import {
   type LeakAgent,
   type LeakFile,
 } from '../src/checks/leaks';
-import type { AgentConnectorRuntime, AgentDefinition } from '../src/contract';
+import type { AgentChannelProtocol, AgentConnectorRuntime, AgentDefinition, AgentWakeTarget } from '../src/contract';
 
-export type ScannedAgent = { id: string; definition: AgentDefinition; runtime: AgentConnectorRuntime | null };
+export type ScannedAgent = {
+  id: string;
+  definition: AgentDefinition;
+  runtime: AgentConnectorRuntime | null;
+  wake: AgentWakeTarget | null;
+  channel: AgentChannelProtocol | null;
+};
 
 const SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.sh', '.py', '.yml', '.yaml', '.toml', '.json'];
 const GENERATED_FOLDER = 'libs/agents/src/generated/';
@@ -28,12 +34,16 @@ const FULLY_EXEMPT_FILES = [
 ];
 
 function leakAgentOf(input: { agent: ScannedAgent }): LeakAgent {
-  const { id, definition, runtime } = input.agent;
+  const { id, definition, runtime, wake, channel } = input.agent;
   return {
     id,
     enumMember: definition.enumMember,
     isOrdinaryWord: definition.idIsOrdinaryWord,
-    literals: runtime === null ? [] : [runtime.homeFolder, runtime.homeVariable],
+    literals: [
+      ...(runtime === null ? [] : [runtime.homeFolder, runtime.homeVariable]),
+      ...(wake === null ? [] : [wake.host, wake.providerId]),
+      ...(channel === null ? [] : [channel.capability, channel.notificationMethod]),
+    ],
   };
 }
 

@@ -1,7 +1,7 @@
-import { OwnerLocale, SECOND_MS, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { OwnerLocale, SECOND_MS, WakeAttemptOutcome, WakeMode, WakeStatus, GENERIC_WAKE_PROVIDER } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
 import type { Clock } from '../../inbox/ports';
-import { PINNED_WAKE_PROVIDER_RULES } from '../wake-provider';
+import { FIXTURE_PINNED_PROVIDERS } from './wake-pinned-fixtures';
 import { WAKE_CONTENT_TYPE, WAKE_TIMESTAMP_HEADER } from '../constants';
 import type {
   RecordedWakeRequest,
@@ -14,6 +14,7 @@ import type {
   WakeTransport,
 } from '../wake-ports';
 import type { PollState, ScheduledWake, StoredWake, WakeJob } from '../wake-setting';
+import type { PinnedWakeProviderRule } from '../wake-provider';
 
 const SEAL_SEPARATOR = '.';
 const BASE64 = 'base64';
@@ -47,15 +48,22 @@ function outcomeOf(input: { statusCode: number }): WakeAttemptOutcome {
   return WakeAttemptOutcome.Refused;
 }
 
-function headersOf(input: { provider: WakeProvider; token: string; nowMs: number }): Record<string, string> {
+function headersOf(input: {
+  provider: string;
+  token: string;
+  nowMs: number;
+  pinnedProviders: PinnedWakeProviderRule[];
+}): Record<string, string> {
   const { provider, token, nowMs } = input;
-  if (provider === WakeProvider.GenericWebhook) {
+  if (provider === GENERIC_WAKE_PROVIDER) {
     return { 'content-type': WAKE_CONTENT_TYPE, [WAKE_TIMESTAMP_HEADER]: String(Math.floor(nowMs / SECOND_MS)) };
   }
-  return PINNED_WAKE_PROVIDER_RULES[provider].buildHeaders({ token });
+  const rule = input.pinnedProviders.find((candidate) => candidate.providerId === provider);
+  if (rule === undefined) throw new Error(`no pinned wake provider ${provider}`);
+  return rule.buildHeaders({ token });
 }
 
-export function createScriptedWakeTransport(): ScriptedWakeTransport {
+export function createScriptedWakeTransport(pinnedProviders: PinnedWakeProviderRule[] = FIXTURE_PINNED_PROVIDERS): ScriptedWakeTransport {
   const queues = new Map<AgentName, ScriptedWakeResponse[]>();
   const requests: RecordedWakeRequest[] = [];
 
@@ -77,7 +85,7 @@ export function createScriptedWakeTransport(): ScriptedWakeTransport {
       requests.push({
         agent,
         url: target.url,
-        headers: headersOf({ provider: target.provider, token: target.token, nowMs }),
+        headers: headersOf({ provider: target.provider, token: target.token, nowMs, pinnedProviders }),
         body,
         atMs: nowMs,
       });

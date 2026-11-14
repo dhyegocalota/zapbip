@@ -84,3 +84,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0061](0061-the-public-docs-carry-an-open-source-section-and-link-the-runbooks.md) | The public docs carry an open source section and link the runbooks | Accepted | 2026-11-14 |
 | [0062](0062-an-agent-opens-the-form-already-filled-in-and-the-person-presses-the-button.md) | An agent opens the form already filled in and the person presses the button | Accepted | 2026-11-14 |
 | [0063](0063-an-agent-may-deploy-when-the-command-names-the-environment.md) | An agent may deploy when the command names the environment | Accepted | 2026-11-14 |
+| [0064](0064-a-wake-provider-and-a-channel-protocol-belong-to-the-agent-folder.md) | A wake provider and a channel protocol belong to the agent folder | Accepted | 2026-11-14 |

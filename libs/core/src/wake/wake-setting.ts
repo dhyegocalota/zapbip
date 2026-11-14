@@ -1,4 +1,4 @@
-import { WakeMode, type OwnerLocale, type WakeAttemptOutcome, type WakeProvider, type WakeStatus } from '@zapbip/types';
+import { WakeMode, type OwnerLocale, type WakeAttemptOutcome, type WakeProviderId, type WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../inbox/connection';
 import { invalidInput } from '../inbox/inbox-error-factories';
 import { AGENT_NAME_PATTERN } from '../inbox/constants';
@@ -12,9 +12,9 @@ export type WakeSettingInput = {
   standbyAgent: AgentName | null;
 };
 
-export type WakeTarget = { provider: WakeProvider; url: string; token: string };
+export type WakeTarget = { provider: WakeProviderId; url: string; token: string };
 
-export type StoredWakeTarget = { provider: WakeProvider; host: string; sealedTarget: string; keyVersion: number };
+export type StoredWakeTarget = { provider: WakeProviderId; host: string; sealedTarget: string; keyVersion: number };
 
 export type StoredWake = {
   agent: AgentName;

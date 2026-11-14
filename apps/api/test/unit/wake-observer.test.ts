@@ -1,7 +1,8 @@
 import type { WakeLogEvent } from '@zapbip/core';
-import { WakeAttemptOutcome, WakeLogEventName, WakeProvider } from '@zapbip/types';
+import { WakeAttemptOutcome, WakeLogEventName } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCloudflareWakeObserver, WakeObserverErrorCode } from '../../src/adapters/wake/wake-observer';
+import { FIRST_PINNED_PROVIDER } from '../support/pinned-wake';
 
 const TOKEN = 'token-with-sixteen-chars';
 const URL_PATH = '/automations/webhook/abc12345';
@@ -12,7 +13,7 @@ const ACCOUNT_ID = 'acc_1';
 function eventOf(input: Partial<WakeLogEvent>): WakeLogEvent {
   return {
     name: WakeLogEventName.Delivered,
-    provider: WakeProvider.GrokRoutine,
+    provider: FIRST_PINNED_PROVIDER,
     agent: 'alpha',
     attempt: 1,
     statusCode: 200,
@@ -59,7 +60,7 @@ describe('createCloudflareWakeObserver', () => {
     const { writeDataPoint } = observe({ event: eventOf({}) });
     expect(writeDataPoint).toHaveBeenCalledTimes(1);
     expect(writeDataPoint).toHaveBeenCalledWith({
-      blobs: [WakeProvider.GrokRoutine, WakeAttemptOutcome.Delivered, '2xx'],
+      blobs: [FIRST_PINNED_PROVIDER, WakeAttemptOutcome.Delivered, '2xx'],
       doubles: [1, LATENCY_MS],
     });
   });

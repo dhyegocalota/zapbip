@@ -4,7 +4,7 @@ import { constantNameOf } from '../identifiers';
 export type LeakAgent = { id: string; enumMember: string; isOrdinaryWord: boolean; literals: string[] };
 export type LeakFile = { path: string; text: string };
 
-const AGENT_ENUM_NAMES = ['AgentId', 'InstallClient', 'ConnectorClient', 'PluginAgent'];
+const AGENT_ENUM_NAMES = ['AgentId', 'InstallClient', 'ConnectorClient', 'PluginAgent', 'WakeAgent', 'ChannelAgent'];
 const WHOLE_ENUM_RECORD_PATTERN = new RegExp(`\\bRecord<(${AGENT_ENUM_NAMES.join('|')})\\b`);
 const LINE_SEPARATOR = '\n';
 const SUPPORTED_ROOT = 'libs/agents/supported';

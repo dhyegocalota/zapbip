@@ -3,7 +3,7 @@ import { MessageKind, WakeMode } from '@zapbip/types';
 import { SELF } from 'cloudflare:test';
 import { describe, expect, test } from 'vitest';
 import { inboxOf, ORIGIN, seedAccount } from './route-fixtures';
-import { ACCEPTED, GROK_TOKEN, GROK_URL } from '../support/wake-session';
+import { ACCEPTED, PINNED_WAKE_TOKEN, PINNED_WAKE_URL } from '../support/wake-session';
 
 const STATUS_NO_CONTENT = 204;
 const STATUS_OK = 200;
@@ -56,7 +56,7 @@ describe('wake dev routes', () => {
     const account = await seedAccount({ agent: FIRST_AGENT });
     const setting = await inboxOf({ accountId: account.accountId }).setWake({
       connection: account.connection,
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
+      setting: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_WAKE_TOKEN, intervalMinutes: null, standbyAgent: null },
     });
     expect(setting.ok).toBe(true);
     const script = await scriptWake({ phone: account.phone, agent: FIRST_AGENT, body: { responses: [ACCEPTED] } });

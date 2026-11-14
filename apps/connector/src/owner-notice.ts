@@ -1,5 +1,6 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_NOTIFICATION_METHOD, CHANNEL_SENDER, type MessageKind } from '@zapbip/types';
+import { CHANNEL_SENDER, type MessageKind } from '@zapbip/types';
+import { CHANNEL_PROTOCOL } from './channel-protocol';
 import { escapeChannelText, ownerMessageText } from './owner-prompt';
 
 export type OwnerNotice = { messageId: string; kind: MessageKind; sender: string; verified: boolean; forwarded: boolean; text: string };
@@ -24,7 +25,7 @@ export function formatListenLine(input: { message: Message }): string {
 export function buildChannelNotification(input: { message: Message }): ChannelNotification {
   const { text, verified, forwarded } = buildOwnerNotice(input);
   return {
-    method: CHANNEL_NOTIFICATION_METHOD,
+    method: CHANNEL_PROTOCOL.notificationMethod,
     params: {
       content: escapeChannelText({ text }),
       meta: { sender: CHANNEL_SENDER, verified: String(verified), forwarded: String(forwarded) },

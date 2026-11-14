@@ -165,11 +165,8 @@ export enum WakeAttemptOutcome {
   Refused = 'refused',
 }
 
-export enum WakeProvider {
-  GrokRoutine = 'grok_routine',
-  ClaudeRoutine = 'claude_routine',
-  GenericWebhook = 'generic',
-}
+export const GENERIC_WAKE_PROVIDER = 'generic';
+export type WakeProviderId = string;
 
 export enum WakeStatus {
   Active = 'active',

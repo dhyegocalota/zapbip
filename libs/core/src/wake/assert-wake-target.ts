@@ -1,4 +1,4 @@
-import { WakeProvider } from '@zapbip/types';
+import { GENERIC_WAKE_PROVIDER } from '@zapbip/types';
 import type { InboxError } from '../inbox/errors';
 import { invalidInput } from '../inbox/inbox-error-factories';
 import {
@@ -10,15 +10,13 @@ import {
   WAKE_TOKEN_PATTERN,
   WAKE_URL_MAX_CHARS,
 } from './constants';
-import { PINNED_WAKE_PROVIDER_RULES, type PinnedWakeProvider, type PinnedWakeProviderRule } from './wake-provider';
+import type { PinnedWakeProviderRule } from './wake-provider';
 import type { WakeTarget } from './wake-setting';
 
 export enum WakeTargetField {
   Url = 'url',
   Token = 'token',
 }
-
-type PinnedMatch = { provider: PinnedWakeProvider; rule: PinnedWakeProviderRule };
 
 const HTTPS_PROTOCOL = 'https:';
 const HOST_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
@@ -27,7 +25,7 @@ const WHITESPACE_PATTERN = /\s/;
 const FRAGMENT_MARK = '#';
 const SCHEME_SEPARATOR = '://';
 
-export type AssertWakeTargetInput = { url: string; token: string; publicHost: string };
+export type AssertWakeTargetInput = { url: string; token: string; publicHost: string; pinnedProviders: PinnedWakeProviderRule[] };
 
 export function invalidWakeField(input: { field: WakeTargetField }): InboxError {
   return invalidInput({ message: `invalid ${input.field}` });
@@ -44,11 +42,9 @@ function parseWakeUrl(input: { url: string }): URL {
   return parsed;
 }
 
-function findPinnedMatch(input: { hostname: string }): PinnedMatch | null {
-  const providers = Object.keys(PINNED_WAKE_PROVIDER_RULES) as PinnedWakeProvider[];
-  const provider = providers.find((candidate) => PINNED_WAKE_PROVIDER_RULES[candidate].host === input.hostname);
-  if (provider === undefined) return null;
-  return { provider, rule: PINNED_WAKE_PROVIDER_RULES[provider] };
+function findPinnedRule(input: { hostname: string; pinnedProviders: PinnedWakeProviderRule[] }): PinnedWakeProviderRule | null {
+  const rule = input.pinnedProviders.find((candidate) => candidate.host === input.hostname);
+  return rule === undefined ? null : rule;
 }
 
 function hostnameOf(input: { publicHost: string }): string {
@@ -72,15 +68,15 @@ function assertToken(input: { token: string; minChars: number }): void {
 }
 
 export function assertWakeTarget(input: AssertWakeTargetInput): WakeTarget {
-  const { url, token, publicHost } = input;
+  const { url, token, publicHost, pinnedProviders } = input;
   const parsed = parseWakeUrl({ url });
-  const pinned = findPinnedMatch({ hostname: parsed.hostname });
+  const pinned = findPinnedRule({ hostname: parsed.hostname, pinnedProviders });
   if (pinned === null) {
     assertGenericHost({ hostname: parsed.hostname, publicHost });
     assertToken({ token, minChars: WAKE_GENERIC_TOKEN_MIN_CHARS });
-    return { provider: WakeProvider.GenericWebhook, url, token };
+    return { provider: GENERIC_WAKE_PROVIDER, url, token };
   }
-  if (!pinned.rule.pathPattern.test(parsed.pathname)) throw invalidWakeField({ field: WakeTargetField.Url });
+  if (!pinned.pathPattern.test(parsed.pathname)) throw invalidWakeField({ field: WakeTargetField.Url });
   assertToken({ token, minChars: WAKE_TOKEN_MIN_CHARS });
-  return { provider: pinned.provider, url, token };
+  return { provider: pinned.providerId, url, token };
 }

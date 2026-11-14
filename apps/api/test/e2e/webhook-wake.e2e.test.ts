@@ -7,9 +7,10 @@ import { McpToolName } from '../../src/contract/tool-definitions';
 import type { ScreenEntry } from '../../src/contract/account-inbox-rpc';
 import type { WakeAccount } from './global-setup';
 import { callTool, mcpUrl, stack } from './stack';
+import { FIRST_PINNED_URL } from '../support/pinned-wake';
 
-const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
-const GROK_TOKEN = 'grok-token-sixteen-chars';
+const PINNED_WAKE_URL = FIRST_PINNED_URL;
+const PINNED_WAKE_TOKEN = 'pinned-token-sixteen-chars';
 const ACCEPTED = { statusCode: 200, errorName: null, retryAfterMs: null };
 const UNAVAILABLE = { statusCode: 503, errorName: null, retryAfterMs: null };
 const UNAUTHORIZED = { statusCode: 401, errorName: null, retryAfterMs: null };
@@ -43,7 +44,7 @@ async function enableWake(input: { account: WakeAccount; responses: unknown[] })
   const result = await callTool({
     client,
     name: McpToolName.SetWake,
-    arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN },
+    arguments: { mode: WakeMode.Webhook, url: PINNED_WAKE_URL, token: PINNED_WAKE_TOKEN },
   });
   expect(result.isError).toBe(false);
   const script = await fetch(ownerUrl({ account: input.account, path: `/agents/${input.account.agent}/wake/script` }), {

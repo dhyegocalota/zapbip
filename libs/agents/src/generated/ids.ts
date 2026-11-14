@@ -36,3 +36,12 @@ export enum PluginAgent {
   Hermes = 'hermes',
   OpenClaw = 'openclaw',
 }
+
+export enum WakeAgent {
+  ClaudeAi = 'claude-ai',
+  GrokBot = 'grok-bot',
+}
+
+export enum ChannelAgent {
+  ClaudeCode = 'claude-code',
+}

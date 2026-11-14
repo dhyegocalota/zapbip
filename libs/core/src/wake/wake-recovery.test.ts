@@ -8,7 +8,7 @@ import { setWake } from './set-wake';
 import {
   addUnreadOwnerMessage,
   createWakeEnvironment,
-  GROK_URL,
+  ALPHA_URL,
   PUBLIC_HOST,
   setWebhook,
   type WakeEnvironment,
@@ -78,7 +78,7 @@ describe('wake recovery', () => {
         await setWake({
           ...environment.context,
           connection: connectionOf({ agent: AGENT }),
-          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: OTHER_TOKEN, intervalMinutes: null, standbyAgent: null },
+          setting: { mode: WakeMode.Webhook, url: ALPHA_URL, token: OTHER_TOKEN, intervalMinutes: null, standbyAgent: null },
           publicHost: PUBLIC_HOST,
         });
       },
