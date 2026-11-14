@@ -16,7 +16,7 @@ The repository has one process for people and for coding agents alike, in [.clau
 - **Tests are mandatory.** Write the failing test first, then the code. Unit tests use Vitest; end-to-end tests use Playwright.
 - **The local gate** is `pnpm verify`. Run it before you push; it runs what your diff can break.
 - **Commits** follow Conventional Commits (`type(scope): summary`), in English. Never skip the git hooks.
-- **Copy** shown to users lives in `*-copy.ts` modules, in English and Portuguese.
+- **Copy** shown to users lives in `*-copy.ts` modules, in every language the product speaks; a missing translation fails the typecheck.
 
 [docs/contributing/local-stack.md](../docs/contributing/local-stack.md) starts everything locally with a test double for WhatsApp.
 
