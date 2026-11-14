@@ -22,6 +22,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Korean]:
       '에이전트 {agent}을(를) 깨우지 못했습니다. 메시지는 받은 편지함에서 기다립니다. set_wake를 다시 실행하라고 요청해 주세요.',
     [OwnerLocale.ChineseSimplified]: '我没能唤醒智能体 {agent}。你的消息在收件箱里等候；请让它重新运行 set_wake。',
+    [OwnerLocale.Arabic]: 'تعذّر عليّ إيقاظ الوكيل {agent}. رسالتك تنتظر في صندوق الوارد؛ اطلب منه تشغيل set_wake من جديد.',
   },
   [WakeCopyKey.ExpectedDelayNote]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} confere o inbox {cadence}. {lastPoll} Sua mensagem espera lá até a próxima checagem.',
@@ -35,6 +36,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Korean]:
       '에이전트 {agent}은(는) 받은 편지함을 {cadence} 확인합니다. {lastPoll} 메시지는 다음 확인 때까지 그곳에서 기다립니다.',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} {cadence}检查一次收件箱。{lastPoll}你的消息会在那里等到下一次检查。',
+    [OwnerLocale.Arabic]: 'يفحص الوكيل {agent} صندوق الوارد {cadence}. {lastPoll} رسالتك تنتظر هناك حتى الفحص التالي.',
   },
   [WakeCopyKey.StaleNotice]: {
     [OwnerLocale.PortugueseBrazil]: '{agent} {lastPoll}: suas mensagens esperam',
@@ -45,6 +47,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '{agent}は{lastPoll}: メッセージは待機中です',
     [OwnerLocale.Korean]: '{agent}: {lastPoll}, 메시지가 대기 중입니다',
     [OwnerLocale.ChineseSimplified]: '{agent}{lastPoll}：你的消息在等候',
+    [OwnerLocale.Arabic]: '{agent} {lastPoll}: رسائلك تنتظر',
   },
   [WakeCopyKey.CadenceHourly]: {
     [OwnerLocale.PortugueseBrazil]: 'de hora em hora',
@@ -55,6 +58,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '1時間ごとに',
     [OwnerLocale.Korean]: '1시간마다',
     [OwnerLocale.ChineseSimplified]: '每小时',
+    [OwnerLocale.Arabic]: 'كل ساعة',
   },
   [WakeCopyKey.CadenceHours]: {
     [OwnerLocale.PortugueseBrazil]: 'a cada {count} horas',
@@ -65,6 +69,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '{count}時間ごとに',
     [OwnerLocale.Korean]: '{count}시간마다',
     [OwnerLocale.ChineseSimplified]: '每 {count} 小时',
+    [OwnerLocale.Arabic]: 'كل {count} س',
   },
   [WakeCopyKey.CadenceMinute]: {
     [OwnerLocale.PortugueseBrazil]: 'a cada minuto',
@@ -75,6 +80,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '1分ごとに',
     [OwnerLocale.Korean]: '1분마다',
     [OwnerLocale.ChineseSimplified]: '每分钟',
+    [OwnerLocale.Arabic]: 'كل دقيقة',
   },
   [WakeCopyKey.CadenceMinutes]: {
     [OwnerLocale.PortugueseBrazil]: 'a cada {count} minutos',
@@ -85,6 +91,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '{count}分ごとに',
     [OwnerLocale.Korean]: '{count}분마다',
     [OwnerLocale.ChineseSimplified]: '每 {count} 分钟',
+    [OwnerLocale.Arabic]: 'كل {count} د',
   },
   [WakeCopyKey.ElapsedMinutes]: {
     [OwnerLocale.PortugueseBrazil]: 'Última checagem há {count} min.',
@@ -95,6 +102,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '最後の確認は{count}分前です。',
     [OwnerLocale.Korean]: '마지막 확인은 {count}분 전입니다.',
     [OwnerLocale.ChineseSimplified]: '上次检查是在 {count} 分钟前。',
+    [OwnerLocale.Arabic]: 'آخر فحص كان قبل {count} د.',
   },
   [WakeCopyKey.ElapsedHours]: {
     [OwnerLocale.PortugueseBrazil]: 'Última checagem há {count} h.',
@@ -105,6 +113,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '最後の確認は{count}時間前です。',
     [OwnerLocale.Korean]: '마지막 확인은 {count}시간 전입니다.',
     [OwnerLocale.ChineseSimplified]: '上次检查是在 {count} 小时前。',
+    [OwnerLocale.Arabic]: 'آخر فحص كان قبل {count} س.',
   },
   [WakeCopyKey.NeverPolled]: {
     [OwnerLocale.PortugueseBrazil]: 'Ainda não conferiu o inbox.',
@@ -115,6 +124,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'まだ受信箱を確認していません。',
     [OwnerLocale.Korean]: '아직 받은 편지함을 확인하지 않았습니다.',
     [OwnerLocale.ChineseSimplified]: '它还没有检查过收件箱。',
+    [OwnerLocale.Arabic]: 'لم يفحص صندوق الوارد بعد.',
   },
   [WakeCopyKey.StaleElapsedMinutes]: {
     [OwnerLocale.PortugueseBrazil]: 'não checa há {count} min',
@@ -125,6 +135,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '{count}分間確認していません',
     [OwnerLocale.Korean]: '{count}분째 확인하지 않음',
     [OwnerLocale.ChineseSimplified]: '已 {count} 分钟没有检查',
+    [OwnerLocale.Arabic]: 'لم يفحص منذ {count} د',
   },
   [WakeCopyKey.StaleElapsedHours]: {
     [OwnerLocale.PortugueseBrazil]: 'não checa há {count} h',
@@ -135,6 +146,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '{count}時間確認していません',
     [OwnerLocale.Korean]: '{count}시간째 확인하지 않음',
     [OwnerLocale.ChineseSimplified]: '已 {count} 小时没有检查',
+    [OwnerLocale.Arabic]: 'لم يفحص منذ {count} س',
   },
   [WakeCopyKey.StaleNeverPolled]: {
     [OwnerLocale.PortugueseBrazil]: 'ainda não checou',
@@ -145,6 +157,7 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'まだ確認していません',
     [OwnerLocale.Korean]: '아직 확인하지 않음',
     [OwnerLocale.ChineseSimplified]: '还没有检查过',
+    [OwnerLocale.Arabic]: 'لم يفحص بعد',
   },
 };
 

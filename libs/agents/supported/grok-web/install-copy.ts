@@ -60,6 +60,11 @@ const GROK_WEB_TEXT: Record<OwnerLocale, GrokWebText> = {
     wakeNoteWithoutStandby: '没有备用智能体的话，只有你打开聊天时，网页版 Grok 才能看到新消息。',
     pasteConnector: (connectionLink) => `在 Grok 设置中，把这个地址粘贴为连接器：${connectionLink}`,
   },
+  [OwnerLocale.Arabic]: {
+    wakeNote: 'لا يمكن إيقاظ Grok على الويب من الخارج: الوكيل الاحتياطي المختار يرد نيابةً عنه خلال ثوانٍ.',
+    wakeNoteWithoutStandby: 'من دون وكيل احتياطي، لن يرى Grok على الويب الرسائل الجديدة إلا عند فتح المحادثة.',
+    pasteConnector: (connectionLink) => `الصق هذا العنوان موصّلًا في إعدادات Grok: ${connectionLink}`,
+  },
 };
 
 function wakeNoteOf(input: { text: GrokWebText; standbyAgent: InstallSectionInput['standbyAgent'] }): string {
@@ -92,6 +97,7 @@ const GROK_WEB_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'Grokで次の操作をします',
   [OwnerLocale.Korean]: 'Grok에서 이렇게 하세요',
   [OwnerLocale.ChineseSimplified]: '在 Grok 中这样做',
+  [OwnerLocale.Arabic]: 'افعل هذا في Grok',
 };
 
 const GROK_WEB_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
@@ -103,6 +109,7 @@ const GROK_WEB_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Japanese]: ['Grokを開く → 設定', 'コネクタを追加', 'このアドレスを貼り付ける'],
   [OwnerLocale.Korean]: ['Grok 열기 → 설정', '커넥터 추가', '이 주소 붙여넣기'],
   [OwnerLocale.ChineseSimplified]: ['打开 Grok → 设置', '添加连接器', '粘贴这个地址'],
+  [OwnerLocale.Arabic]: ['افتح Grok ← الإعدادات', 'أضف موصّلًا', 'الصق هذا العنوان'],
 };
 
 export const GROK_WEB_QUICK_START = quickStartOf({ hint: GROK_WEB_QUICK_START_HINT, path: GROK_WEB_QUICK_START_PATH, code: addressText });

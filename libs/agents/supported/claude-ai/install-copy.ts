@@ -88,6 +88,15 @@ const CLAUDE_AI_TEXT: Record<OwnerLocale, ClaudeAiText> = {
     withoutTrigger: '没有触发器的话，只有你打开这个聊天时，它才能看到新消息。',
     createHourlyTask: '另外再创建一个每小时调用 check_inbox 的任务，作为保险。',
   },
+  [OwnerLocale.Arabic]: {
+    wakeNote:
+      'يوقظ webhook الروتين claude.ai خلال نحو 16 ثانية؛ أما المهمة المجدولة الاحتياطية فتعمل مرة واحدة كل 60 دقيقة على الأكثر، وهذا حد أدنى تفرضه المنصة.',
+    pasteConnector: (connectionLink) => `الصق هذا العنوان موصّلًا مخصّصًا في إعدادات claude.ai: ${connectionLink}`,
+    pasteTrigger:
+      'أنشئ مهمة بمُشغّل API من claude.ai/code/routines، واضغط Generate token، ثم الصق هنا عنوان fire URL والرمز. يظهر الرمز مرة واحدة فقط.',
+    withoutTrigger: 'من دون المُشغّل، لن ترى هذه المحادثة الرسائل الجديدة إلا عند فتحها.',
+    createHourlyTask: 'وأنشئ أيضًا مهمة كل ساعة تستدعي check_inbox كشبكة أمان.',
+  },
 };
 
 export const CLAUDE_AI_COPY = localizeCopy({
@@ -123,6 +132,7 @@ const CLAUDE_AI_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'claude.aiで次の操作をします',
   [OwnerLocale.Korean]: 'claude.ai에서 이렇게 하세요',
   [OwnerLocale.ChineseSimplified]: '在 claude.ai 中这样做',
+  [OwnerLocale.Arabic]: 'افعل هذا في claude.ai',
 };
 
 const CLAUDE_AI_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
@@ -149,6 +159,7 @@ const CLAUDE_AI_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Japanese]: ['claude.aiを開く → 設定', 'コネクタへ移動', 'カスタムコネクタを追加', 'このアドレスを貼り付ける'],
   [OwnerLocale.Korean]: ['claude.ai 열기 → 설정', '커넥터로 이동', '사용자 지정 커넥터 추가', '이 주소 붙여넣기'],
   [OwnerLocale.ChineseSimplified]: ['打开 claude.ai → 设置', '前往连接器', '添加自定义连接器', '粘贴这个地址'],
+  [OwnerLocale.Arabic]: ['افتح claude.ai ← الإعدادات', 'انتقل إلى الموصّلات', 'أضف موصّلًا مخصّصًا', 'الصق هذا العنوان'],
 };
 
 export const CLAUDE_AI_QUICK_START = quickStartOf({

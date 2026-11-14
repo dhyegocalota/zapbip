@@ -66,6 +66,13 @@ const SECTION_TEXT: Record<OwnerLocale, SectionText> = {
     connect: '在以下位置添加一个名为 zapbip 的 MCP 服务器：',
     connectSuccess: '设置中列出了 zapbip。',
   },
+  [OwnerLocale.Arabic]: {
+    heading: 'Fixture Plugin Agent',
+    stopCheck: 'If you are not Fixture Plugin Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Plugin Agent, or you have stopped.',
+    connect: 'أضف خادم MCP باسم zapbip في:',
+    connectSuccess: 'الإعدادات تعرض zapbip.',
+  },
 };
 
 export function renderFixturePluginAgentSection(input: InstallSectionInput): string {

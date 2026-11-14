@@ -99,6 +99,16 @@ const LOCALE_WORDS: Record<OwnerLocale, LocaleWords> = {
     confirmDeletion: '永久删除账户',
     setLanguage: '语言',
   },
+  [OwnerLocale.Arabic]: {
+    createAgent: 'وكيل جديد',
+    listAgents: 'وكلائي',
+    revokeAgent: 'إبطال',
+    rotateAgent: 'تجديد',
+    help: ['مساعدة', 'القائمة'],
+    requestDeletion: 'حذف الحساب',
+    confirmDeletion: 'حذف الحساب نهائيا',
+    setLanguage: 'اللغة',
+  },
 };
 
 function wordsOf(input: { locale: OwnerLocale }): CommandWord[] {
