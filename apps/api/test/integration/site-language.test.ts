@@ -204,6 +204,14 @@ describe('every language of the site', () => {
     expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og-${locale}.png"`);
   });
 
+  it.each(LOCALES)('shows %s its own demo video and posters, never the English ones', async (locale) => {
+    const html = await (await siteFetch({ path: localePathOf({ locale }) })).text();
+    ['demo-%-960.mp4', 'demo-%-960.webm', 'demo-%-poster-960.webp', 'demo-%-poster-540.webp'].forEach((name) =>
+      expect(html).toContain(`/site/${name.replace('%', locale)}`),
+    );
+    if (locale !== OwnerLocale.EnglishUs) expect(html).not.toContain('demo-en_US');
+  });
+
   it.each(LOCALES)('answers %s with a 301 from its trailing slash', async (locale) => {
     const path = localePathOf({ locale });
     if (path === '/') return;

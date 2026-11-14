@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { promisify } from 'node:util';
+import { parseArgs, promisify } from 'node:util';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
@@ -12,9 +12,8 @@ import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS } from '@zapbip/types';
 import { chromium } from '@playwright/test';
 import { z } from 'zod';
-import { SCRIPTS, type RecordedLocale } from './landing-demo/demo-copy';
+import { demoScriptOf, openGraphDataOf } from './landing-demo/demo-copy';
 import { renderOpenGraphImage } from './landing-demo/open-graph-image';
-import { renderSiteCopy, SiteCopyKey } from '../src/site/site-copy';
 import { languageOf } from '../src/web-shell/locale-profiles';
 import { FAVICON_SVG } from '../src/backoffice/assets/favicon';
 import type { ScreenEntry } from '../src/contract/account-inbox-rpc';
@@ -28,16 +27,20 @@ const OUTPUT_DIRECTORY = join(SCRIPT_DIRECTORY, '..', 'site-public', 'site');
 const STAGE_FILE = join(SCRIPT_DIRECTORY, 'landing-demo', 'stage.html');
 const DATABASE_BINDING = 'CONNECTIONS';
 const DEVELOPMENT_ENVIRONMENT = 'development';
-const OWNER_PHONES: Record<RecordedLocale, string> = {
+const OWNER_PHONES: Record<OwnerLocale, string> = {
   [OwnerLocale.EnglishUs]: '5511999990000',
   [OwnerLocale.PortugueseBrazil]: '5511999990001',
+  [OwnerLocale.Spanish]: '5511999990002',
+  [OwnerLocale.German]: '5511999990003',
+  [OwnerLocale.French]: '5511999990004',
+  [OwnerLocale.Japanese]: '5511999990005',
+  [OwnerLocale.Korean]: '5511999990006',
+  [OwnerLocale.ChineseSimplified]: '5511999990007',
 };
 const [LEADING_AGENT] = Object.values(AGENT_DEFINITIONS);
 const AGENT_DISPLAY_NAME = LEADING_AGENT!.docs.matrixName[DocsPageLanguage.English];
 const AGENT_NAME = AGENT_DISPLAY_NAME.toLowerCase().replaceAll(' ', '-');
-const TAGLINE_PREFIX = 'zapbip.com · ';
 
-const LOCALES: RecordedLocale[] = [OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil];
 const CHOSEN_INDEX = 0;
 const POLL_INTERVAL_MS = 200;
 const POLL_DEADLINE_MS = 30 * SECOND_MS;
@@ -51,7 +54,7 @@ const SMALL_POSTER_SIZE = 540;
 const TOUCH_ICON_SIZE = 180;
 const TOUCH_ICON_FILE = 'apple-touch-icon.png';
 
-function demoFilesOf(input: { locale: RecordedLocale }) {
+function demoFilesOf(input: { locale: OwnerLocale }) {
   const { locale } = input;
   return {
     mp4: `demo-${locale}-960.mp4`,
@@ -88,14 +91,14 @@ type DemoData = {
 
 type ScreenResponse = { entries: Pick<ScreenEntry, 'at' | 'text' | 'options'>[] };
 
-async function readScreen(input: { origin: string; locale: RecordedLocale }): Promise<ScreenResponse['entries']> {
+async function readScreen(input: { origin: string; locale: OwnerLocale }): Promise<ScreenResponse['entries']> {
   const response = await fetch(`${input.origin}/dev/owner/${OWNER_PHONES[input.locale]}/screen`);
   return screenSchema.parse(await response.json()).entries;
 }
 
 async function untilScreen(input: {
   origin: string;
-  locale: RecordedLocale;
+  locale: OwnerLocale;
   isReady: (entries: ScreenResponse['entries']) => boolean;
   deadline: number;
 }) {
@@ -150,7 +153,7 @@ async function startWorker(input: { persistDirectory: string }): Promise<{ origi
   return { origin, stop: () => (server.pid === undefined ? undefined : process.kill(-server.pid, 'SIGTERM')) };
 }
 
-async function seedAgent(input: { origin: string; locale: RecordedLocale }): Promise<string> {
+async function seedAgent(input: { origin: string; locale: OwnerLocale }): Promise<string> {
   const response = await fetch(`${input.origin}${DEV_SEED_PATH}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -176,7 +179,7 @@ async function optionIdOf(input: { client: Client; index: number }): Promise<{ o
   return { optionId: option.option_id, title: option.title };
 }
 
-async function postOwner(input: { origin: string; locale: RecordedLocale; body: Record<string, unknown> }): Promise<void> {
+async function postOwner(input: { origin: string; locale: OwnerLocale; body: Record<string, unknown> }): Promise<void> {
   await fetch(`${input.origin}/dev/owner/${OWNER_PHONES[input.locale]}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -184,9 +187,9 @@ async function postOwner(input: { origin: string; locale: RecordedLocale; body: 
   });
 }
 
-async function recordFlow(input: { origin: string; secret: string; locale: RecordedLocale }): Promise<DemoData> {
+async function recordFlow(input: { origin: string; secret: string; locale: OwnerLocale }): Promise<DemoData> {
   const { origin, locale } = input;
-  const script = SCRIPTS[locale];
+  const script = demoScriptOf({ locale });
   const client = new Client({ name: 'zapbip-landing-demo', version: '0.0.0' });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${origin}/c/${input.secret}/mcp`)));
   await postOwner({ origin, locale, body: { kind: MessageKind.Text, text: script.command } });
@@ -213,6 +216,7 @@ async function recordFlow(input: { origin: string; secret: string; locale: Recor
   });
   await client.close();
   return {
+    ...openGraphDataOf({ locale }),
     agentName: AGENT_DISPLAY_NAME,
     question: script.terminalQuestion,
     questionShort: question.text,
@@ -226,9 +230,6 @@ async function recordFlow(input: { origin: string; secret: string; locale: Recor
     optionsLabel: script.optionsLabel,
     waitingLabel: script.waitingLabel,
     answeredLabel: script.answeredLabel,
-    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale }),
-    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale }),
-    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale })}`,
   };
 }
 
@@ -236,11 +237,12 @@ function frameName(input: { index: number }): string {
   return `frame-${String(input.index).padStart(4, '0')}.png`;
 }
 
-async function renderFrames(input: { data: DemoData; framesDirectory: string }): Promise<void> {
+async function renderFrames(input: { data: DemoData; language: string; framesDirectory: string }): Promise<void> {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: STAGE_SIZE, height: STAGE_SIZE }, deviceScaleFactor: 1 });
   await page.addInitScript(`window.DEMO = ${JSON.stringify(input.data)};`);
   await page.goto(`file://${STAGE_FILE}`);
+  await page.evaluate(`document.documentElement.setAttribute('lang', ${JSON.stringify(input.language)})`);
   const frameCount = LOOP_SECONDS * FRAMES_PER_SECOND;
   await Array.from({ length: frameCount }, (_, index) => index).reduce(async (previous, index) => {
     await previous;
@@ -260,7 +262,7 @@ async function renderTouchIcon(input: { target: string }): Promise<void> {
   await browser.close();
 }
 
-async function encode(input: { framesDirectory: string; locale: RecordedLocale }): Promise<void> {
+async function encode(input: { framesDirectory: string; locale: OwnerLocale }): Promise<void> {
   const files = demoFilesOf({ locale: input.locale });
   const mp4 = join(OUTPUT_DIRECTORY, files.mp4);
   const scale = `scale=${ENCODED_SIZE}:${ENCODED_SIZE}:flags=lanczos,format=yuv420p`;
@@ -334,27 +336,37 @@ async function encode(input: { framesDirectory: string; locale: RecordedLocale }
   ]);
 }
 
-async function produceLocale(input: { origin: string; locale: RecordedLocale; workDirectory: string }): Promise<DemoData> {
+async function produceLocale(input: { origin: string; locale: OwnerLocale; workDirectory: string }): Promise<DemoData> {
   const { origin, locale, workDirectory } = input;
   const framesDirectory = join(workDirectory, `frames-${locale}`);
   await mkdir(framesDirectory);
   const data = await recordFlow({ origin, locale, secret: await seedAgent({ origin, locale }) });
   await writeFile(join(workDirectory, `demo-data-${locale}.json`), JSON.stringify(data));
-  await renderFrames({ data, framesDirectory });
+  await renderFrames({ data, language: languageOf({ locale }), framesDirectory });
   await encode({ framesDirectory, locale });
   const openGraph = join(OUTPUT_DIRECTORY, demoFilesOf({ locale }).openGraph);
   await renderOpenGraphImage({ data, language: languageOf({ locale }), target: openGraph });
   return data;
 }
 
+function requestedLocales(): OwnerLocale[] {
+  const { values } = parseArgs({ options: { locale: { type: 'string' } } });
+  if (values.locale === undefined) return Object.values(OwnerLocale);
+  const locale = Object.values(OwnerLocale).find((candidate) => candidate === values.locale);
+  if (locale === undefined) throw new Error(`unknown locale ${values.locale}`);
+  return [locale];
+}
+
 async function main(): Promise<void> {
   const workDirectory = await mkdtemp(join(tmpdir(), 'zapbip-landing-demo-'));
   await mkdir(OUTPUT_DIRECTORY, { recursive: true });
   const worker = await startWorker({ persistDirectory: workDirectory });
-  const produced = await LOCALES.reduce<Promise<DemoData[]>>(
-    async (previous, locale) => [...(await previous), await produceLocale({ origin: worker.origin, locale, workDirectory })],
-    Promise.resolve([]),
-  ).finally(() => worker.stop());
+  const produced = await requestedLocales()
+    .reduce<Promise<DemoData[]>>(
+      async (previous, locale) => [...(await previous), await produceLocale({ origin: worker.origin, locale, workDirectory })],
+      Promise.resolve([]),
+    )
+    .finally(() => worker.stop());
   await renderTouchIcon({ target: join(OUTPUT_DIRECTORY, TOUCH_ICON_FILE) });
   await rm(workDirectory, { recursive: true, force: true });
   console.log(JSON.stringify(produced));
