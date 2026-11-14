@@ -137,6 +137,14 @@
   inset-inline-start: 0;
 }
 
+@media (max-width: 40rem) {
+  .site-footer .lang-list,
+  .shell-footer .lang-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: min(18rem, calc(100vw - 2rem));
+  }
+}
+
 .switch form,
 form.switch {
   margin: 0;
@@ -230,7 +238,7 @@ form.switch {
   --font-display: ui-rounded, 'Geeza Pro', 'Segoe UI', 'Noto Sans Arabic', Tahoma, sans-serif;
 }
 
-:root:lang(ar) * {
+:root:lang(ar) :not(.footer-wordmark, .brand) {
   letter-spacing: normal !important;
 }
 
