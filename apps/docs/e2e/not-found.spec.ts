@@ -11,7 +11,7 @@ const NOT_FOUND_LABELS: Record<DocsPageLanguage, { heading: string; overviewLabe
   [DocsPageLanguage.PortugueseBrazil]: { heading: 'Página não encontrada', overviewLabel: 'Voltar para a visão geral' },
   [DocsPageLanguage.Spanish]: { heading: 'Página no encontrada', overviewLabel: 'Volver a la visión general' },
   [DocsPageLanguage.German]: { heading: 'Seite nicht gefunden', overviewLabel: 'Zurück zur Übersicht' },
-  [DocsPageLanguage.French]: { heading: 'Page introuvable', overviewLabel: "Retour à l'aperçu" },
+  [DocsPageLanguage.French]: { heading: 'Page introuvable', overviewLabel: 'Retour à l’aperçu' },
   [DocsPageLanguage.Japanese]: { heading: 'ページが見つかりません', overviewLabel: '概要に戻る' },
   [DocsPageLanguage.Korean]: { heading: '페이지를 찾을 수 없음', overviewLabel: '개요로 돌아가기' },
   [DocsPageLanguage.Chinese]: { heading: '页面未找到', overviewLabel: '返回概览' },

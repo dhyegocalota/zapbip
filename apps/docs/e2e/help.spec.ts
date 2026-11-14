@@ -52,7 +52,7 @@ const DELETE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.PortugueseBrazil]: ['apagar conta', 'apagar conta definitivamente', 'Meta', 'Cloudflare', 'lista de espera'],
   [DocsPageLanguage.Spanish]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'lista de espera'],
   [DocsPageLanguage.German]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'Warteliste'],
-  [DocsPageLanguage.French]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', "liste d'attente"],
+  [DocsPageLanguage.French]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'liste d’attente'],
   [DocsPageLanguage.Japanese]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'ウェイトリスト'],
   [DocsPageLanguage.Korean]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', '대기자 명단'],
   [DocsPageLanguage.Chinese]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', '候补名单'],
