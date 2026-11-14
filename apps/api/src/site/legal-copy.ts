@@ -490,7 +490,7 @@ export function daysOf(input: { milliseconds: number; locale: OwnerLocale }): st
 function legalValuesOf(input: { locale: OwnerLocale }): Record<string, string> {
   const { locale } = input;
   return {
-    agents: leadingAgentNames(),
+    agents: leadingAgentNames({ locale }),
     tradeName: COMPANY.tradeName,
     legalName: COMPANY.legalName,
     cnpj: COMPANY.cnpj,

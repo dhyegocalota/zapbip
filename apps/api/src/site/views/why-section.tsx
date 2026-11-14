@@ -33,7 +33,7 @@ export function WhySection(props: { locale: OwnerLocale }) {
                     {String(index + 1).padStart(STORY_NUMBER_WIDTH, STORY_NUMBER_PAD)}
                   </span>
                   <h3>{translate(story.title)}</h3>
-                  <p>{translate(story.body, { agents: leadingAgentNames() })}</p>
+                  <p>{translate(story.body, { agents: leadingAgentNames({ locale: props.locale }) })}</p>
                 </div>
                 <div class="why-visual" aria-hidden="true">
                   <story.Scene locale={props.locale} />

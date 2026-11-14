@@ -103,7 +103,7 @@ describe('the Markdown twins keep up with the page copy', () => {
 
   it.each(HOME_TWINS)('%s holds every title, body, question and answer of the sections', async (path, locale) => {
     const { text } = await textOf({ path });
-    const values = { ...pricingValuesOf({ locale }), agents: leadingAgentNames() };
+    const values = { ...pricingValuesOf({ locale }), agents: leadingAgentNames({ locale }) };
     sectionKeys.forEach((key) => expect(text).toContain(copy({ key, locale, values }).replaceAll('{contactEmail}', COMPANY.contactEmail)));
   });
 });

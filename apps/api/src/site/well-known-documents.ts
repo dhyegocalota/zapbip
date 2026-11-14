@@ -88,7 +88,7 @@ export function mcpDiscoveryOf(input: { publicOrigin: string }): object {
 export function mcpServerCardOf(input: { publicOrigin: string }): object {
   const description = copyOf({ locale: OwnerLocale.EnglishUs })(SiteCopyKey.MetaDescription, {
     ...pricingValuesOf({ locale: OwnerLocale.EnglishUs }),
-    agents: leadingAgentNames(),
+    agents: leadingAgentNames({ locale: OwnerLocale.EnglishUs }),
   });
   return {
     name: PRODUCT_NAME,
@@ -105,7 +105,7 @@ export function mcpServerCardOf(input: { publicOrigin: string }): object {
 export function agentCardOf(input: { origin: string }): object {
   const description = copyOf({ locale: OwnerLocale.EnglishUs })(SiteCopyKey.MetaDescription, {
     ...pricingValuesOf({ locale: OwnerLocale.EnglishUs }),
-    agents: leadingAgentNames(),
+    agents: leadingAgentNames({ locale: OwnerLocale.EnglishUs }),
   });
   return {
     protocolVersion: AGENT_CARD_PROTOCOL_VERSION,

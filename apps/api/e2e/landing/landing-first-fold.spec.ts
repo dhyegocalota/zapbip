@@ -11,7 +11,9 @@ async function expectFirstFold(input: { page: import('@playwright/test').Page; l
   const { page, locale } = input;
   const copy = (key: SiteCopyKey): string => siteCopy({ key, locale });
   await expect(page.getByRole('heading', { level: 1 })).toContainText(copy(SiteCopyKey.HeroTitleLead));
-  await expect(page.getByText(siteCopy({ key: SiteCopyKey.HeroLead, locale, values: { agents: leadingAgentNames() } }))).toBeVisible();
+  await expect(
+    page.getByText(siteCopy({ key: SiteCopyKey.HeroLead, locale, values: { agents: leadingAgentNames({ locale }) } })),
+  ).toBeVisible();
   await expect(page.getByLabel(copy(SiteCopyKey.JoinEmailLabel))).toBeVisible();
   await expect(page.getByRole('button', { name: copy(SiteCopyKey.JoinSubmit) })).toBeVisible();
   const viewportHeight = page.viewportSize()!.height;

@@ -16,6 +16,9 @@ export function pageMetaOf(input: { model: PageModel; title: string }): PageMeta
     const legalText = legalTextOf({ document: model.legalDocument, locale: model.locale });
     return { title: brandedTitle, description: legalText.description, openGraphTitle: title };
   }
-  const description = translate(SiteCopyKey.MetaDescription, { ...pricingValuesOf({ locale: model.locale }), agents: leadingAgentNames() });
+  const description = translate(SiteCopyKey.MetaDescription, {
+    ...pricingValuesOf({ locale: model.locale }),
+    agents: leadingAgentNames({ locale: model.locale }),
+  });
   return { title: brandedTitle, description, openGraphTitle: translate(SiteCopyKey.MetaOgTitle) };
 }

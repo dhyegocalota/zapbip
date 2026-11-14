@@ -49,7 +49,7 @@ describe('GET /', () => {
       copyHtml({
         key: SiteCopyKey.HeroLead,
         locale: OwnerLocale.EnglishUs,
-        values: { agents: leadingAgentNames() },
+        values: { agents: leadingAgentNames({ locale: OwnerLocale.EnglishUs }) },
       }),
     );
     expect(html).toContain(copy(SiteCopyKey.JoinSubmit));
@@ -444,7 +444,11 @@ describe('the differentiators', () => {
   it('names the leading agents of the registry in the every-agent story', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.WhyEveryAgentBody, locale: OwnerLocale.EnglishUs, values: { agents: leadingAgentNames() } }),
+      copyHtml({
+        key: SiteCopyKey.WhyEveryAgentBody,
+        locale: OwnerLocale.EnglishUs,
+        values: { agents: leadingAgentNames({ locale: OwnerLocale.EnglishUs }) },
+      }),
     );
   });
 
