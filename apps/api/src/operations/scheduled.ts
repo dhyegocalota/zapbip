@@ -4,8 +4,9 @@ import { pruneBackoffice } from '../backoffice/audit/prune';
 import { BACKOFFICE_PRUNE_HOUR, BACKOFFICE_PRUNE_MINUTE } from '../backoffice/backoffice-constants';
 import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import type { Bindings } from '../contract/env';
+import { recheckTemplates } from '../numbers/template-recheck';
 import { runBudgetCheck } from './budget-check';
-import { BUDGET_CHECK_MINUTE, MEDIA_RETENTION_HOUR, MEDIA_RETENTION_MINUTE, SCHEDULED_CRON } from './constants';
+import { BUDGET_CHECK_MINUTE, MEDIA_RETENTION_HOUR, MEDIA_RETENTION_MINUTE, SCHEDULED_CRON, TEMPLATE_RECHECK_MINUTE } from './constants';
 import { runMediaRetention } from './media-retention';
 
 export type ScheduledJob = {
@@ -17,6 +18,7 @@ export enum ScheduledJobName {
   ClearExpiredInstallSecrets = 'clear_expired_install_secrets',
   SweepDeletingAccounts = 'sweep_deleting_accounts',
   BudgetCheck = 'budget_check',
+  TemplateRecheck = 'template_recheck',
   MediaRetention = 'media_retention',
   BackofficePrune = 'backoffice_prune',
   ClientAppPrune = 'client_app_prune',
@@ -36,6 +38,10 @@ export const SCHEDULED_JOBS: Record<ScheduledJobName, ScheduledJob> = {
   [ScheduledJobName.BudgetCheck]: {
     isDue: ({ now }) => new Date(now).getUTCMinutes() === BUDGET_CHECK_MINUTE,
     run: ({ env, now }) => runBudgetCheck({ repository: new D1UsageRepository({ database: env.CONNECTIONS }), now }),
+  },
+  [ScheduledJobName.TemplateRecheck]: {
+    isDue: ({ now }) => new Date(now).getUTCMinutes() === TEMPLATE_RECHECK_MINUTE,
+    run: ({ env, now }) => recheckTemplates({ environment: env, now }),
   },
   [ScheduledJobName.MediaRetention]: {
     isDue: ({ now }) => {
