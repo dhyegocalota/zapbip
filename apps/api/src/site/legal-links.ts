@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
 import { SitePath } from './site-paths';
 
 export enum LegalDocument {
@@ -6,19 +6,24 @@ export enum LegalDocument {
   Privacy = 'privacy',
 }
 
-export type LegalPage = { document: LegalDocument; locale: OwnerLocale };
+export type LegalPage = { document: LegalDocument; locale: WebLocale };
 
-const LEGAL_PATHS: Record<LegalDocument, Record<OwnerLocale, SitePath>> = {
-  [LegalDocument.Terms]: { [OwnerLocale.EnglishUs]: SitePath.Terms, [OwnerLocale.PortugueseBrazil]: SitePath.PortugueseTerms },
-  [LegalDocument.Privacy]: { [OwnerLocale.EnglishUs]: SitePath.Privacy, [OwnerLocale.PortugueseBrazil]: SitePath.PortuguesePrivacy },
+const PORTUGUESE_LEGAL_PATHS: Record<LegalDocument, SitePath> = {
+  [LegalDocument.Terms]: SitePath.PortugueseTerms,
+  [LegalDocument.Privacy]: SitePath.PortuguesePrivacy,
+};
+const ENGLISH_LEGAL_PATHS: Record<LegalDocument, SitePath> = {
+  [LegalDocument.Terms]: SitePath.Terms,
+  [LegalDocument.Privacy]: SitePath.Privacy,
 };
 
 export const LEGAL_PAGES: LegalPage[] = Object.values(LegalDocument).flatMap((document) =>
-  Object.values(OwnerLocale).map((locale) => ({ document, locale })),
+  Object.values(WebLocale).map((locale) => ({ document, locale })),
 );
 
 export function legalPathOf(input: LegalPage): string {
-  return LEGAL_PATHS[input.document][input.locale];
+  if (input.locale === WebLocale.PortugueseBrazil) return PORTUGUESE_LEGAL_PATHS[input.document];
+  return `${WEB_LOCALE_PATH_PREFIXES[input.locale]}${ENGLISH_LEGAL_PATHS[input.document]}`;
 }
 
 export function legalPageOf(input: { pathname: string }): LegalPage | null {
@@ -26,6 +31,6 @@ export function legalPageOf(input: { pathname: string }): LegalPage | null {
   return page === undefined ? null : page;
 }
 
-export function legalUrlOf(input: { origin: string; document: LegalDocument; locale: OwnerLocale }): string {
+export function legalUrlOf(input: { origin: string; document: LegalDocument; locale: WebLocale }): string {
   return `${input.origin}${legalPathOf({ document: input.document, locale: input.locale })}`;
 }

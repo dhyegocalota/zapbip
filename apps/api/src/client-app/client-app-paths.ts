@@ -1,4 +1,6 @@
-import { CLIENT_APP_LOCALE_PATH_PREFIXES, CLIENT_APP_PORTUGUESE_PATH_PREFIX, OwnerLocale } from '@zapbip/types';
+import { WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
+
+export const PREFIXED_LOCALES = Object.values(WebLocale).filter((locale) => WEB_LOCALE_PATH_PREFIXES[locale] !== '');
 
 export enum ClientAppPath {
   Home = '/',
@@ -12,14 +14,17 @@ export enum ClientAppPath {
   Favicon = '/favicon.svg',
 }
 
-export function localeOfPath(input: { path: string }): OwnerLocale {
+export function localeOfPath(input: { path: string }): WebLocale {
   const { path } = input;
-  const isPortuguese = path === CLIENT_APP_PORTUGUESE_PATH_PREFIX || path.startsWith(`${CLIENT_APP_PORTUGUESE_PATH_PREFIX}/`);
-  return isPortuguese ? OwnerLocale.PortugueseBrazil : OwnerLocale.EnglishUs;
+  const prefixed = PREFIXED_LOCALES.find((locale) => {
+    const prefix = WEB_LOCALE_PATH_PREFIXES[locale];
+    return path === prefix || path.startsWith(`${prefix}/`);
+  });
+  return prefixed === undefined ? WebLocale.EnglishUs : prefixed;
 }
 
-export function pathWithLocale(input: { locale: OwnerLocale; path: string }): string {
-  const prefix = CLIENT_APP_LOCALE_PATH_PREFIXES[input.locale];
+export function pathWithLocale(input: { locale: WebLocale; path: string }): string {
+  const prefix = WEB_LOCALE_PATH_PREFIXES[input.locale];
   const isRootWithPrefix = input.path === ClientAppPath.Home && prefix !== '';
   if (isRootWithPrefix) return prefix;
   return `${prefix}${input.path}`;

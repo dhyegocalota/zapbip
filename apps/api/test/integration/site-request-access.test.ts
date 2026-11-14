@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { HOUR_MS, OwnerLocale, WaitlistSource } from '@zapbip/types';
+import { HOUR_MS, WebLocale, WaitlistSource } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import {
@@ -11,6 +11,7 @@ import {
   AGENT_HOURLY_ROW_CAP,
   AGENT_RATE_KEY_PREFIX,
 } from '../../src/site/site-constants';
+import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { createFakeRateLimiter, type FakeRateLimiter } from '../support/fake-rate-limiter';
 import { applyLandingWaitlistMigration } from '../support/seed';
@@ -45,8 +46,8 @@ async function answerOf(input: { response: Response }): Promise<Answer> {
   return (await input.response.json()) as Answer;
 }
 
-function copy(input: { key: SiteCopyKey; locale?: OwnerLocale }): string {
-  return renderSiteCopy({ key: input.key, locale: input.locale === undefined ? OwnerLocale.EnglishUs : input.locale });
+function copy(input: { key: SiteCopyKey; locale?: WebLocale }): string {
+  return renderSiteCopy({ key: input.key, locale: input.locale === undefined ? WebLocale.EnglishUs : input.locale });
 }
 
 function limitedEnvironment(): Environment {
@@ -82,7 +83,7 @@ describe('POST /api/request-access', () => {
       message: `${copy({ key: SiteCopyKey.ThanksTitle })} ${copy({ key: SiteCopyKey.ThanksBody })}`,
     });
     expect(await rowOf({ email: MARIA })).toMatchObject({
-      locale: OwnerLocale.EnglishUs,
+      locale: WebLocale.EnglishUs,
       source: WaitlistSource.Agent,
       referred_by: null,
       credited: 0,
@@ -94,14 +95,26 @@ describe('POST /api/request-access', () => {
     const response = await request({ body: { email: MARIA, language: 'pt-BR' } });
     const answer = await answerOf({ response });
     expect(answer.language).toBe('pt-BR');
-    expect(answer.message).toContain(copy({ key: SiteCopyKey.ThanksTitle, locale: OwnerLocale.PortugueseBrazil }));
-    expect(await rowOf({ email: MARIA })).toMatchObject({ locale: OwnerLocale.PortugueseBrazil });
+    expect(answer.message).toContain(copy({ key: SiteCopyKey.ThanksTitle, locale: WebLocale.PortugueseBrazil }));
+    expect(await rowOf({ email: MARIA })).toMatchObject({ locale: WebLocale.PortugueseBrazil });
   });
+
+  it.each([WebLocale.Spanish, WebLocale.German, WebLocale.French, WebLocale.Japanese, WebLocale.Korean, WebLocale.ChineseSimplified])(
+    'answers and stores in %s when the agent asks for it',
+    async (locale) => {
+      const tag = LOCALE_PROFILES[locale].languageTag;
+      const response = await request({ body: { email: MARIA, language: tag } });
+      const answer = await answerOf({ response });
+      expect(answer.language).toBe(tag);
+      expect(answer.message).toContain(copy({ key: SiteCopyKey.ThanksTitle, locale }));
+      expect(await rowOf({ email: MARIA })).toMatchObject({ locale });
+    },
+  );
 
   it('takes the language of the request when none is given', async () => {
     const response = await request({ body: { email: MARIA }, headers: { 'accept-language': 'pt-BR,pt;q=0.9' } });
     expect((await answerOf({ response })).language).toBe('pt-BR');
-    expect(await rowOf({ email: MARIA })).toMatchObject({ locale: OwnerLocale.PortugueseBrazil });
+    expect(await rowOf({ email: MARIA })).toMatchObject({ locale: WebLocale.PortugueseBrazil });
   });
 
   it('answers a duplicate like a new request and writes one row', async () => {

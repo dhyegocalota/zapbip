@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { Sparkline } from '../views/sparkline';
 import { accessMonthSeries, accessWindowFigures, accessWindowOf, waitlistTotalOf, type AccessWindowFigures } from './access-metrics';
@@ -22,7 +22,7 @@ const WINDOW_ROWS: WindowRow[] = [
   { label: BackofficeCopyKey.MetricsAccessQuestions, cell: MetricCell.AccessQuestions, figure: 'questions' },
 ];
 
-export function AccessMetricsSection(props: { locale: OwnerLocale; access: AccessReport; now: number; live: Freshness; noData: string }) {
+export function AccessMetricsSection(props: { locale: WebLocale; access: AccessReport; now: number; live: Freshness; noData: string }) {
   const { locale, access, now, live, noData } = props;
   const translate = (key: BackofficeCopyKey): string => renderBackofficeCopy({ key, locale });
   const week = accessWindowFigures({ access, now, window: accessWindowOf({ access, dayCount: ACCESS_WEEK_DAYS }) });

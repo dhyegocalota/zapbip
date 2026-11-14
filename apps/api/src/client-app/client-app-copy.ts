@@ -1,70 +1,13 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
+import { ClientAppCopyKey } from './client-app-copy-keys';
+import { SPANISH_CLIENT_APP_COPY } from './client-app-copy-spanish';
+import { GERMAN_CLIENT_APP_COPY } from './client-app-copy-german';
+import { FRENCH_CLIENT_APP_COPY } from './client-app-copy-french';
+import { JAPANESE_CLIENT_APP_COPY } from './client-app-copy-japanese';
+import { KOREAN_CLIENT_APP_COPY } from './client-app-copy-korean';
+import { CHINESE_CLIENT_APP_COPY } from './client-app-copy-chinese';
 
-export enum ClientAppCopyKey {
-  SkipToContent = 'skip_to_content',
-  BrandName = 'brand_name',
-  BrandHomeLabel = 'brand_home_label',
-  SignOut = 'sign_out',
-  SignedOutTitle = 'signed_out_title',
-  SignedOutLead = 'signed_out_lead',
-  SignInWithWhatsapp = 'sign_in_with_whatsapp',
-  SignedOutNote = 'signed_out_note',
-  SignedOutEyebrow = 'signed_out_eyebrow',
-  SignedOutAgents = 'signed_out_agents',
-  SignedOutAgentsLink = 'signed_out_agents_link',
-  SignedOutTrustLabel = 'signed_out_trust_label',
-  SignedOutTrustApi = 'signed_out_trust_api',
-  SignedOutTrustPassword = 'signed_out_trust_password',
-  SignedOutTrustLink = 'signed_out_trust_link',
-  PhoneLabel = 'phone_label',
-  PhoneReply = 'phone_reply',
-  UnavailableTitle = 'unavailable_title',
-  UnavailableBody = 'unavailable_body',
-  ContinueTitle = 'continue_title',
-  ContinueLead = 'continue_lead',
-  ContinueAs = 'continue_as',
-  ContinueButton = 'continue_button',
-  ExpiredTitle = 'expired_title',
-  ExpiredBody = 'expired_body',
-  ForbiddenTitle = 'forbidden_title',
-  ForbiddenBody = 'forbidden_body',
-  RateLimitedTitle = 'rate_limited_title',
-  RateLimitedBody = 'rate_limited_body',
-  NotFoundTitle = 'not_found_title',
-  NotFoundBody = 'not_found_body',
-  BackHome = 'back_home',
-  WaitlistTitle = 'waitlist_title',
-  WaitlistBody = 'waitlist_body',
-  AgentsTitle = 'agents_title',
-  AgentsEmpty = 'agents_empty',
-  AgentCreated = 'agent_created',
-  AgentCreatedHint = 'agent_created_hint',
-  AgentClient = 'agent_client',
-  AgentAdded = 'agent_added',
-  AgentLastActive = 'agent_last_active',
-  SignedInAs = 'signed_in_as',
-  Revoke = 'revoke',
-  ConnectTitle = 'connect_title',
-  ConnectLabel = 'connect_label',
-  ConnectButton = 'connect_button',
-  ConnectHint = 'connect_hint',
-  ProblemEmptyName = 'problem_empty_name',
-  ProblemInvalidName = 'problem_invalid_name',
-  ProblemReservedName = 'problem_reserved_name',
-  ProblemNameTaken = 'problem_name_taken',
-  ProblemLimitReached = 'problem_limit_reached',
-  RevokeTitle = 'revoke_title',
-  RevokeBody = 'revoke_body',
-  RevokeConfirm = 'revoke_confirm',
-  RevokeCancel = 'revoke_cancel',
-  NoticeRevoked = 'notice_revoked',
-  NoticeAgentMissing = 'notice_agent_missing',
-  PlanLine = 'plan_line',
-  AccountTitle = 'account_title',
-  DeleteAccount = 'delete_account',
-  DeleteAccountHint = 'delete_account_hint',
-  FooterMaker = 'footer_maker',
-}
+export { ClientAppCopyKey };
 
 type CopyEntries = Record<ClientAppCopyKey, string>;
 
@@ -203,16 +146,22 @@ const PORTUGUESE_COPY: CopyEntries = {
   [ClientAppCopyKey.FooterMaker]: 'zapbip, um canal pessoal de WhatsApp para os seus agentes de IA',
 };
 
-const CLIENT_APP_COPY: Record<OwnerLocale, CopyEntries> = {
-  [OwnerLocale.EnglishUs]: ENGLISH_COPY,
-  [OwnerLocale.PortugueseBrazil]: PORTUGUESE_COPY,
+const CLIENT_APP_COPY: Record<WebLocale, CopyEntries> = {
+  [WebLocale.EnglishUs]: ENGLISH_COPY,
+  [WebLocale.PortugueseBrazil]: PORTUGUESE_COPY,
+  [WebLocale.Spanish]: SPANISH_CLIENT_APP_COPY,
+  [WebLocale.German]: GERMAN_CLIENT_APP_COPY,
+  [WebLocale.French]: FRENCH_CLIENT_APP_COPY,
+  [WebLocale.Japanese]: JAPANESE_CLIENT_APP_COPY,
+  [WebLocale.Korean]: KOREAN_CLIENT_APP_COPY,
+  [WebLocale.ChineseSimplified]: CHINESE_CLIENT_APP_COPY,
 };
 
-export function renderClientAppCopy(input: { key: ClientAppCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
+export function renderClientAppCopy(input: { key: ClientAppCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
   const { key, locale, values = {} } = input;
   return Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), CLIENT_APP_COPY[locale][key]);
 }
 
-export function copyOf(input: { locale: OwnerLocale }): (key: ClientAppCopyKey, values?: Record<string, string>) => string {
+export function copyOf(input: { locale: WebLocale }): (key: ClientAppCopyKey, values?: Record<string, string>) => string {
   return (key, values) => renderClientAppCopy({ key, locale: input.locale, values });
 }

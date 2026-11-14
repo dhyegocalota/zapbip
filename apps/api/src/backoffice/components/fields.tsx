@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 
 export type FieldProps = {
@@ -36,7 +36,7 @@ export function Field(props: FieldProps) {
   );
 }
 
-export function CodeField(props: { locale: OwnerLocale; id: string }) {
+export function CodeField(props: { locale: WebLocale; id: string }) {
   const translate = (key: BackofficeCopyKey): string => renderBackofficeCopy({ key, locale: props.locale });
   return (
     <div class="field">

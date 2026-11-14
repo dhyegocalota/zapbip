@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
+import { DEFAULT_WAITLIST_REFERRAL_CAP, WebLocale, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { joinWaitlist } from '../../src/site/join-waitlist';
 import { applyLandingWaitlistMigration, SEED_CREATED_AT } from '../support/seed';
@@ -22,41 +22,41 @@ afterEach(reset);
 describe('a row written by an agent', () => {
   it('is taken over by the person who later joins with the form: source and language follow, the code stays', async () => {
     const agentResult = await join({ email: 'maria@example.com', source: WaitlistSource.Agent });
-    await join({ email: 'Maria@Example.com', source: WaitlistSource.Form, locale: OwnerLocale.PortugueseBrazil });
+    await join({ email: 'Maria@Example.com', source: WaitlistSource.Form, locale: WebLocale.PortugueseBrazil });
     const rows = await waitlistRows();
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ source: WaitlistSource.Form, locale: OwnerLocale.PortugueseBrazil });
+    expect(rows[0]).toMatchObject({ source: WaitlistSource.Form, locale: WebLocale.PortugueseBrazil });
     expect(rows[0]!.referral_code).toBe((agentResult as { referralCode: string }).referralCode);
   });
 
   it('stays an agent row when an agent asks again', async () => {
     await join({ email: 'maria@example.com', source: WaitlistSource.Agent });
-    await join({ email: 'maria@example.com', source: WaitlistSource.Agent, locale: OwnerLocale.PortugueseBrazil });
-    expect(await rowOf({ email: 'maria@example.com' })).toMatchObject({ source: WaitlistSource.Agent, locale: OwnerLocale.EnglishUs });
+    await join({ email: 'maria@example.com', source: WaitlistSource.Agent, locale: WebLocale.PortugueseBrazil });
+    expect(await rowOf({ email: 'maria@example.com' })).toMatchObject({ source: WaitlistSource.Agent, locale: WebLocale.EnglishUs });
   });
 
   it('never takes over the row of a person who joined with the form', async () => {
     await join({ email: 'maria@example.com', source: WaitlistSource.Form });
-    await join({ email: 'maria@example.com', source: WaitlistSource.Agent, locale: OwnerLocale.PortugueseBrazil });
-    expect(await rowOf({ email: 'maria@example.com' })).toMatchObject({ source: WaitlistSource.Form, locale: OwnerLocale.EnglishUs });
+    await join({ email: 'maria@example.com', source: WaitlistSource.Agent, locale: WebLocale.PortugueseBrazil });
+    expect(await rowOf({ email: 'maria@example.com' })).toMatchObject({ source: WaitlistSource.Form, locale: WebLocale.EnglishUs });
   });
 });
 
 describe('joinWaitlist', () => {
   it('joins a new email and returns Joined', async () => {
-    const result = await join({ email: 'Maria@Example.com ', locale: OwnerLocale.PortugueseBrazil });
+    const result = await join({ email: 'Maria@Example.com ', locale: WebLocale.PortugueseBrazil });
     expect(result).toMatchObject({ outcome: WaitlistJoinOutcome.Joined, creditedCount: 0, cap: DEFAULT_WAITLIST_REFERRAL_CAP });
     expect(await waitlistRows()).toEqual([
-      expect.objectContaining({ email: 'maria@example.com', locale: OwnerLocale.PortugueseBrazil, credited: 0, referred_by: null }),
+      expect.objectContaining({ email: 'maria@example.com', locale: WebLocale.PortugueseBrazil, credited: 0, referred_by: null }),
     ]);
   });
 
   it('duplicate email returns AlreadyJoined and writes nothing', async () => {
     const referrerCode = await joinedCodeOf({ email: 'referrer@example.com' });
     const firstCode = await joinedCodeOf({ email: 'maria@example.com' });
-    const second = await join({ email: 'maria@example.com', locale: OwnerLocale.PortugueseBrazil, referralCode: referrerCode });
+    const second = await join({ email: 'maria@example.com', locale: WebLocale.PortugueseBrazil, referralCode: referrerCode });
     expect(second).toMatchObject({ outcome: WaitlistJoinOutcome.AlreadyJoined, referralCode: firstCode });
-    expect(await rowOf({ email: 'maria@example.com' })).toMatchObject({ locale: OwnerLocale.EnglishUs, referred_by: null, credited: 0 });
+    expect(await rowOf({ email: 'maria@example.com' })).toMatchObject({ locale: WebLocale.EnglishUs, referred_by: null, credited: 0 });
     expect(await waitlistRows()).toHaveLength(2);
     expect(await join({ email: 'referrer@example.com' })).toMatchObject({ creditedCount: 0 });
   });
@@ -170,7 +170,7 @@ describe('joinWaitlist', () => {
     await joinWaitlist({
       database,
       email: 'maria@example.com',
-      locale: OwnerLocale.EnglishUs,
+      locale: WebLocale.EnglishUs,
       referralCode: null,
       source: WaitlistSource.Form,
       now: SEED_CREATED_AT,

@@ -1,4 +1,4 @@
-import { HttpStatus, OwnerLocale, type DocsLanguage } from '@zapbip/types';
+import { HttpStatus, type WebLanguageTag, WebLocale } from '@zapbip/types';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { RETRY_AFTER_HEADER } from '../routes/private-response';
@@ -32,9 +32,9 @@ export enum AgentAnswerStatus {
   UnknownAgent = 'unknown_agent',
 }
 
-export type AgentAnswer = { status: AgentAnswerStatus; language: DocsLanguage; message: string };
+export type AgentAnswer = { status: AgentAnswerStatus; language: WebLanguageTag; message: string };
 
-type MessageOf = (input: { locale: OwnerLocale }) => string;
+type MessageOf = (input: { locale: WebLocale }) => string;
 
 function copyMessage(input: { keys: SiteCopyKey[] }): MessageOf {
   return ({ locale }) => input.keys.map((key) => copyOf({ locale })(key)).join(MESSAGE_SEPARATOR);
@@ -45,7 +45,7 @@ function fixedMessage(input: { text: string }): MessageOf {
 }
 
 export function supportedLanguagesText(): string {
-  return Object.values(OwnerLocale)
+  return Object.values(WebLocale)
     .map((locale) => languageOf({ locale }))
     .join(LANGUAGE_SEPARATOR);
 }
@@ -98,7 +98,7 @@ export function jsonResponse(input: {
 export function answerResponse(input: {
   context: Context<SiteEnv>;
   status: AgentAnswerStatus;
-  locale: OwnerLocale;
+  locale: WebLocale;
   extra?: object;
 }): Response {
   const { context, status, locale, extra } = input;
@@ -113,7 +113,7 @@ export function answerResponse(input: {
   });
 }
 
-export function requestedLocaleOf(input: { context: Context<SiteEnv>; value: unknown }): OwnerLocale | null {
+export function requestedLocaleOf(input: { context: Context<SiteEnv>; value: unknown }): WebLocale | null {
   const { context, value } = input;
   if (value === undefined) return context.get('locale');
   if (typeof value !== 'string') return null;

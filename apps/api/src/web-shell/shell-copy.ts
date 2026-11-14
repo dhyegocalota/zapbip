@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 
 export enum ShellCopyKey {
   LocaleLabel = 'locale_label',
@@ -14,8 +14,8 @@ export enum ShellCopyKey {
   FooterSupport = 'footer_support',
 }
 
-const SHELL_COPY: Record<OwnerLocale, Record<ShellCopyKey, string>> = {
-  [OwnerLocale.EnglishUs]: {
+const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
+  [WebLocale.EnglishUs]: {
     [ShellCopyKey.LocaleLabel]: 'Language',
     [ShellCopyKey.ThemeLabel]: 'Theme',
     [ShellCopyKey.ThemeLight]: 'Light',
@@ -28,7 +28,7 @@ const SHELL_COPY: Record<OwnerLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Made by Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Support',
   },
-  [OwnerLocale.PortugueseBrazil]: {
+  [WebLocale.PortugueseBrazil]: {
     [ShellCopyKey.LocaleLabel]: 'Idioma',
     [ShellCopyKey.ThemeLabel]: 'Tema',
     [ShellCopyKey.ThemeLight]: 'Claro',
@@ -41,8 +41,86 @@ const SHELL_COPY: Record<OwnerLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Feito pela Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Suporte',
   },
+  [WebLocale.Spanish]: {
+    [ShellCopyKey.LocaleLabel]: 'Idioma',
+    [ShellCopyKey.ThemeLabel]: 'Tema',
+    [ShellCopyKey.ThemeLight]: 'Claro',
+    [ShellCopyKey.ThemeDark]: 'Oscuro',
+    [ShellCopyKey.ThemeSystem]: 'Sistema',
+    [ShellCopyKey.FooterLinksLabel]: 'Más sobre zapbip',
+    [ShellCopyKey.FooterDocs]: 'Documentación',
+    [ShellCopyKey.FooterTerms]: 'Términos de uso',
+    [ShellCopyKey.FooterPrivacy]: 'Política de privacidad',
+    [ShellCopyKey.FooterMadeBy]: 'Hecho por Logic Bit',
+    [ShellCopyKey.FooterSupport]: 'Soporte',
+  },
+  [WebLocale.German]: {
+    [ShellCopyKey.LocaleLabel]: 'Sprache',
+    [ShellCopyKey.ThemeLabel]: 'Design',
+    [ShellCopyKey.ThemeLight]: 'Hell',
+    [ShellCopyKey.ThemeDark]: 'Dunkel',
+    [ShellCopyKey.ThemeSystem]: 'System',
+    [ShellCopyKey.FooterLinksLabel]: 'Mehr über zapbip',
+    [ShellCopyKey.FooterDocs]: 'Dokumentation',
+    [ShellCopyKey.FooterTerms]: 'Nutzungsbedingungen',
+    [ShellCopyKey.FooterPrivacy]: 'Datenschutzerklärung',
+    [ShellCopyKey.FooterMadeBy]: 'Entwickelt von Logic Bit',
+    [ShellCopyKey.FooterSupport]: 'Support',
+  },
+  [WebLocale.French]: {
+    [ShellCopyKey.LocaleLabel]: 'Langue',
+    [ShellCopyKey.ThemeLabel]: 'Thème',
+    [ShellCopyKey.ThemeLight]: 'Clair',
+    [ShellCopyKey.ThemeDark]: 'Sombre',
+    [ShellCopyKey.ThemeSystem]: 'Système',
+    [ShellCopyKey.FooterLinksLabel]: 'En savoir plus sur zapbip',
+    [ShellCopyKey.FooterDocs]: 'Documentation',
+    [ShellCopyKey.FooterTerms]: 'Conditions d’utilisation',
+    [ShellCopyKey.FooterPrivacy]: 'Politique de confidentialité',
+    [ShellCopyKey.FooterMadeBy]: 'Créé par Logic Bit',
+    [ShellCopyKey.FooterSupport]: 'Assistance',
+  },
+  [WebLocale.Japanese]: {
+    [ShellCopyKey.LocaleLabel]: '言語',
+    [ShellCopyKey.ThemeLabel]: 'テーマ',
+    [ShellCopyKey.ThemeLight]: 'ライト',
+    [ShellCopyKey.ThemeDark]: 'ダーク',
+    [ShellCopyKey.ThemeSystem]: 'システム',
+    [ShellCopyKey.FooterLinksLabel]: 'zapbipについて',
+    [ShellCopyKey.FooterDocs]: 'ドキュメント',
+    [ShellCopyKey.FooterTerms]: '利用規約',
+    [ShellCopyKey.FooterPrivacy]: 'プライバシーポリシー',
+    [ShellCopyKey.FooterMadeBy]: '開発元：Logic Bit',
+    [ShellCopyKey.FooterSupport]: 'サポート',
+  },
+  [WebLocale.Korean]: {
+    [ShellCopyKey.LocaleLabel]: '언어',
+    [ShellCopyKey.ThemeLabel]: '테마',
+    [ShellCopyKey.ThemeLight]: '라이트',
+    [ShellCopyKey.ThemeDark]: '다크',
+    [ShellCopyKey.ThemeSystem]: '시스템',
+    [ShellCopyKey.FooterLinksLabel]: 'zapbip 더 알아보기',
+    [ShellCopyKey.FooterDocs]: '문서',
+    [ShellCopyKey.FooterTerms]: '이용약관',
+    [ShellCopyKey.FooterPrivacy]: '개인정보 처리방침',
+    [ShellCopyKey.FooterMadeBy]: '제작: Logic Bit',
+    [ShellCopyKey.FooterSupport]: '지원',
+  },
+  [WebLocale.ChineseSimplified]: {
+    [ShellCopyKey.LocaleLabel]: '语言',
+    [ShellCopyKey.ThemeLabel]: '主题',
+    [ShellCopyKey.ThemeLight]: '浅色',
+    [ShellCopyKey.ThemeDark]: '深色',
+    [ShellCopyKey.ThemeSystem]: '跟随系统',
+    [ShellCopyKey.FooterLinksLabel]: '了解更多 zapbip',
+    [ShellCopyKey.FooterDocs]: '文档',
+    [ShellCopyKey.FooterTerms]: '使用条款',
+    [ShellCopyKey.FooterPrivacy]: '隐私政策',
+    [ShellCopyKey.FooterMadeBy]: '由 Logic Bit 打造',
+    [ShellCopyKey.FooterSupport]: '支持',
+  },
 };
 
-export function renderShellCopy(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
+export function renderShellCopy(input: { key: ShellCopyKey; locale: WebLocale }): string {
   return SHELL_COPY[input.locale][input.key];
 }

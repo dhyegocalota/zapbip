@@ -1,4 +1,4 @@
-import { HttpStatus, OwnerLocale } from '@zapbip/types';
+import { HttpStatus, WebLocale } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { ACCEPT_LANGUAGE_HEADER, SAFE_METHODS } from '../backoffice/backoffice-constants';
@@ -9,9 +9,9 @@ import { localeOfLanguageValue, localeOfPath, preferredLocaleOf } from './site-l
 import { pagePathOf } from './site-links';
 import { SitePath } from './site-paths';
 
-const TRAILING_SLASH_PATH = `${SitePath.PortugueseHome}/`;
+const TRAILING_SLASH = '/';
 
-function targetOf(input: { context: Context<SiteEnv>; locale: OwnerLocale }): string {
+function targetOf(input: { context: Context<SiteEnv>; locale: WebLocale }): string {
   const { context, locale } = input;
   return pagePathOf({ locale, agent: context.get('agentParameter'), referralCode: context.get('referralCode') });
 }
@@ -19,7 +19,9 @@ function targetOf(input: { context: Context<SiteEnv>; locale: OwnerLocale }): st
 export async function languageRedirects(context: Context<SiteEnv>, next: Next): Promise<Response | void> {
   if (!SAFE_METHODS.includes(context.req.method)) return next();
   const url = new URL(context.req.url);
-  if (url.pathname === TRAILING_SLASH_PATH) return context.redirect(`${SitePath.PortugueseHome}${url.search}`, HttpStatus.MovedPermanently);
+  const untrailedPath = url.pathname.endsWith(TRAILING_SLASH) ? url.pathname.slice(0, -TRAILING_SLASH.length) : null;
+  const isTrailingSlashHome = untrailedPath !== null && localeOfPath({ pathname: untrailedPath }) !== null;
+  if (isTrailingSlashHome) return context.redirect(`${untrailedPath}${url.search}`, HttpStatus.MovedPermanently);
   const pathLocale = localeOfPath({ pathname: url.pathname });
   if (pathLocale === null) return next();
   const legacyLocale = localeOfLanguageValue({ value: context.req.query(SITE_LANGUAGE_PARAMETER) });
@@ -32,7 +34,7 @@ export async function languageRedirects(context: Context<SiteEnv>, next: Next): 
     cookieValue: getCookie(context, LOCALE_COOKIE_NAME),
     acceptLanguage: context.req.header(ACCEPT_LANGUAGE_HEADER),
   });
-  if (!isRoot || preferred === OwnerLocale.EnglishUs) return next();
+  if (!isRoot || preferred === WebLocale.EnglishUs) return next();
   context.header('Vary', PAGE_VARY);
   return context.redirect(targetOf({ context, locale: preferred }), HttpStatus.Found);
 }

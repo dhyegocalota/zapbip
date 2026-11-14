@@ -1,5 +1,5 @@
 import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
-import type { OwnerLocale } from '@zapbip/types';
+import { OWNER_LOCALE_OF_WEB_LOCALE, type WebLocale } from '@zapbip/types';
 
 export enum SiteStartTab {
   AnyMcp = 'any',
@@ -28,12 +28,15 @@ export function agentParameterOf(input: { value: string | undefined }): InstallC
   return siteAgentIdOf({ value: input.value });
 }
 
-export function siteQuickStartOf(input: { id: InstallClient; locale: OwnerLocale; connectionLink: string }): {
+export function siteQuickStartOf(input: { id: InstallClient; locale: WebLocale; connectionLink: string }): {
   hint: string;
   path: string[];
   code: string;
 } {
-  const { hint, path, code } = AGENT_INSTALLS[input.id].quickStart({ locale: input.locale, connectionLink: input.connectionLink });
+  const { hint, path, code } = AGENT_INSTALLS[input.id].quickStart({
+    locale: OWNER_LOCALE_OF_WEB_LOCALE[input.locale],
+    connectionLink: input.connectionLink,
+  });
   return { hint, path, code };
 }
 

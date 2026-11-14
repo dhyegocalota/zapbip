@@ -1,4 +1,4 @@
-import { ACCESS_BATCH_LIMIT, OwnerLocale, WaitlistSource } from '@zapbip/types';
+import { ACCESS_BATCH_LIMIT, WebLocale, WaitlistSource } from '@zapbip/types';
 import { maskedPhoneOf } from '@zapbip/core';
 import { SOURCE_LABELS } from '../waitlist/source-labels';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
@@ -67,7 +67,7 @@ export function AccessPage(props: AccessPageProps) {
             <option value="" selected={filter.locale === null}>
               {translate(BackofficeCopyKey.AccessFilterAnyLocale)}
             </option>
-            {Object.values(OwnerLocale).map((option) => (
+            {Object.values(WebLocale).map((option) => (
               <option value={option} selected={filter.locale === option}>
                 {LOCALE_PROFILES[option].nativeName}
               </option>

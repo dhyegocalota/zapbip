@@ -1,4 +1,4 @@
-import { type OwnerLocale, SiteSettingKey, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
+import { type WebLocale, SiteSettingKey, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import { createRandomReferralCode, isReferralCode } from './referral-code';
 import { EMAIL_PATTERN, REFERRAL_CODE_CLASH_ATTEMPTS } from './site-constants';
 import { readReferralCap } from './site-settings';
@@ -16,7 +16,7 @@ export type WaitlistJoinResult =
 export type JoinWaitlistInput = {
   database: D1Database;
   email: string;
-  locale: OwnerLocale;
+  locale: WebLocale;
   referralCode: string | null;
   source: WaitlistSource;
   now: number;

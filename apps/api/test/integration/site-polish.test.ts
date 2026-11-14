@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { COMPANY, OwnerLocale, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
+import { COMPANY, WebLocale, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CONNECTION_SECRET_PATTERN } from '../../src/contract/constants';
 import { SITE_COPY, SiteCopyKey } from '../../src/site/site-copy';
@@ -11,10 +11,10 @@ import { copyHtml, joinForm, shellCopyHtml, siteFetch } from '../support/site';
 const ENGLISH_PATHS = ['/', '/terms'] as const;
 const LOGIC_BIT_ORIGIN = 'https://logicbit.com.br';
 const LOCALIZED_PAGES = [
-  ['/', OwnerLocale.EnglishUs, '/'],
-  ['/pt-br', OwnerLocale.PortugueseBrazil, '/pt-br'],
-  ['/terms', OwnerLocale.EnglishUs, '/'],
-  ['/pt-br/termos', OwnerLocale.PortugueseBrazil, '/pt-br'],
+  ['/', WebLocale.EnglishUs, '/'],
+  ['/pt-br', WebLocale.PortugueseBrazil, '/pt-br'],
+  ['/terms', WebLocale.EnglishUs, '/'],
+  ['/pt-br/termos', WebLocale.PortugueseBrazil, '/pt-br'],
 ] as const;
 const FOOTER_PATTERN = /<footer class="site-footer">([\s\S]*?)<\/footer>/;
 const HEADER_PATTERN = /<header class="site-header">([\s\S]*?)<\/header>/;
@@ -84,8 +84,8 @@ describe('the footer', () => {
 
 describe('the access call to action', () => {
   it.each([
-    [OwnerLocale.EnglishUs, '/', 'Request access', 'Get started free'],
-    [OwnerLocale.PortugueseBrazil, '/pt-br', 'Pedir acesso', 'Comece grátis'],
+    [WebLocale.EnglishUs, '/', 'Request access', 'Get started free'],
+    [WebLocale.PortugueseBrazil, '/pt-br', 'Pedir acesso', 'Comece grátis'],
   ])('says %s on the header, the form, the pricing cards and the final call', async (locale, path, label, retired) => {
     const html = await htmlOf({ path });
     expect(HEADER_PATTERN.exec(html)![1]).toContain(`>${label}</a>`);
@@ -107,8 +107,8 @@ describe('the access call to action', () => {
 
 describe('the quick start example link', () => {
   it.each([
-    ['/', OwnerLocale.EnglishUs],
-    ['/pt-br', OwnerLocale.PortugueseBrazil],
+    ['/', WebLocale.EnglishUs],
+    ['/pt-br', WebLocale.PortugueseBrazil],
   ])('shows a connection link in the real format with a caption on %s', async (path, locale) => {
     const html = await htmlOf({ path });
     const secret = EXAMPLE_LINK_PATTERN.exec(html)![1]!;
@@ -128,8 +128,8 @@ describe('the quick start example link', () => {
 
 describe('the thank-you panel while access is closed', () => {
   it.each([
-    [OwnerLocale.EnglishUs, '/'],
-    [OwnerLocale.PortugueseBrazil, '/pt-br'],
+    [WebLocale.EnglishUs, '/'],
+    [WebLocale.PortugueseBrazil, '/pt-br'],
   ])('confirms the early access list in %s with no referral surface', async (locale) => {
     const response = await siteFetch({ path: '/join', method: 'POST', form: joinForm({ email: MARIA, locale }) });
     const html = await response.text();
@@ -142,20 +142,20 @@ describe('the thank-you panel while access is closed', () => {
 
   it('shows no invite button in the final call after joining', async () => {
     const response = await siteFetch({ path: '/join', method: 'POST', form: joinForm({ email: MARIA }) });
-    expect(await response.text()).not.toContain(copyHtml({ key: SiteCopyKey.FinalButtonInvite, locale: OwnerLocale.EnglishUs }));
+    expect(await response.text()).not.toContain(copyHtml({ key: SiteCopyKey.FinalButtonInvite, locale: WebLocale.EnglishUs }));
   });
 });
 
 describe('the Brazilian Portuguese copy', () => {
   it('has no literal "você toca" or "seu toque"', async () => {
-    const texts = Object.values(SITE_COPY[OwnerLocale.PortugueseBrazil]);
+    const texts = Object.values(SITE_COPY[WebLocale.PortugueseBrazil]);
     expect(texts.filter((text) => /você toca|seu toque|\bsua vez de tocar/i.test(text))).toEqual([]);
     const html = await htmlOf({ path: '/pt-br' });
     expect(html).not.toMatch(/Você toca|seu toque/i);
   });
 
   it('asks and answers with a tap in natural words', () => {
-    const copy = SITE_COPY[OwnerLocale.PortugueseBrazil];
+    const copy = SITE_COPY[WebLocale.PortugueseBrazil];
     expect(copy[SiteCopyKey.WhyAskTitle]).toBe('O agente pergunta. Você responde com um toque.');
     expect(copy[SiteCopyKey.DemoStepTap]).toBe('Você responde');
     expect(copy[SiteCopyKey.HeroLead]).toContain('esperam sua resposta');

@@ -1,5 +1,5 @@
 import type { InstallClient } from '@zapbip/agents/install';
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { CodeTokenKind, highlightCode } from '../code-tokens';
 import { initialsOf, SiteStartTab } from '../site-agents';
 import { quickStartEntriesOf } from '../quick-start-entries';
@@ -74,7 +74,7 @@ function TabLogo(props: { tab: Tab }) {
   );
 }
 
-export function QuickStartSection(props: { locale: OwnerLocale; referralCode: string | null; startTab: InstallClient | SiteStartTab }) {
+export function QuickStartSection(props: { locale: WebLocale; referralCode: string | null; startTab: InstallClient | SiteStartTab }) {
   const { locale, referralCode, startTab } = props;
   const translate = copyOf({ locale });
   const tabs: Tab[] = quickStartEntriesOf({ locale }).map((entry) => ({

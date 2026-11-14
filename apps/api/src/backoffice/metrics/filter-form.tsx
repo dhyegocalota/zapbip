@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
 import { MetricsPeriod, NUMBER_QUERY, PERIOD_QUERY, type MetricsFilter } from './metrics-filter';
@@ -9,7 +9,7 @@ const PERIOD_LABELS: Record<MetricsPeriod, BackofficeCopyKey> = {
   [MetricsPeriod.Month]: BackofficeCopyKey.MetricsPeriod30,
 };
 
-export function FilterForm(props: { locale: OwnerLocale; filter: MetricsFilter; numbers: NumberOption[] }) {
+export function FilterForm(props: { locale: WebLocale; filter: MetricsFilter; numbers: NumberOption[] }) {
   const { locale, filter, numbers } = props;
   const translate = (key: BackofficeCopyKey): string => renderBackofficeCopy({ key, locale });
   return (

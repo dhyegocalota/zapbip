@@ -1,11 +1,11 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { ContactText } from './contact-text';
 import { pricingValuesOf } from '../price-format';
 import { faqItemsOf } from '../faq-items';
 
-export function FaqSection(props: { locale: OwnerLocale }) {
+export function FaqSection(props: { locale: WebLocale }) {
   const translate = copyOf({ locale: props.locale });
   const values = pricingValuesOf({ locale: props.locale });
   return (
