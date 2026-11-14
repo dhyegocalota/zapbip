@@ -235,6 +235,15 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
     '{agents}, 그리고 모든 MCP 에이전트가 WhatsApp으로 메시지를 보내고, 버튼으로 묻고, 답을 기다립니다. 메시지 {free}건까지 무료로 써 보세요. 이용을 신청하세요.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: AI 에이전트가 WhatsApp으로 말을 겁니다',
   [SiteCopyKey.MetaOgImageAlt]: 'AI 에이전트가 WhatsApp에서 “v2.4를 프로덕션에 배포할까요?”라고 묻는 화면. Ship it과 Wait 버튼이 있습니다.',
+  [SiteCopyKey.AboutTitle]: 'zapbip 소개',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip는 AI 에이전트를 위한 개인용 WhatsApp 채널로, 내 에이전트를 WhatsApp Cloud API 번호 하나, API 키 하나, MCP 서버 하나로 내 휴대폰에 연결합니다.',
+  [SiteCopyKey.AboutPricing]:
+    '요금: 메시지 {free}건 무료이며, Pro는 월 {price}에 메시지 {included}건을 포함하고 이후 {block}건마다 {overage}가 추가됩니다.',
+  [SiteCopyKey.AboutAgents]: '지원 에이전트: {agents}.',
+  [SiteCopyKey.AboutLimits]:
+    '제한: WhatsApp 번호 하나를 모든 계정이 공유하며 각 답장은 해당 에이전트로 전달됩니다. 공식 WhatsApp Cloud API만 사용하며, 대기 중인 메시지는 {messageDays}일, 미디어는 {mediaDays}일 보관됩니다.',
+  [SiteCopyKey.AboutUpdated]: '업데이트: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: '페이지를 찾을 수 없습니다',
   [SiteCopyKey.AgentsTitle]: 'AI 에이전트용',
   [SiteCopyKey.AgentsBody]:

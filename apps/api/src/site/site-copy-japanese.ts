@@ -235,10 +235,18 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterLegalLabel]: '法的情報',
   [SiteCopyKey.MetaTitle]: 'AIエージェントがWhatsAppでメッセージをくれる',
   [SiteCopyKey.MetaDescription]:
-    '{agents}、そしてあらゆるMCPエージェントがWhatsAppでメッセージを送り、ボタンで質問してあなたの返事を待ちます。{free}通まで無料でお試しいただけます。アクセスをリクエストしてください。',
+    '{agents}、そしてあらゆるMCPエージェントがWhatsAppでメッセージを送り、ボタンで質問して返事を待ちます。{free}通まで無料。アクセスをリクエストしてください。',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: AIエージェントがWhatsAppでメッセージをくれる',
   [SiteCopyKey.MetaOgImageAlt]:
     'AIエージェントがWhatsAppで「v2.4を本番環境にデプロイしますか？」と質問している画面。Ship itとWaitのボタン付き。',
+  [SiteCopyKey.AboutTitle]: 'zapbipについて',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbipは、自分のAIエージェントを、WhatsApp Cloud APIの番号1つ、APIキー1つ、MCPサーバー1つで自分のスマートフォンにつなぐ、AIエージェント向けの個人用WhatsAppチャンネルです。',
+  [SiteCopyKey.AboutPricing]: '料金：{free}通まで無料。Proは月額{price}で{included}通を含み、追加は{block}通ごとに{overage}です。',
+  [SiteCopyKey.AboutAgents]: '対応エージェント：{agents}。',
+  [SiteCopyKey.AboutLimits]:
+    '制限：1つのWhatsApp番号を全アカウントで共有し、各返信は返信先のエージェントに届きます。公式のWhatsApp Cloud APIのみを使用します。キュー内のメッセージは{messageDays}日、メディアは{mediaDays}日保管されます。',
+  [SiteCopyKey.AboutUpdated]: '更新日：{updatedOn}。',
   [SiteCopyKey.NotFoundMetaTitle]: 'ページが見つかりません',
   [SiteCopyKey.AgentsTitle]: 'AIエージェント向け',
   [SiteCopyKey.AgentsBody]:

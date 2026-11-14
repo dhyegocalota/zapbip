@@ -1,4 +1,5 @@
-import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type WebLocale } from '@zapbip/types';
+import { PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type WebLocale } from '@zapbip/types';
+import { aboutBlocksOf } from './about-facts';
 import { faqItemsOf } from './faq-items';
 import { legalTextOf } from './legal-copy';
 import type { LegalDocument } from './legal-links';
@@ -7,13 +8,13 @@ import { formatPrice, pricingValuesOf } from './price-format';
 import { FREE_FEATURE_KEYS } from './pricing-features';
 import { quickStartEntriesOf } from './quick-start-entries';
 import { setupPromptOf } from './setup-prompt';
+import { plainContactTextOf } from './plain-contact-text';
 import { leadingAgentNames } from './site-agents';
 import { SITE_BRAND_SEPARATOR, SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import { SitePath } from './site-paths';
 
-const CONTACT_PLACEHOLDER = '{contactEmail}';
 const TITLE_SEPARATOR = ': ';
 const SPACE = ' ';
 
@@ -47,14 +48,10 @@ const GUARANTEES: TitledCopy[] = [
   { title: SiteCopyKey.PrivacyKeysTitle, body: SiteCopyKey.PrivacyKeysBody },
 ];
 
-function withContact(input: { text: string }): string {
-  return input.text.replaceAll(CONTACT_PLACEHOLDER, COMPANY.contactEmail);
-}
-
 function textOf(input: { locale: WebLocale; endpoint: string }): Text {
   const translate = copyOf({ locale: input.locale });
   const values = { ...pricingValuesOf({ locale: input.locale }), agents: leadingAgentNames(), endpoint: input.endpoint };
-  return (key, extraValues) => withContact({ text: translate(key, { ...values, ...extraValues }) });
+  return (key, extraValues) => plainContactTextOf({ text: translate(key, { ...values, ...extraValues }) });
 }
 
 function titledBlocks(input: { text: Text; entries: TitledCopy[] }): MarkdownBlock[] {
@@ -130,6 +127,7 @@ export function homeMarkdownOf(input: { locale: WebLocale; origin: string }): st
     blocks: [
       heading({ level: HeadingLevel.Page, text: text(SiteCopyKey.MetaOgTitle) }),
       { kind: MarkdownBlockKind.Quote, text: text(SiteCopyKey.MetaDescription) },
+      ...aboutBlocksOf({ locale }),
       ...heroBlocks({ text }),
       sectionHeading({ text, key: SiteCopyKey.WhyTitle }),
       ...titledBlocks({ text, entries: STORIES }),
@@ -157,8 +155,8 @@ export function legalMarkdownOf(input: { document: LegalDocument; locale: WebLoc
   const legal = legalTextOf(input);
   const sections = legal.sections.flatMap((section): MarkdownBlock[] => [
     heading({ level: HeadingLevel.Section, text: section.heading }),
-    ...section.paragraphs.map((text) => paragraph({ text: withContact({ text }) })),
-    ...(section.items.length === 0 ? [] : [list({ items: section.items.map((text) => withContact({ text })), isOrdered: false })]),
+    ...section.paragraphs.map((text) => paragraph({ text: plainContactTextOf({ text }) })),
+    ...(section.items.length === 0 ? [] : [list({ items: section.items.map((text) => plainContactTextOf({ text })), isOrdered: false })]),
   ]);
   return renderMarkdown({
     blocks: [

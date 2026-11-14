@@ -38,7 +38,7 @@ export enum SiteAssetKind {
 
 export const APPLE_TOUCH_ICON_PATH = `${SitePath.AssetPrefix}apple-touch-icon.png`;
 const LOCALE_PLACEHOLDER = '{locale}';
-// NB ADR 0047: the demo and the Open Graph image exist in English and Portuguese only; every other language shows the English asset until it is recorded.
+// NB ADR 0047: the demo exists in English and Portuguese only; every other language shows the English demo until it is recorded. The Open Graph image exists in every language.
 const ASSET_LOCALES: Record<WebLocale, WebLocale> = {
   [WebLocale.EnglishUs]: WebLocale.EnglishUs,
   [WebLocale.PortugueseBrazil]: WebLocale.PortugueseBrazil,
@@ -51,7 +51,8 @@ const ASSET_LOCALES: Record<WebLocale, WebLocale> = {
 };
 
 export function siteAssetOf(input: { kind: SiteAssetKind; locale: WebLocale }): string {
-  return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, ASSET_LOCALES[input.locale])}`;
+  const assetLocale = input.kind === SiteAssetKind.OpenGraphImage ? input.locale : ASSET_LOCALES[input.locale];
+  return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, assetLocale)}`;
 }
 
 const LOGO_FOLDER = 'logos/';

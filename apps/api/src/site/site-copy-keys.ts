@@ -218,5 +218,11 @@ export enum SiteCopyKey {
   MetaDescription = 'meta_description',
   MetaOgTitle = 'meta_og_title',
   MetaOgImageAlt = 'meta_og_image_alt',
+  AboutTitle = 'about_title',
+  AboutDefinition = 'about_definition',
+  AboutPricing = 'about_pricing',
+  AboutAgents = 'about_agents',
+  AboutLimits = 'about_limits',
+  AboutUpdated = 'about_updated',
   NotFoundMetaTitle = 'not_found_meta_title',
 }
