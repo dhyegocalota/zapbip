@@ -19,6 +19,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'プラグインはメッセージを即座に配信します。プラグインがない場合、OpenClawは1分ごとに受信箱を確認します。',
   [OwnerLocale.Korean]: '플러그인은 각 메시지를 즉시 전달해요. 플러그인이 없으면 OpenClaw가 1분마다 받은 편지함을 확인해요.',
   [OwnerLocale.ChineseSimplified]: '插件会立即送达每条消息；没有插件时，OpenClaw 每分钟检查一次收件箱。',
+  [OwnerLocale.Arabic]: 'يسلّم المكوّن الإضافي كل رسالة فورًا؛ ومن دونه يفحص OpenClaw صندوق الوارد كل دقيقة.',
 };
 
 describe('the OpenClaw install section', () => {

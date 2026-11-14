@@ -49,6 +49,11 @@ const APPROVAL_TITLES: Record<OwnerLocale, Record<ApprovalChoice, string>> = {
     [ApprovalChoice.AllowAndSend]: '发送给智能体',
     [ApprovalChoice.Deny]: '拒绝',
   },
+  [OwnerLocale.Arabic]: {
+    [ApprovalChoice.Allow]: 'السماح',
+    [ApprovalChoice.AllowAndSend]: 'إرسال إلى الوكيل',
+    [ApprovalChoice.Deny]: 'رفض',
+  },
 };
 
 const APPROVAL_QUESTIONS: Record<ApprovedCommandKind, Record<OwnerLocale, string>> = {
@@ -69,6 +74,8 @@ const APPROVAL_QUESTIONS: Record<ApprovedCommandKind, Record<OwnerLocale, string
       '{requester}이(가) {agent}이라는 새 에이전트의 연결을 요청해요. 허용할까요? "{allow}"은(는) 설치 링크를 여기로 보내고, "{allowAndSend}"은(는) {requester}에게 넘겨요. 참조 {reference}.',
     [OwnerLocale.ChineseSimplified]:
       '{requester} 想连接一个名为 {agent} 的新智能体。是否允许？“{allow}”会把安装链接发到这里；“{allowAndSend}”会把它交给 {requester}。编号 {reference}。',
+    [OwnerLocale.Arabic]:
+      'يريد {requester} ربط وكيل جديد باسم {agent}. هل تسمح بذلك؟ «{allow}» يرسل رابط التثبيت إلى هنا، و«{allowAndSend}» يسلّمه إلى {requester}. المرجع {reference}.',
   },
   [CommandKind.RevokeAgent]: {
     [OwnerLocale.PortugueseBrazil]: '{requester} quer revogar o agente {agent}. O link dele deixa de funcionar. Permitir? Ref {reference}.',
@@ -82,6 +89,7 @@ const APPROVAL_QUESTIONS: Record<ApprovedCommandKind, Record<OwnerLocale, string
     [OwnerLocale.Korean]:
       '{requester}이(가) 에이전트 {agent}의 폐기를 요청해요. 링크는 더 이상 작동하지 않아요. 허용할까요? 참조 {reference}.',
     [OwnerLocale.ChineseSimplified]: '{requester} 想撤销智能体 {agent}。它的链接将失效。是否允许？编号 {reference}。',
+    [OwnerLocale.Arabic]: 'يريد {requester} إبطال الوكيل {agent}. سيتوقف رابطه عن العمل. هل تسمح بذلك؟ المرجع {reference}.',
   },
 };
 

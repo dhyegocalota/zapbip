@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: 'أرسل صورة أو فيديو أو صوتًا أو رسالة صوتية أو مستندًا أو ملصقًا.'
+---
+
+أرسل صورة أو فيديو أو صوتًا أو رسالة صوتية أو مستندًا أو ملصقًا.
+
+## المدخلات
+
+| الحقل       | النوع                                                    | الوصف                                                                     |
+| ----------- | -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `kind`      | `image` أو `video` أو `audio` أو `document` أو `sticker` | الحدود: 5 MB و16 MB و16 MB و100 MB و100 KB.                               |
+| `url`       | string                                                   | رابط https. قدّمه أو قدّم `upload_id`.                                    |
+| `upload_id` | string                                                   | من [create_upload](/ar/mcp-reference/create-upload). قدّمه أو قدّم `url`. |
+| `caption`   | string، اختياري                                          | حتى 1024 حرفًا.                                                           |
+| `filename`  | string، اختياري                                          | حتى 240 حرفًا.                                                            |
+| `voice`     | boolean، اختياري                                         | يرسل الصوت رسالةً صوتية.                                                  |
+| `reply_to`  | string، اختياري                                          | معرّف الرسالة المراد اقتباسها.                                            |
+
+## المخرجات
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. يعني `queued` أن [نافذة الـ24 ساعة](/ar/concepts/24-hour-window) مغلقة.
+
+يجب أن يكون الملصق `image/webp`. ويُفحص الحجم والنوع قبل الإرسال.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

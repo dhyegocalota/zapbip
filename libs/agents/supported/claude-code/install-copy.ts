@@ -81,6 +81,12 @@ const CLAUDE_CODE_TEXT: Record<OwnerLocale, ClaudeCodeText> = {
     confirmChange: `我将把 zapbip MCP 服务器添加到 Claude Code，并写入文件 ${SKILL_PATH}。可以吗？`,
     restart: `请用 \`${CHANNEL_COMMAND}\` 重新启动 Claude Code 以使用 zapbip。这个选项只是为 zapbip 打开 Claude Code 的通道功能，本身不会批准任何工具。`,
   },
+  [OwnerLocale.Arabic]: {
+    wakeNote:
+      'يستمع Claude Code دون حد زمني: تسلّم القناة الرسائل فورًا ما دامت الجلسة مفتوحة، ويستأنف الموصّل جلسة متوقفة خلال نحو 7 ثوانٍ.',
+    confirmChange: `سأضيف خادم MCP الخاص بـ zapbip إلى Claude Code وأكتب الملف ${SKILL_PATH}. هل أستطيع ذلك؟`,
+    restart: `أعد تشغيل Claude Code بالأمر \`${CHANNEL_COMMAND}\` لاستخدام zapbip. هذا الخيار يفعّل ميزة القنوات في Claude Code لـ zapbip ولا يوافق على أي أداة من تلقاء نفسه.`,
+  },
 };
 
 export const CLAUDE_CODE_SKILL_DESCRIPTION: Record<OwnerLocale, () => string> = {
@@ -96,6 +102,7 @@ export const CLAUDE_CODE_SKILL_DESCRIPTION: Record<OwnerLocale, () => string> = 
   [OwnerLocale.Japanese]: () => 'zapbip経由でWhatsAppで仕えている人と話すときのルール: 質問し、返事を待ち、短く書く。',
   [OwnerLocale.Korean]: () => 'zapbip으로 WhatsApp에서 함께 일하는 사람과 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.',
   [OwnerLocale.ChineseSimplified]: () => '通过 zapbip 在 WhatsApp 上与你所服务的人交流的规则：提问、等待回答、写得简短。',
+  [OwnerLocale.Arabic]: () => 'قواعد التحدث عبر zapbip على WhatsApp مع الشخص الذي تخدمه: اسأل، وانتظر الجواب، واكتب باختصار.',
 };
 
 export const CLAUDE_CODE_COPY = localizeCopy({
@@ -157,6 +164,7 @@ const CLAUDE_CODE_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'ターミナルで実行します',
   [OwnerLocale.Korean]: '터미널에서 실행하세요',
   [OwnerLocale.ChineseSimplified]: '在你的终端里运行',
+  [OwnerLocale.Arabic]: 'شغّل هذا في الطرفية',
 };
 
 export const CLAUDE_CODE_QUICK_START = quickStartOf({

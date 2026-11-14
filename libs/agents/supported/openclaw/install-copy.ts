@@ -59,6 +59,12 @@ const OPENCLAW_TEXT: Record<OwnerLocale, OpenClawText> = {
     pluginPermission: 'zapbip 插件会从 zapbip 读取发给这个智能体的消息，并把智能体的回复发回去，别的什么都不做。可以安装吗？',
     pollCost: '每分钟检查一次会消耗模型调用。',
   },
+  [OwnerLocale.Arabic]: {
+    wakeNote: 'يسلّم المكوّن الإضافي كل رسالة فورًا؛ ومن دونه يفحص OpenClaw صندوق الوارد كل دقيقة.',
+    pluginPermission:
+      'يقرأ المكوّن الإضافي zapbip رسائلك الموجّهة إلى هذا الوكيل من zapbip وينشر ردود الوكيل عائدةً إليها، ولا يفعل شيئًا غير ذلك. هل أستطيع تثبيته؟',
+    pollCost: 'الفحص كل دقيقة يستهلك استدعاءات للنموذج.',
+  },
 };
 
 export const OPENCLAW_COPY = localizeCopy({
@@ -99,6 +105,7 @@ const OPENCLAW_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'OpenClawの設定の、mcp.servers.zapbipの下に',
   [OwnerLocale.Korean]: 'OpenClaw 설정에서 mcp.servers.zapbip 아래에',
   [OwnerLocale.ChineseSimplified]: '在 OpenClaw 配置中，放在 mcp.servers.zapbip 下',
+  [OwnerLocale.Arabic]: 'في إعدادات OpenClaw، تحت mcp.servers.zapbip',
 };
 
 export const OPENCLAW_QUICK_START = quickStartOf({

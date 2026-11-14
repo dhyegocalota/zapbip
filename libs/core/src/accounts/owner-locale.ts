@@ -15,6 +15,7 @@ const OWNER_LOCALES_BY_LANGUAGE_VALUE: Record<string, OwnerLocale> = {
   ko: OwnerLocale.Korean,
   zh: OwnerLocale.ChineseSimplified,
   'zh-cn': OwnerLocale.ChineseSimplified,
+  ar: OwnerLocale.Arabic,
 };
 
 export function ownerLocaleOf(input: { waId: string }): OwnerLocale {

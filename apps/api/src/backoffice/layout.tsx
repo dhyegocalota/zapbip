@@ -3,7 +3,7 @@ import type { Child } from 'hono/jsx';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import { FAVICON_CONTENT_TYPE, FAVICON_HREF } from './assets/favicon';
 import { BackofficeCopyKey, renderBackofficeCopy } from './backoffice-copy';
-import { languageOf } from '../web-shell/locale-profiles';
+import { languageOf, textDirectionOf } from '../web-shell/locale-profiles';
 import { ShellControls } from '../web-shell/shell-controls';
 import { RETURN_TO_FIELD } from '../web-shell/shell-fields';
 import { ShellFooter } from '../web-shell/shell-footer';
@@ -46,7 +46,7 @@ export function Layout(props: LayoutProps) {
   const documentTitle = `${props.title}${TITLE_SEPARATOR}${translate(BackofficeCopyKey.BrandName)}`;
   const noticeView = notice === null ? null : NOTICE_VIEWS[notice];
   return (
-    <html lang={languageOf({ locale })} data-theme={theme}>
+    <html lang={languageOf({ locale })} dir={textDirectionOf({ locale })} data-theme={theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -68,6 +68,11 @@ const GEMINI_CLI_TEXT: Record<OwnerLocale, GeminiCliText> = {
     confirmChange: '我将把 zapbip MCP 服务器添加到 Gemini CLI。可以吗？',
     restart: '请重新启动 Gemini CLI 以使用 zapbip。',
   },
+  [OwnerLocale.Arabic]: {
+    wakeNote: 'يستمع Gemini CLI عبر الطرفية الخلفية ويرد خلال ثوانٍ ما دامت تعمل، دون حد زمني.',
+    confirmChange: 'سأضيف خادم zapbip MCP إلى Gemini CLI. هل أستطيع ذلك؟',
+    restart: 'أعد تشغيل Gemini CLI لاستخدام zapbip.',
+  },
 };
 
 export const GEMINI_CLI_COPY = localizeCopy({
@@ -110,6 +115,7 @@ const GEMINI_CLI_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'ターミナルで実行します',
   [OwnerLocale.Korean]: '터미널에서 실행하세요',
   [OwnerLocale.ChineseSimplified]: '在你的终端里运行',
+  [OwnerLocale.Arabic]: 'شغّل هذا في الطرفية',
 };
 
 export const GEMINI_CLI_QUICK_START = quickStartOf({

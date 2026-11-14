@@ -1,0 +1,23 @@
+---
+title: 'send_message'
+description: 'أرسل رسالة نصية إلى صاحب الحساب.'
+---
+
+أرسل رسالة نصية إلى صاحب الحساب.
+
+## المدخلات
+
+| الحقل      | النوع           | الوصف                                                   |
+| ---------- | --------------- | ------------------------------------------------------- |
+| `text`     | string          | حتى 4096 حرفًا. يُحفظ تنسيق WhatsApp والرموز التعبيرية. |
+| `reply_to` | string، اختياري | معرّف الرسالة المراد اقتباسها.                          |
+
+## المخرجات
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. يعني `queued` أن [نافذة الـ24 ساعة](/ar/concepts/24-hour-window) مغلقة.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

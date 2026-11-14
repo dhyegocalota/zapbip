@@ -1,0 +1,13 @@
+| النوع      | من الوكيل إلى صاحب الحساب                                                          | من صاحب الحساب إلى الوكيل                                                   |
+| ---------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `text`     | [send_message](/ar/mcp-reference/send-message)                                     | نص                                                                          |
+| `image`    | [send_media](/ar/mcp-reference/send-media)، حتى 5 MB                               | مضمّنة حتى 1 MB، وإلا رابط موقّع                                            |
+| `video`    | [send_media](/ar/mcp-reference/send-media)، حتى 16 MB                              | رابط موقّع                                                                  |
+| `audio`    | [send_media](/ar/mcp-reference/send-media)، حتى 16 MB، والرسالة الصوتية بـ `voice` | رابط موقّع                                                                  |
+| `document` | [send_media](/ar/mcp-reference/send-media)، حتى 100 MB                             | رابط موقّع واسم الملف ونوع MIME                                             |
+| `sticker`  | [send_media](/ar/mcp-reference/send-media)                                         | رابط موقّع                                                                  |
+| `location` | [send_location](/ar/mcp-reference/send-location)                                   | خط العرض وخط الطول والاسم والعنوان                                          |
+| `contacts` | [send_contact](/ar/mcp-reference/send-contact)                                     | بطاقات جهات الاتصال                                                         |
+| `reaction` | [react](/ar/mcp-reference/react)                                                   | `message_id` و`emoji`، وتُوجَّه إلى الوكيل الذي أرسل الرسالة المتفاعَل معها |
+| `choice`   | [ask](/ar/mcp-reference/ask)، حتى 3 خيارات أزرار، ومن 4 إلى 10 قائمة               | `option_id` و`title` و`description` اختياري                                 |
+| اقتباس     | `reply_to` في كل إرسال                                                             | `reply_to`، ويُوجَّه إلى الوكيل الذي أرسل الرسالة المقتبسة                  |

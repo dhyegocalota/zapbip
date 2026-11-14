@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'احجز رفعًا واحدًا للبايتات التي تملكها محليًا.'
+---
+
+احجز رفعًا واحدًا للبايتات التي تملكها محليًا.
+
+## المدخلات
+
+| الحقل        | النوع  | الوصف |
+| ------------ | ------ | ----- |
+| `filename`   | string |       |
+| `mime_type`  | string |       |
+| `size_bytes` | number |       |
+
+## المخرجات
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. و`upload_url` رابط موقّع لا يحمل سرّ الاتصال. ارفع البايتات إليه بـ `PUT` على ألا يتجاوز `Content-Length` قيمة `size_bytes`، ثم مرّر `upload_id` إلى [send_media](/ar/mcp-reference/send-media). تنتهي صلاحية الرفع بعد 15 دقيقة. وغياب الطول أو كبر الجسم أو خطأ النوع أو انتهاء صلاحية الرفع تُرفض بـ 411 أو 413 أو 415 أو 410 على التوالي، دون تخزين أي شيء.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

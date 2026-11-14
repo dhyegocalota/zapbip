@@ -1,0 +1,40 @@
+---
+title: ربط أي تطبيق MCP
+description: عنوان الاتصال وبديل Bearer والأدوات.
+---
+
+يستخدم zapbip بروتوكول MCP عبر Streamable HTTP. ويستطيع أي تطبيق يدعمه أن يتصل بعنوان الاتصال الذي يعطيه zapbip لوكيلك.
+
+## عنوان الاتصال
+
+```text
+https://<zapbip-host>/c/<secret>/mcp
+```
+
+السرّ في العنوان هو الاتصال نفسه. فاحرص على سريته.
+
+## بديل Bearer
+
+للتطبيقات التي لا تستطيع إخفاء السرّ في العنوان، استخدم `/mcp` وأرسل السرّ في ترويسة:
+
+```text
+POST https://<zapbip-host>/mcp
+Authorization: Bearer <secret>
+```
+
+تتصل الصيغتان بالوكيل نفسه. وعند غياب السرّ أو خطئه يُعاد `401`.
+
+## الأدوات
+
+| الأداة                                             | ما تفعله                                          |
+| -------------------------------------------------- | ------------------------------------------------- |
+| [send_message](/ar/mcp-reference/send-message)     | ترسل نصًا.                                        |
+| [send_media](/ar/mcp-reference/send-media)         | ترسل صورة أو فيديو أو صوتًا أو مستندًا أو ملصقًا. |
+| [send_location](/ar/mcp-reference/send-location)   | ترسل نقطة موقع.                                   |
+| [send_contact](/ar/mcp-reference/send-contact)     | ترسل بطاقة جهة اتصال.                             |
+| [react](/ar/mcp-reference/react)                   | تتفاعل برمز تعبيري.                               |
+| [ask](/ar/mcp-reference/ask)                       | تسأل بأزرار أو قائمة وتنتظر.                      |
+| [wait_for_reply](/ar/mcp-reference/wait-for-reply) | تنتظر جوابًا أو الرسالة التالية.                  |
+| [get_messages](/ar/mcp-reference/get-messages)     | تقرأ الرسائل غير المقروءة وآخر السجل.             |
+| [check_inbox](/ar/mcp-reference/check-inbox)       | تفحص إن كان هناك جديد ينتظر.                      |
+| [create_upload](/ar/mcp-reference/create-upload)   | تحجز رفعًا واحدًا لبايتات محلية.                  |

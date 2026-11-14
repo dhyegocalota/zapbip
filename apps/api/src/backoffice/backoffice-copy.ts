@@ -5,6 +5,7 @@ import { GERMAN_BACKOFFICE_COPY } from './backoffice-copy-german';
 import { FRENCH_BACKOFFICE_COPY } from './backoffice-copy-french';
 import { JAPANESE_BACKOFFICE_COPY } from './backoffice-copy-japanese';
 import { KOREAN_BACKOFFICE_COPY } from './backoffice-copy-korean';
+import { ARABIC_BACKOFFICE_COPY } from './backoffice-copy-arabic';
 import { CHINESE_BACKOFFICE_COPY } from './backoffice-copy-chinese';
 
 export { BackofficeCopyKey };
@@ -807,6 +808,7 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
   [OwnerLocale.Japanese]: JAPANESE_BACKOFFICE_COPY,
   [OwnerLocale.Korean]: KOREAN_BACKOFFICE_COPY,
   [OwnerLocale.ChineseSimplified]: CHINESE_BACKOFFICE_COPY,
+  [OwnerLocale.Arabic]: ARABIC_BACKOFFICE_COPY,
 };
 
 export function renderBackofficeCopy(input: { key: BackofficeCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {

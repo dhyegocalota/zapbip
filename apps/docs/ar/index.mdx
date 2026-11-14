@@ -1,0 +1,114 @@
+---
+title: نظرة عامة
+description: الذكاء الاصطناعي لديك، داخل WhatsApp الخاص بك.
+mode: 'wide'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ar/start-link.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="واجهة WhatsApp Cloud API الرسمية"
+  statement="الذكاء الاصطناعي لديك يبدأ بمراسلتك."
+  accent="وأنت تردّ على WhatsApp."
+  lead="القرارات والأعمال المنجزة والأسئلة ذات الأزرار تصل إلى الهاتف الذي تحمله أصلًا. والإعداد يتم بسطر واحد."
+  primary={{ label: 'ابدأ الآن', href: '/ar/get-started/how-to-start' }}
+  secondary={{ label: 'الوكلاء المدعومون', href: '/ar/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'انخفضت تذكرة الطيران إلى لشبونة إلى 700 دولار. هل أحجزها؟', options: ['احجز', 'واصل المراقبة'] },
+      { you: true, text: 'احجز' },
+      { name: 'Claude', text: 'تم الحجز. سأرسل بطاقة الصعود إلى الطائرة هنا.' },
+      { typing: true },
+    ]}
+  />
+</Hero>
+
+## لماذا zapbip
+
+تستخدم الذكاء الاصطناعي في البحث والتخطيط والبرمجة. لكن عندما يحتاج إلى قرارك، أو ينهي عملًا طويلًا، لا تكون أمام الشاشة. فينتظر، أو يخمّن.
+
+أنت أصلًا تعيش في WhatsApp. وzapbip يجلب الذكاء الاصطناعي لديك إلى هناك: يراسلك، ويسألك بالأزرار، وينتظر جوابك، ويمكنك أنت أيضًا أن تبدأ المحادثة متى شئت.
+
+تراسل zapbip مرة واحدة عبر رابط البدء، فيعطيك سطرًا من النص تلصقه في الذكاء الاصطناعي لديك، وينتهي الإعداد.
+
+<StartLink />
+
+## كيف يعمل
+
+<Frame>
+  <img
+    src="/images/how-it-works-ar.svg"
+    alt="يتصل الذكاء الاصطناعي لديك بـ zapbip، وينقل zapbip رسائله إلى هاتفك عبر WhatsApp Cloud API الرسمية. ويعود ردّك من الطريق نفسه ويوقظ الذكاء الاصطناعي لديك."
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **اربط الذكاء الاصطناعي لديك** بلصق سطر واحد، مرة واحدة.
+2. **يراسلك** بنصوص وملفات وأسئلة ذات أزرار.
+3. **تردّ أنت، أو تبدأ بالكلام**، فيوصل zapbip الرسالة إلى الذكاء الاصطناعي المعنيّ.
+
+## كيف يبدو عمليًا
+
+<CardGroup cols={2}>
+  <Card title="اكتمل البحث" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: 'اكتمل البحث عن الدراجات الكهربائية، والملخص مرفق.',
+          media: { kind: 'document', label: 'summary.pdf' },
+        },
+        { you: true, text: 'شكرًا، ممتاز.' },
+      ]}
+    />
+  </Card>
+  <Card title="قرار أثناء السفر" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'أي فندق في لشبونة؟', options: ['ألفاما', 'بايشا', 'بيليم'] },
+        { you: true, text: 'بايشا' },
+        { name: 'Claude', text: 'جارٍ حجز الفندق في بايشا لـ 3 ليالٍ.' },
+      ]}
+    />
+  </Card>
+  <Card title="أنت من يبدأ" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: 'ذكّرني يوم الجمعة بتجديد جواز السفر.' },
+        { name: 'Grok', text: 'حسنًا، سأذكّرك صباح الجمعة.' },
+      ]}
+    />
+  </Card>
+  <Card title="عدة وكلاء، رقم واحد" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'نجحت الاختبارات.' },
+        { name: 'Grok', text: 'وجدت 3 مصادر.' },
+        { you: true, quote: { name: 'Grok', text: 'وجدت 3 مصادر.' }, text: 'أيّها؟' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+## لمن هو
+
+لكل من يستخدم الذكاء الاصطناعي: ChatGPT وClaude وGrok وCodex وCursor وGemini وغيرها. كل ما تحتاج إليه هو WhatsApp. ولا يتحدث zapbip إلا إليك، ولا يتواصل مع طرف ثالث أبدًا.
+
+## ما الذي تستطيع فعله
+
+- [إرسال الرسائل والوسائط](/ar/features/send-messages-and-media)
+- [السؤال بالأزرار والقوائم](/ar/features/ask-with-buttons-and-lists)
+- [عدة وكلاء على رقم واحد](/ar/features/many-agents-on-one-number)
+- [فهم نافذة الـ24 ساعة](/ar/features/the-24-hour-window)
+
+ولمعرفة أي ذكاء اصطناعي يعمل، راجع [الوكلاء المدعومين](/ar/agents/supported-agents).
+
+<Card title="ابدأ الآن" icon="rocket" href="/ar/get-started/how-to-start">
+  راسل رقم zapbip، والصق سطرًا واحدًا في الذكاء الاصطناعي لديك، فتصلك أول رسالة منه.
+</Card>

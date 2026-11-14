@@ -1,0 +1,23 @@
+---
+title: 'react'
+description: 'تفاعل مع رسالة برمز تعبيري.'
+---
+
+تفاعل مع رسالة برمز تعبيري.
+
+## المدخلات
+
+| الحقل        | النوع  | الوصف                                             |
+| ------------ | ------ | ------------------------------------------------- |
+| `message_id` | string | الرسالة التي يُتفاعل معها.                        |
+| `emoji`      | string | رمز تعبيري واحد. وتمرير سلسلة فارغة يزيل التفاعل. |
+
+## المخرجات
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. يعني `queued` أن [نافذة الـ24 ساعة](/ar/concepts/24-hour-window) مغلقة.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

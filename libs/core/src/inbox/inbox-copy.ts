@@ -13,6 +13,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'メッセージをどのエージェントに送りますか？',
     [OwnerLocale.Korean]: '메시지를 어느 에이전트에게 보낼까요?',
     [OwnerLocale.ChineseSimplified]: '要把你的消息发给哪个智能体？',
+    [OwnerLocale.Arabic]: 'إلى أي وكيل أرسل رسالتك؟',
   },
   [InboxCopyKey.RoutingListExpired]: {
     [OwnerLocale.PortugueseBrazil]: 'Essa lista já foi usada.',
@@ -23,6 +24,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'このリストはすでに使用済みです。',
     [OwnerLocale.Korean]: '이 목록은 이미 사용했어요.',
     [OwnerLocale.ChineseSimplified]: '这个列表已经用过了。',
+    [OwnerLocale.Arabic]: 'سبق استخدام هذه القائمة.',
   },
   [InboxCopyKey.RoutingListReminder]: {
     [OwnerLocale.PortugueseBrazil]: 'Escolha o agente na lista acima',
@@ -33,6 +35,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '上のリストからエージェントを選んでください',
     [OwnerLocale.Korean]: '위 목록에서 에이전트를 골라 주세요',
     [OwnerLocale.ChineseSimplified]: '请在上面的列表中选择智能体',
+    [OwnerLocale.Arabic]: 'اختر الوكيل من القائمة أعلاه',
   },
   [InboxCopyKey.NoAgents]: {
     [OwnerLocale.PortugueseBrazil]: 'Nenhum agente conectado. Sua mensagem ficou guardada.',
@@ -43,6 +46,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '接続されているエージェントがありません。メッセージは保管されています。',
     [OwnerLocale.Korean]: '연결된 에이전트가 없어요. 메시지는 저장되어 있어요.',
     [OwnerLocale.ChineseSimplified]: '没有已连接的智能体。你的消息已保存。',
+    [OwnerLocale.Arabic]: 'لا يوجد وكيل متصل. رسالتك محفوظة.',
   },
   [InboxCopyKey.AgentNotListening]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} não está ouvindo agora. Sua mensagem espera no inbox.',
@@ -53,6 +57,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'エージェント{agent}は現在待ち受けていません。メッセージは受信箱で待機しています。',
     [OwnerLocale.Korean]: '에이전트 {agent}이(가) 지금은 듣고 있지 않아요. 메시지는 받은 편지함에서 기다려요.',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} 现在没有在监听。你的消息在收件箱里等候。',
+    [OwnerLocale.Arabic]: 'الوكيل {agent} لا يستمع الآن. رسالتك تنتظر في صندوق الوارد.',
   },
   [InboxCopyKey.AgentAssignedByExpiry]: {
     [OwnerLocale.PortugueseBrazil]: 'Você não escolheu um agente, então sua mensagem foi para {agent}. Ela espera no inbox.',
@@ -63,6 +68,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'エージェントが選ばれなかったため、メッセージは{agent}に送られました。受信箱で待機しています。',
     [OwnerLocale.Korean]: '에이전트를 고르지 않아서 메시지가 {agent}에게 갔어요. 받은 편지함에서 기다려요.',
     [OwnerLocale.ChineseSimplified]: '你没有选择智能体，所以消息发给了 {agent}。它在收件箱里等候。',
+    [OwnerLocale.Arabic]: 'لم تختر وكيلًا، فذهبت رسالتك إلى {agent}. وهي تنتظر في صندوق الوارد.',
   },
   [InboxCopyKey.NoticeBody]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} tem uma mensagem para você: {preview}',
@@ -73,6 +79,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'エージェント{agent}からメッセージです: {preview}',
     [OwnerLocale.Korean]: '에이전트 {agent}이(가) 메시지를 보냈어요: {preview}',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} 有一条消息给你：{preview}',
+    [OwnerLocale.Arabic]: 'لدى الوكيل {agent} رسالة لك: {preview}',
   },
   [InboxCopyKey.QuestionNoticeBody]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} tem uma pergunta para você: {preview}',
@@ -83,6 +90,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: 'エージェント{agent}から質問です: {preview}',
     [OwnerLocale.Korean]: '에이전트 {agent}이(가) 질문을 보냈어요: {preview}',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} 有一个问题要问你：{preview}',
+    [OwnerLocale.Arabic]: 'لدى الوكيل {agent} سؤال لك: {preview}',
   },
   [InboxCopyKey.NoticeQuickReply]: {
     [OwnerLocale.PortugueseBrazil]: 'Abrir',
@@ -93,6 +101,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '開く',
     [OwnerLocale.Korean]: '열기',
     [OwnerLocale.ChineseSimplified]: '打开',
+    [OwnerLocale.Arabic]: 'فتح',
   },
   [InboxCopyKey.PreviewImage]: {
     [OwnerLocale.PortugueseBrazil]: '[imagem]',
@@ -103,6 +112,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[画像]',
     [OwnerLocale.Korean]: '[이미지]',
     [OwnerLocale.ChineseSimplified]: '[图片]',
+    [OwnerLocale.Arabic]: '[صورة]',
   },
   [InboxCopyKey.PreviewVideo]: {
     [OwnerLocale.PortugueseBrazil]: '[vídeo]',
@@ -113,6 +123,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[動画]',
     [OwnerLocale.Korean]: '[동영상]',
     [OwnerLocale.ChineseSimplified]: '[视频]',
+    [OwnerLocale.Arabic]: '[فيديو]',
   },
   [InboxCopyKey.PreviewAudio]: {
     [OwnerLocale.PortugueseBrazil]: '[áudio]',
@@ -123,6 +134,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[音声]',
     [OwnerLocale.Korean]: '[오디오]',
     [OwnerLocale.ChineseSimplified]: '[音频]',
+    [OwnerLocale.Arabic]: '[ملف صوتي]',
   },
   [InboxCopyKey.PreviewVoice]: {
     [OwnerLocale.PortugueseBrazil]: '[mensagem de voz]',
@@ -133,6 +145,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[ボイスメッセージ]',
     [OwnerLocale.Korean]: '[음성 메시지]',
     [OwnerLocale.ChineseSimplified]: '[语音消息]',
+    [OwnerLocale.Arabic]: '[رسالة صوتية]',
   },
   [InboxCopyKey.PreviewDocument]: {
     [OwnerLocale.PortugueseBrazil]: '[documento]',
@@ -143,6 +156,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[ドキュメント]',
     [OwnerLocale.Korean]: '[문서]',
     [OwnerLocale.ChineseSimplified]: '[文档]',
+    [OwnerLocale.Arabic]: '[مستند]',
   },
   [InboxCopyKey.PreviewSticker]: {
     [OwnerLocale.PortugueseBrazil]: '[figurinha]',
@@ -153,6 +167,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[スタンプ]',
     [OwnerLocale.Korean]: '[스티커]',
     [OwnerLocale.ChineseSimplified]: '[贴纸]',
+    [OwnerLocale.Arabic]: '[ملصق]',
   },
   [InboxCopyKey.PreviewReaction]: {
     [OwnerLocale.PortugueseBrazil]: '[reação]',
@@ -163,6 +178,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[リアクション]',
     [OwnerLocale.Korean]: '[반응]',
     [OwnerLocale.ChineseSimplified]: '[回应]',
+    [OwnerLocale.Arabic]: '[تفاعل]',
   },
   [InboxCopyKey.PreviewLocation]: {
     [OwnerLocale.PortugueseBrazil]: '[localização]',
@@ -173,6 +189,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[位置情報]',
     [OwnerLocale.Korean]: '[위치]',
     [OwnerLocale.ChineseSimplified]: '[位置]',
+    [OwnerLocale.Arabic]: '[موقع]',
   },
   [InboxCopyKey.PreviewContacts]: {
     [OwnerLocale.PortugueseBrazil]: '[contato]',
@@ -183,6 +200,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[連絡先]',
     [OwnerLocale.Korean]: '[연락처]',
     [OwnerLocale.ChineseSimplified]: '[联系人]',
+    [OwnerLocale.Arabic]: '[جهات اتصال]',
   },
   [InboxCopyKey.PreviewChoice]: {
     [OwnerLocale.PortugueseBrazil]: '[resposta]',
@@ -193,6 +211,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.Japanese]: '[回答]',
     [OwnerLocale.Korean]: '[답변]',
     [OwnerLocale.ChineseSimplified]: '[回答]',
+    [OwnerLocale.Arabic]: '[إجابة]',
   },
 };
 

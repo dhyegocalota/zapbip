@@ -83,4 +83,13 @@ export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = 
     [OwnerCopyKey.NumberClosedToNewAccounts]: '这个号码目前不接受新账户。',
     [OwnerCopyKey.AccountOnOtherNumber]: '你的 zapbip 在 {displayNumber} 这个号码上。请在这里给它发消息：{whatsAppLink}',
   },
+  [OwnerLocale.Arabic]: {
+    [OwnerCopyKey.UnsupportedKind]: 'هذا النوع من الرسائل غير مدعوم بعد. أرسله نصًا أو صورة.',
+    [OwnerCopyKey.MediaUnavailable]: 'تعذّر عليّ تنزيل الملف. أرسله مرة أخرى من فضلك.',
+    [OwnerCopyKey.ListButtonLabel]: 'عرض الخيارات',
+    [OwnerCopyKey.ListSectionTitle]: 'الخيارات',
+    [OwnerCopyKey.TemplatePreviewFallback]: 'رسالة',
+    [OwnerCopyKey.NumberClosedToNewAccounts]: 'هذا الرقم لا يقبل حسابات جديدة حاليًا.',
+    [OwnerCopyKey.AccountOnOtherNumber]: 'حسابك على zapbip موجود على الرقم {displayNumber}. راسله من هنا: {whatsAppLink}',
+  },
 };

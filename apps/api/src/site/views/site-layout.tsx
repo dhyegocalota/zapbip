@@ -24,7 +24,7 @@ import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { localePathOf } from '../site-language';
 import { joinPathOf, pageUrlOf, returnPathOf } from '../site-links';
-import { LOCALE_PROFILES, languageOf } from '../../web-shell/locale-profiles';
+import { LOCALE_PROFILES, languageOf, textDirectionOf } from '../../web-shell/locale-profiles';
 import { LegalDocument, legalPathOf } from '../legal-links';
 import { pageMetaOf } from '../page-meta';
 import { serializeStructuredData, structuredDataOf } from '../structured-data';
@@ -153,7 +153,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
   const posterSourceSet = `${siteAssetOf({ kind: SiteAssetKind.PosterSmall, locale: model.locale })} ${POSTER_SMALL_WIDTH}w, ${siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: model.locale })} ${DEMO_IMAGE_SIZE}w`;
   const preloadAttributes = { imagesrcset: posterSourceSet, imagesizes: POSTER_SIZES, fetchpriority: 'high' };
   return (
-    <html lang={languageOf({ locale: model.locale })} data-theme={model.theme}>
+    <html lang={languageOf({ locale: model.locale })} dir={textDirectionOf({ locale: model.locale })} data-theme={model.theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

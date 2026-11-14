@@ -16,6 +16,7 @@ const HEADER_CELLS: Record<OwnerLocale, string[]> = {
   [OwnerLocale.Japanese]: ['email', '登録日時', '加算済み紹介数', '紹介者', '流入元'],
   [OwnerLocale.Korean]: ['email', '가입일시', '반영된_추천수', '추천인', '유입경로'],
   [OwnerLocale.ChineseSimplified]: ['email', '加入时间', '已计入邀请数', '邀请人', '来源'],
+  [OwnerLocale.Arabic]: ['email', 'تاريخ_الانضمام', 'الدعوات_المحتسبة', 'مدعو_من', 'المصدر'],
 };
 const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
 const NEUTRALISING_PREFIX = "'";

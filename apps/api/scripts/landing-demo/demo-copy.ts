@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { SENDER_INDEXES, senderNameOf } from '../../src/site/site-agents';
+import { textDirectionOf, type TextDirection } from '../../src/web-shell/locale-profiles';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { copyOf } from '../../src/site/site-copy-text';
 
@@ -18,6 +19,7 @@ export type LocaleScript = {
 };
 
 export type DemoOpenGraphData = {
+  direction: TextDirection;
   titleLead: string;
   titleAccent: string;
   tagline: string;
@@ -107,6 +109,16 @@ const TERMINAL_COPY: Record<OwnerLocale, TerminalCopy> = {
     waitingLabel: '답변을 기다리는 중',
     answeredLabel: '답변:',
   },
+  [OwnerLocale.Arabic]: {
+    command: 'شغّل الاختبارات',
+    testsPassed: 'نجح 128 اختبارًا',
+    questionTemplate: `نجحت الاختبارات. ${QUESTION_PLACEHOLDER}`,
+    liveText: 'v2.4 يعمل الآن',
+    deployCommand: 'انشر v2.4',
+    optionsLabel: 'الخيارات:',
+    waitingLabel: 'في انتظار ردّك',
+    answeredLabel: 'ردّ المالك:',
+  },
   [OwnerLocale.ChineseSimplified]: {
     command: '运行测试',
     testsPassed: '128 个测试通过',
@@ -138,6 +150,7 @@ export function openGraphDataOf(input: { locale: OwnerLocale }): DemoOpenGraphDa
   const translate = copyOf({ locale });
   const script = demoScriptOf({ locale });
   return {
+    direction: textDirectionOf({ locale }),
     titleLead: translate(SiteCopyKey.HeroTitleLead),
     titleAccent: translate(SiteCopyKey.HeroTitleAccent),
     tagline: `${TAGLINE_PREFIX}${translate(SiteCopyKey.FinalButton)}`,

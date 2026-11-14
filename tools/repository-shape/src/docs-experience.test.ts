@@ -71,6 +71,7 @@ const DAYS_WORDS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '日',
   [DocsPageLanguage.Korean]: '일',
   [DocsPageLanguage.Chinese]: '天',
+  [DocsPageLanguage.Arabic]: 'أيام|يومًا',
 };
 const LANGUAGES = Object.values(DocsPageLanguage);
 const TRANSLATED_LANGUAGES = LANGUAGES.filter((language) => language !== DocsPageLanguage.English);
@@ -198,7 +199,7 @@ function retentionFigureViolations({
   kind: DocsRetentionKind;
   language: DocsPageLanguage;
 }): string[] {
-  const figure = new RegExp(`\\b${RETENTION_DAYS[kind]}\\s*${DAYS_WORDS[language]}(?!\\p{L})`, 'u');
+  const figure = new RegExp(`\\b${RETENTION_DAYS[kind]}\\s*(?:${DAYS_WORDS[language]})(?!\\p{L})`, 'u');
   return figure.test(markdown) ? [] : [`${kind}: expected ${RETENTION_DAYS[kind]} days`];
 }
 

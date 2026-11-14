@@ -43,6 +43,10 @@ const HERMES_TEXT: Record<OwnerLocale, HermesText> = {
     wakeNote: '插件会立即送达每条消息；没有插件时，Hermes 每分钟检查一次收件箱。',
     pollCost: '每分钟检查一次会消耗模型调用。',
   },
+  [OwnerLocale.Arabic]: {
+    wakeNote: 'يسلّم المكوّن الإضافي كل رسالة فورًا؛ ومن دونه يفحص Hermes صندوق الوارد كل دقيقة.',
+    pollCost: 'الفحص كل دقيقة يستهلك استدعاءات للنموذج.',
+  },
 };
 
 export const HERMES_COPY = localizeCopy({
@@ -83,6 +87,7 @@ const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'Hermesのconfig.yamlの、mcp_serversの下に',
   [OwnerLocale.Korean]: 'Hermes의 config.yaml에서 mcp_servers 아래에',
   [OwnerLocale.ChineseSimplified]: '在 Hermes 的 config.yaml 中，放在 mcp_servers 下',
+  [OwnerLocale.Arabic]: 'في ملف config.yaml الخاص بـ Hermes، تحت mcp_servers',
 };
 
 export const HERMES_QUICK_START = quickStartOf({

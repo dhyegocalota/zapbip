@@ -12,6 +12,7 @@ const NAME_PLACEHOLDERS: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '<名前>',
   [OwnerLocale.Korean]: '<이름>',
   [OwnerLocale.ChineseSimplified]: '<名称>',
+  [OwnerLocale.Arabic]: '<الاسم>',
 };
 
 export function findCommandWords(input: { kind: CommandKind; locale: OwnerLocale }): string {

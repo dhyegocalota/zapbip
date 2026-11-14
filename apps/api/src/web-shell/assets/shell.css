@@ -31,7 +31,8 @@
   content: '';
   width: 0.4375rem;
   height: 0.4375rem;
-  margin: -0.25rem 0 0 var(--space-1);
+  margin: -0.25rem 0 0;
+  margin-inline-start: var(--space-1);
   border-right: 2px solid currentcolor;
   border-bottom: 2px solid currentcolor;
   transform: rotate(45deg);
@@ -49,7 +50,7 @@
 .lang-list {
   position: absolute;
   top: calc(100% + var(--space-2));
-  right: 0;
+  inset-inline-end: 0;
   z-index: 30;
   display: grid;
   min-width: 11rem;
@@ -73,7 +74,7 @@
   background: transparent;
   color: var(--color-text);
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -131,9 +132,17 @@
 .site-footer .lang-list,
 .shell-footer .lang-list {
   top: auto;
-  right: auto;
+  inset-inline-end: auto;
   bottom: calc(100% + var(--space-2));
-  left: 0;
+  inset-inline-start: 0;
+}
+
+@media (max-width: 40rem) {
+  .site-footer .lang-list,
+  .shell-footer .lang-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: min(18rem, calc(100vw - 2rem));
+  }
 }
 
 .switch form,
@@ -222,6 +231,28 @@ form.switch {
   --font-sans:
     system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', sans-serif;
   --font-display: ui-rounded, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+}
+
+:root:lang(ar) {
+  --font-sans: system-ui, -apple-system, 'Geeza Pro', 'Segoe UI', 'Noto Sans Arabic', Tahoma, sans-serif;
+  --font-display: ui-rounded, 'Geeza Pro', 'Segoe UI', 'Noto Sans Arabic', Tahoma, sans-serif;
+}
+
+:root:lang(ar) :not(.footer-wordmark, .brand) {
+  letter-spacing: normal !important;
+}
+
+:root[dir='rtl'] :is(pre, code, kbd, samp) {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+:root[dir='rtl'] pre {
+  text-align: left;
+}
+
+:root[dir='rtl'] input:is([type='email'], [type='url']) {
+  direction: ltr;
 }
 
 :root:lang(ko) body {

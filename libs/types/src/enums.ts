@@ -51,6 +51,7 @@ export enum OwnerLocale {
   Japanese = 'ja',
   Korean = 'ko',
   ChineseSimplified = 'zh_CN',
+  Arabic = 'ar',
 }
 
 export enum WebLanguageTag {
@@ -62,6 +63,7 @@ export enum WebLanguageTag {
   Japanese = 'ja',
   Korean = 'ko',
   ChineseSimplified = 'zh-CN',
+  Arabic = 'ar',
 }
 
 export enum InboxCopyKey {
@@ -374,6 +376,7 @@ export enum DocsPageLanguage {
   Japanese = 'ja',
   Korean = 'ko',
   Chinese = 'zh',
+  Arabic = 'ar',
 }
 
 export enum DocsRetentionKind {

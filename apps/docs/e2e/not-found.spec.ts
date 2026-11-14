@@ -15,6 +15,7 @@ const NOT_FOUND_LABELS: Record<DocsPageLanguage, { heading: string; overviewLabe
   [DocsPageLanguage.Japanese]: { heading: 'ページが見つかりません', overviewLabel: '概要に戻る' },
   [DocsPageLanguage.Korean]: { heading: '페이지를 찾을 수 없음', overviewLabel: '개요로 돌아가기' },
   [DocsPageLanguage.Chinese]: { heading: '页面未找到', overviewLabel: '返回概览' },
+  [DocsPageLanguage.Arabic]: { heading: 'الصفحة غير موجودة', overviewLabel: 'العودة إلى النظرة العامة' },
 };
 const NOT_FOUND_CASES = Object.values(DocsPageLanguage).map((language) => ({
   language,

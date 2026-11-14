@@ -42,6 +42,9 @@ const ORDINARY_MESSAGES = [
   'sí, hazlo',
   '登录失败了吗',
   'agents are great',
+  'اللغة العربية جميلة',
+  'تجديد الاشتراك',
+  'تجديد الاشتراك السنوي',
 ];
 
 function kindsOfText(words: string): Set<CommandKind> {

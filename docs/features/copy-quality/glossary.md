@@ -18,3 +18,17 @@ One word per product term per language. Docs and replies use the term in the sec
 - The docs say "AI" where a person talks to one assistant and "agent" where the product routes, connects or revokes it.
 - "Client" is "app" wherever it names the software the person uses.
 - Placeholders, limits and prices never change with the wording.
+
+## Arabic
+
+| Term | ar |
+| --- | --- |
+| agent | وكيل |
+| your AI (docs) | الذكاء الاصطناعي لديك |
+| reply (what the person does) | يردّ / ردّ |
+| button / list | زر / قائمة |
+| owner (docs) | المالك |
+| window | نافذة |
+| prompt (loanword) | موجّه (prompt) |
+
+Arabic keeps `WhatsApp`, `Meta`, `MCP` and product names in Latin script; numbers use Latin digits; the quotation marks are «…».

@@ -34,6 +34,7 @@ describe('the pricing constants', () => {
       [OwnerLocale.Japanese]: PricingCurrency.Usd,
       [OwnerLocale.Korean]: PricingCurrency.Usd,
       [OwnerLocale.ChineseSimplified]: PricingCurrency.Usd,
+      [OwnerLocale.Arabic]: PricingCurrency.Usd,
     });
   });
 });

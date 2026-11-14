@@ -65,4 +65,11 @@ export const INSTALL_PAGE_COPY: Record<OwnerLocale, InstallPageTexts> = {
     notFound: '未找到。',
     footer: `zapbip 是 ${COMPANY.tradeName} 的产品`,
   },
+  [OwnerLocale.Arabic]: {
+    ownerLanguage: 'Modern Standard Arabic',
+    unsupportedProduct: 'zapbip لا يعرف هذا المنتج بعد. تعذّر عليّ تثبيته.',
+    expired: 'انتهت صلاحية هذا الرابط أو سبق استخدامه. اطلب رابطًا جديدًا من zapbip على WhatsApp: أرسل `تجديد رابط <الاسم>`.',
+    notFound: 'غير موجود.',
+    footer: `zapbip منتج من ${COMPANY.tradeName}`,
+  },
 };

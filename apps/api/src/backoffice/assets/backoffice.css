@@ -232,7 +232,7 @@ a {
 
 .skip-link {
   position: absolute;
-  left: var(--space-2);
+  inset-inline-start: var(--space-2);
   top: -10rem;
   padding: var(--space-2) var(--space-3);
   background: var(--color-surface);
@@ -276,7 +276,8 @@ a {
   width: 1em;
   height: 1em;
   font-size: 1.75rem;
-  border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tail);
+  border-radius: var(--radius-card);
+  border-end-start-radius: var(--radius-tail);
   background: var(--mark-bubble);
   box-shadow: var(--glow-signal);
 }
@@ -331,7 +332,7 @@ nav {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 main {
@@ -410,7 +411,7 @@ main > * + * {
 
 .crumb::before {
   content: '\2190' / '';
-  margin-right: var(--space-2);
+  margin-inline-end: var(--space-2);
 }
 
 .crumb:hover {
@@ -532,7 +533,7 @@ legend {
 }
 
 .tile-unit {
-  margin-left: var(--space-2);
+  margin-inline-start: var(--space-2);
   color: var(--color-text-muted);
   font-family: var(--font-sans);
   font-size: var(--text-small);
@@ -799,7 +800,7 @@ select[aria-invalid='true'] {
 
 .button-arrow::after {
   content: '\2192' / '';
-  margin-left: var(--space-2);
+  margin-inline-start: var(--space-2);
   transition: transform var(--duration-base) var(--ease-out);
 }
 
@@ -869,7 +870,7 @@ main > .notice {
 .data-table td {
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border);
-  text-align: left;
+  text-align: start;
   font-size: var(--text-small);
 }
 
@@ -887,7 +888,7 @@ main > .notice {
 
 .summary-table td {
   width: 8rem;
-  text-align: right;
+  text-align: end;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1106,7 +1107,8 @@ main > .notice {
   height: 1em;
   margin-bottom: var(--space-3);
   font-size: 6rem;
-  border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tail);
+  border-radius: var(--radius-card);
+  border-end-start-radius: var(--radius-tail);
   background: var(--mark-bubble);
   animation: bubble-breathe var(--duration-breathe) ease-in-out 1;
 }
@@ -1196,7 +1198,7 @@ main > .notice {
   display: inline-block;
   width: 0.75rem;
   height: 0.75rem;
-  margin-right: var(--space-2);
+  margin-inline-end: var(--space-2);
   border: 1px solid var(--color-action);
   border-radius: 0.125rem;
   vertical-align: middle;
@@ -1322,7 +1324,7 @@ main > .notice {
   }
 
   .header-end {
-    margin-left: 0;
+    margin-inline-start: 0;
     justify-content: space-between;
     gap: var(--space-1);
   }
@@ -1381,7 +1383,7 @@ main > .notice {
     gap: var(--space-3);
     min-width: 0;
     overflow-wrap: anywhere;
-    text-align: right;
+    text-align: end;
   }
 
   .summary-table td::before {
@@ -1398,7 +1400,7 @@ main > .notice {
     color: var(--color-text-muted);
     font-family: var(--font-sans);
     font-weight: 600;
-    text-align: left;
+    text-align: start;
   }
 }
 

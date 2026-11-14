@@ -16,6 +16,7 @@ const DAYS_WORD: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '日',
   [DocsPageLanguage.Korean]: '일',
   [DocsPageLanguage.Chinese]: '天',
+  [DocsPageLanguage.Arabic]: 'أيام|يومًا',
 };
 const WAITLIST_QUESTION: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'What if my account is on the waitlist?',
@@ -26,6 +27,7 @@ const WAITLIST_QUESTION: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: 'アカウントがウェイトリストにある場合は？',
   [DocsPageLanguage.Korean]: '계정이 대기자 명단에 있으면 어떻게 되나요?',
   [DocsPageLanguage.Chinese]: '如果我的账号在候补名单上会怎样？',
+  [DocsPageLanguage.Arabic]: 'ماذا لو كان حسابي في قائمة الانتظار؟',
 };
 const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['zapbip team', 'help'],
@@ -36,26 +38,29 @@ const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Japanese]: ['zapbip チーム', 'help'],
   [DocsPageLanguage.Korean]: ['zapbip 팀', 'help'],
   [DocsPageLanguage.Chinese]: ['zapbip 团队', 'help'],
+  [DocsPageLanguage.Arabic]: ['فريق zapbip', 'مساعدة'],
 };
 const REVOKE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['revoke', 'rotate', 'once'],
   [DocsPageLanguage.PortugueseBrazil]: ['revogar', 'renovar', 'uma vez'],
-  [DocsPageLanguage.Spanish]: ['revoke', 'rotate', 'una vez'],
-  [DocsPageLanguage.German]: ['revoke', 'rotate', 'einmal'],
-  [DocsPageLanguage.French]: ['revoke', 'rotate', 'une fois'],
-  [DocsPageLanguage.Japanese]: ['revoke', 'rotate', '1 回'],
-  [DocsPageLanguage.Korean]: ['revoke', 'rotate', '한 번'],
-  [DocsPageLanguage.Chinese]: ['revoke', 'rotate', '一次'],
+  [DocsPageLanguage.Spanish]: ['revocar', 'rotar', 'una vez'],
+  [DocsPageLanguage.German]: ['widerrufen', 'erneuern', 'einmal'],
+  [DocsPageLanguage.French]: ['révoquer', 'renouveler', 'une fois'],
+  [DocsPageLanguage.Japanese]: ['無効化', '再発行', '1 回'],
+  [DocsPageLanguage.Korean]: ['폐기', '재발급', '한 번'],
+  [DocsPageLanguage.Chinese]: ['撤销', '轮换', '一次'],
+  [DocsPageLanguage.Arabic]: ['إبطال', 'تجديد رابط', 'مرة واحدة'],
 };
 const DELETE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'waitlist'],
   [DocsPageLanguage.PortugueseBrazil]: ['apagar conta', 'apagar conta definitivamente', 'Meta', 'Cloudflare', 'lista de espera'],
-  [DocsPageLanguage.Spanish]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'lista de espera'],
-  [DocsPageLanguage.German]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'Warteliste'],
-  [DocsPageLanguage.French]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'liste d’attente'],
-  [DocsPageLanguage.Japanese]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', 'ウェイトリスト'],
-  [DocsPageLanguage.Korean]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', '대기자 명단'],
-  [DocsPageLanguage.Chinese]: ['delete account', 'delete account permanently', 'Meta', 'Cloudflare', '候补名单'],
+  [DocsPageLanguage.Spanish]: ['eliminar cuenta', 'eliminar cuenta definitivamente', 'Meta', 'Cloudflare', 'lista de espera'],
+  [DocsPageLanguage.German]: ['konto löschen', 'konto endgültig löschen', 'Meta', 'Cloudflare', 'Warteliste'],
+  [DocsPageLanguage.French]: ['supprimer le compte', 'supprimer le compte définitivement', 'Meta', 'Cloudflare', 'liste d’attente'],
+  [DocsPageLanguage.Japanese]: ['アカウント削除', 'アカウント完全削除', 'Meta', 'Cloudflare', 'ウェイトリスト'],
+  [DocsPageLanguage.Korean]: ['계정 삭제', '계정 영구 삭제', 'Meta', 'Cloudflare', '대기자 명단'],
+  [DocsPageLanguage.Chinese]: ['删除账户', '永久删除账户', 'Meta', 'Cloudflare', '候补名单'],
+  [DocsPageLanguage.Arabic]: ['حذف الحساب', 'حذف الحساب نهائيا', 'Meta', 'Cloudflare', 'قائمة الانتظار'],
 };
 const PRIVACY_KINDS = Object.values(DocsRetentionKind);
 const PRIVACY_TOKENS = ['Meta', 'Cloudflare'];
@@ -84,7 +89,7 @@ for (const language of Object.values(DocsPageLanguage)) {
       await page.goto(urlOf({ path: 'privacy-and-security', language }));
       const content = page.locator('#content-area');
       for (const kind of PRIVACY_KINDS) {
-        await expect(content).toContainText(new RegExp(`${RETENTION_DAYS[kind]}\\s*${DAYS_WORD[language]}`));
+        await expect(content).toContainText(new RegExp(`${RETENTION_DAYS[kind]}\\s*(?:${DAYS_WORD[language]})`));
       }
       for (const token of PRIVACY_TOKENS) await expect(content).toContainText(token);
     });

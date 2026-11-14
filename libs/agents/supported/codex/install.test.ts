@@ -13,6 +13,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'コネクタはメッセージが届くたびにCodexのセッションを約6秒で再開します。時間制限はありません。',
   [OwnerLocale.Korean]: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개해요. 시간 제한은 없어요.',
   [OwnerLocale.ChineseSimplified]: '连接器会在每条消息到来时恢复 Codex 会话，大约 6 秒，不限时。',
+  [OwnerLocale.Arabic]: 'يستأنف الموصّل جلسة Codex مع كل رسالة، خلال نحو 6 ثوانٍ ودون حد زمني.',
 };
 const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Reinicie',
@@ -23,6 +24,7 @@ const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '再起動',
   [OwnerLocale.Korean]: '다시 시작',
   [OwnerLocale.ChineseSimplified]: '重新启动',
+  [OwnerLocale.Arabic]: 'أعد تشغيل',
 };
 
 describe('the Codex install section', () => {

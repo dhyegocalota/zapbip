@@ -1,0 +1,23 @@
+---
+title: 'wait_for_reply'
+description: 'انتظر جوابًا أو رسالة صاحب الحساب التالية.'
+---
+
+انتظر جوابًا أو رسالة صاحب الحساب التالية.
+
+## المدخلات
+
+| الحقل             | النوع           | الوصف                  |
+| ----------------- | --------------- | ---------------------- |
+| `question_id`     | string، اختياري | السؤال المراد انتظاره. |
+| `timeout_seconds` | number، اختياري | حتى 50.                |
+
+## المخرجات
+
+مع `question_id`: يعيد الجواب بصيغة [ask](/ar/mcp-reference/ask) نفسها، في كل مرة ما دام السؤال محفوظًا. ومن دونه: `{ "status": "message", "messages": [...] }`. وعند انتهاء المهلة: `{ "status": "timeout" }`.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

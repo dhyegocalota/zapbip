@@ -1,0 +1,26 @@
+---
+title: Fixture Agent
+description: اربط Fixture Agent بـ WhatsApp الخاص بك.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## ما الذي يعمل
+
+يستمع Fixture Agent إليك ويردّ عبر WhatsApp.
+
+## كيف يستمع
+
+نوع الإيقاظ: **محلي**. يشغّل Fixture Agent مستمعًا (listener) على حاسوبك. وعندما يكون لدى zapbip سؤال لك، يردّ «قيد الانتظار» مرة كل 50 ثانية على الأكثر. فيستدعي Fixture Agent مرة أخرى، ويواصل الاستدعاء حتى تجيب. دون حد زمني.
+
+## الإعداد من الصفر
+
+1. راسل رقم zapbip على WhatsApp.
+2. اطلب `وكيل جديد`، ثم الصق `<connectionLink>` في Fixture Agent.
+3. اطلب من Fixture Agent أن يستدعي `send_message` بالنص `✅ تم التثبيت`.
+
+## تحقق من أنه يعمل
+
+اطلب من Fixture Agent أن يرسل `✅ تم التثبيت` إلى WhatsApp الخاص بك.
+
+<Chat messages={[{ name: 'Fixture Agent', text: '✅ تم التثبيت', time: '14:03' }]} />

@@ -7,8 +7,8 @@
   "errors": {
     "404": {
       "redirect": false,
-      "title": "Page not found · Página não encontrada · Página no encontrada · Seite nicht gefunden · Page introuvable · ページが見つかりません · 페이지를 찾을 수 없음 · 页面未找到",
-      "description": "This page does not exist. · Esta página não existe. · Esta página no existe. · Diese Seite existiert nicht. · Cette page n'existe pas. · このページは存在しません。 · 이 페이지는 존재하지 않아요. · 此页面不存在。\n\n[Back to the Overview](/) · [Voltar para a visão geral](/pt-br) · [Volver a la visión general](/es) · [Zurück zur Übersicht](/de) · [Retour à l'aperçu](/fr) · [概要に戻る](/ja) · [개요로 돌아가기](/ko) · [返回概览](/zh)"
+      "title": "Page not found · Página não encontrada · Página no encontrada · Seite nicht gefunden · Page introuvable · ページが見つかりません · 페이지를 찾을 수 없음 · 页面未找到 · الصفحة غير موجودة",
+      "description": "This page does not exist. · Esta página não existe. · Esta página no existe. · Diese Seite existiert nicht. · Cette page n'existe pas. · このページは存在しません。 · 이 페이지는 존재하지 않아요. · 此页面不存在。 · هذه الصفحة غير موجودة.\n\n[Back to the Overview](/) · [Voltar para a visão geral](/pt-br) · [Volver a la visión general](/es) · [Zurück zur Übersicht](/de) · [Retour à l'aperçu](/fr) · [概要に戻る](/ja) · [개요로 돌아가기](/ko) · [返回概览](/zh) · [العودة إلى النظرة العامة](/ar)"
     }
   },
   "colors": {
@@ -777,6 +777,100 @@
                   "zh/mcp-reference/connect-agent",
                   "zh/mcp-reference/revoke-agent",
                   "zh/mcp-reference/sign-in-link"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ar",
+        "groups": [
+          {
+            "group": "البدء",
+            "pages": ["ar/index", "ar/get-started/how-to-start"]
+          },
+          {
+            "group": "الذكاء الاصطناعي",
+            "pages": [
+              "ar/agents/supported-agents",
+              "ar/agents/claude-code",
+              "ar/agents/codex",
+              "ar/agents/cursor",
+              "ar/agents/gemini-cli",
+              "ar/agents/hermes",
+              "ar/agents/openclaw",
+              "ar/agents/claude-ai",
+              "ar/agents/grok-bot",
+              "ar/agents/chatgpt",
+              "ar/agents/grok-web",
+              "ar/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "الميزات",
+            "pages": [
+              "ar/features/send-messages-and-media",
+              "ar/features/ask-with-buttons-and-lists",
+              "ar/features/owner-starts-conversations",
+              "ar/features/manage-your-agents",
+              "ar/features/let-your-ai-manage-zapbip",
+              "ar/features/many-agents-on-one-number",
+              "ar/features/whatsapp-commands",
+              "ar/features/web-app",
+              "ar/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "المساعدة",
+            "pages": [
+              "ar/help/troubleshooting",
+              "ar/help/faq",
+              "ar/help/privacy-and-security",
+              "ar/help/revoke-and-rotate-keys",
+              "ar/help/delete-your-account",
+              "ar/help/about"
+            ]
+          },
+          {
+            "group": "للمطورين",
+            "pages": [
+              "ar/developers/any-mcp-client",
+              "ar/developers/errors",
+              "ar/developers/local-connector",
+              "ar/developers/background-running",
+              "ar/developers/webhook-wake",
+              {
+                "group": "المفاهيم",
+                "pages": [
+                  "ar/concepts/inbox",
+                  "ar/concepts/questions",
+                  "ar/concepts/24-hour-window",
+                  "ar/concepts/routing",
+                  "ar/concepts/wake-ladder",
+                  "ar/concepts/whatsapp-channel",
+                  "ar/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "أدوات MCP",
+                "pages": [
+                  "ar/mcp-reference/send-message",
+                  "ar/mcp-reference/send-media",
+                  "ar/mcp-reference/send-location",
+                  "ar/mcp-reference/send-contact",
+                  "ar/mcp-reference/react",
+                  "ar/mcp-reference/ask",
+                  "ar/mcp-reference/wait-for-reply",
+                  "ar/mcp-reference/get-messages",
+                  "ar/mcp-reference/check-inbox",
+                  "ar/mcp-reference/create-upload",
+                  "ar/mcp-reference/set-wake",
+                  "ar/mcp-reference/list-agents",
+                  "ar/mcp-reference/account-status",
+                  "ar/mcp-reference/connect-agent",
+                  "ar/mcp-reference/revoke-agent",
+                  "ar/mcp-reference/sign-in-link"
                 ]
               }
             ]

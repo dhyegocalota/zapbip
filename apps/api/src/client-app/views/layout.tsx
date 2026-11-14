@@ -5,7 +5,7 @@ import { BRAND_SEPARATOR, CSRF_FIELD, THEME_COLOR_DARK, THEME_COLOR_LIGHT, WIDE_
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
 import { CLIENT_APP_STYLESHEET_HREF } from '../client-app-stylesheet';
-import { languageOf } from '../../web-shell/locale-profiles';
+import { languageOf, textDirectionOf } from '../../web-shell/locale-profiles';
 import { ShellControls } from '../../web-shell/shell-controls';
 import { RETURN_TO_FIELD } from '../../web-shell/shell-fields';
 import { ShellFooter } from '../../web-shell/shell-footer';
@@ -37,7 +37,7 @@ export function Layout(props: LayoutProps) {
   const { locale, csrfToken } = props;
   const translate = copyOf({ locale });
   return (
-    <html lang={languageOf({ locale })} data-theme={props.theme}>
+    <html lang={languageOf({ locale })} dir={textDirectionOf({ locale })} data-theme={props.theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

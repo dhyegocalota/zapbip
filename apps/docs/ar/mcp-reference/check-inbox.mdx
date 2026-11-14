@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: 'افحص صندوق الوارد دون انتظار.'
+---
+
+افحص صندوق الوارد دون انتظار.
+
+## المدخلات
+
+لا حقول.
+
+## المخرجات
+
+يعيد فورًا `{ "status": "empty" }` أو `{ "status": "new", "messages": [...] }`؛ وتصبح الرسائل المعادة مقروءة. صُمم للمهام المجدولة، لذا تكلفة الاستجابة صغيرة.
+
+## أنواع الرسائل
+
+import MessageKinds from '/snippets/ar/message-kinds.mdx';
+
+<MessageKinds />

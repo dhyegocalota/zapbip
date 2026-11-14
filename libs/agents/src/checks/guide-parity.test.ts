@@ -143,6 +143,7 @@ describe('guideParityViolationsOf', () => {
     [DocsPageLanguage.Japanese, 'Japanese'],
     [DocsPageLanguage.Korean, 'Korean'],
     [DocsPageLanguage.Chinese, 'Chinese'],
+    [DocsPageLanguage.Arabic, 'Arabic'],
   ];
 
   test.each(TRANSLATION_LABELS)('rejects a %s twin whose actions differ from the English guide', (language, label) => {

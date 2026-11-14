@@ -167,10 +167,11 @@
       .bubble {
         width: 88%;
         padding: 10px 14px;
-        border-radius: 4px 14px 14px 14px;
+        border-radius: 14px;
+        border-start-start-radius: 4px;
         background: var(--incoming);
         box-shadow: 0 1px 1px rgb(11 20 26 / 0.13);
-        transform-origin: left top;
+        transform-origin: top;
       }
 
       .bubble b {
@@ -195,13 +196,14 @@
         align-self: flex-end;
         width: auto;
         max-width: 70%;
-        border-radius: 14px 4px 14px 14px;
+        border-radius: 14px;
+        border-start-end-radius: 4px;
         background: var(--outgoing);
-        transform-origin: right top;
+        transform-origin: top;
       }
 
       .ticks {
-        margin-left: 8px;
+        margin-inline-start: 8px;
         color: #53bdeb;
         font-size: 18px;
       }
@@ -274,10 +276,12 @@
       const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
       const SPINNER_FRAME_SECONDS = 0.1;
       const POP_SECONDS = 0.35;
-      const BUTTON_TARGET = { x: 796, y: 428 };
+      const BUTTON_TARGETS = { ltr: { x: 796, y: 428 }, rtl: { x: 840, y: 428 } };
       const TAP_START = { x: 960, y: 900 };
 
       const demo = window.DEMO;
+      const BUTTON_TARGET = BUTTON_TARGETS[demo.direction];
+      document.querySelector('.phone-screen').setAttribute('dir', demo.direction);
       const terminalBody = document.getElementById('terminal-body');
       const chat = document.getElementById('chat');
       const tap = document.getElementById('tap');

@@ -42,7 +42,7 @@ describe('renderStartUnavailablePage', () => {
     const page = renderStartUnavailablePage({ locale });
     const other = LOCALES.find((candidate) => candidate !== locale) as OwnerLocale;
     expect(page.indexOf(START_LINK_COPY[locale].unavailableBody)).toBeLessThan(page.indexOf(START_LINK_COPY[other].unavailableBody));
-    expect(page).toContain(`<html lang="${START_LINK_COPY[locale].htmlLanguage}">`);
+    expect(page).toContain(`<html lang="${START_LINK_COPY[locale].htmlLanguage}" dir="${START_LINK_COPY[locale].direction}">`);
   });
 
   it.each(LOCALES)('words the %s unavailable copy without the word owner', (locale) => {

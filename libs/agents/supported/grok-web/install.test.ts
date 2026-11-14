@@ -14,6 +14,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: 'Web版のGrokは外部から起動できません。選ばれた待機エージェントが、数秒で代わりに応答します。',
   [OwnerLocale.Korean]: '웹의 Grok은 외부에서 깨울 수 없어요. 선택한 대기 에이전트가 몇 초 안에 대신 답해요.',
   [OwnerLocale.ChineseSimplified]: '网页版 Grok 无法从外部唤醒：所选的备用智能体会在几秒内代它回应。',
+  [OwnerLocale.Arabic]: 'لا يمكن إيقاظ Grok على الويب من الخارج: الوكيل الاحتياطي المختار يرد نيابةً عنه خلال ثوانٍ.',
 };
 const WAKE_NOTE_WITHOUT_STANDBY: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Sem um agente de prontidão, o Grok na web só vê mensagens novas quando você abre o chat dele.',
@@ -24,6 +25,7 @@ const WAKE_NOTE_WITHOUT_STANDBY: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '待機エージェントがない場合、Web版のGrokは、あなたがチャットを開いたときにだけ新しいメッセージを見られます。',
   [OwnerLocale.Korean]: '대기 에이전트가 없으면 웹의 Grok은 사용자가 채팅을 열었을 때만 새 메시지를 봐요.',
   [OwnerLocale.ChineseSimplified]: '没有备用智能体的话，只有你打开聊天时，网页版 Grok 才能看到新消息。',
+  [OwnerLocale.Arabic]: 'من دون وكيل احتياطي، لن يرى Grok على الويب الرسائل الجديدة إلا عند فتح المحادثة.',
 };
 
 describe('the Grok web install section', () => {

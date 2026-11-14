@@ -23,6 +23,7 @@ const NOTICE_SENTENCE_BY_LANGUAGE: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '本来の内容の前',
   [DocsPageLanguage.Korean]: '실제 내용보다 앞에',
   [DocsPageLanguage.Chinese]: '在真正的内容之前',
+  [DocsPageLanguage.Arabic]: 'قبل المحتوى الفعلي',
 };
 
 type NavigationNode = string | { group: string; pages: NavigationNode[] };

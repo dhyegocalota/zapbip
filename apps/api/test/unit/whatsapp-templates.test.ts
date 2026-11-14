@@ -53,7 +53,7 @@ describe('WhatsApp templates', () => {
     },
   );
 
-  it('AU-96 maps each owner locale to its language code, and the six new languages to the English template until theirs is approved', () => {
+  it('AU-96 maps each owner locale to its language code, and the seven new languages to the English template until theirs is approved', () => {
     expect(OWNER_LOCALE_TO_LANGUAGE_CODE).toEqual({
       [OwnerLocale.PortugueseBrazil]: WhatsAppLanguageCode.PortugueseBrazil,
       [OwnerLocale.EnglishUs]: WhatsAppLanguageCode.EnglishUs,
@@ -63,6 +63,7 @@ describe('WhatsApp templates', () => {
       [OwnerLocale.Japanese]: WhatsAppLanguageCode.EnglishUs,
       [OwnerLocale.Korean]: WhatsAppLanguageCode.EnglishUs,
       [OwnerLocale.ChineseSimplified]: WhatsAppLanguageCode.EnglishUs,
+      [OwnerLocale.Arabic]: WhatsAppLanguageCode.EnglishUs,
     });
     expect(Object.keys(OWNER_LOCALE_TO_LANGUAGE_CODE).sort()).toEqual(Object.values(OwnerLocale).sort());
   });

@@ -73,3 +73,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0050](0050-an-agent-sets-itself-up-from-a-one-line-prompt-that-points-to-a-generated-setup-page.md) | An agent sets itself up from a one-line prompt that points to a generated setup page | Accepted | 2026-11-13 |
 | [0051](0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md) | WhatsApp speaks eight languages, and the template of a language is chosen by a table | Accepted | 2026-11-14 |
 | [0052](0052-structured-data-is-one-json-ld-graph-built-from-the-same-copy-and-constants-as-the-page.md) | Structured data is one JSON-LD graph built from the same copy and constants as the page | Accepted | 2026-11-14 |
+| [0053](0053-arabic-is-the-ninth-language-and-the-first-that-reads-right-to-left.md) | Arabic is the ninth language and the first that reads right to left | Accepted | 2026-11-14 |

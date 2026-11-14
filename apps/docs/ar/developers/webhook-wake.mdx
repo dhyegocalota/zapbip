@@ -1,0 +1,56 @@
+---
+title: 'إيقاظ Webhook'
+description: 'دع zapbip يشغّل الذكاء الاصطناعي لديك عندما تراسله ولا يكون مستمعًا.'
+---
+
+إيقاظ Webhook هو الدرجة الثانية في [سلّم الإيقاظ](/ar/concepts/wake-ladder). عندما تراسل على WhatsApp ولا يكون الوكيل مستمعًا، يستدعي zapbip رابطًا يستطيع تشغيله. وللتطبيقات المدعومة يعدّه مسار التثبيت تلقائيًا؛ وتعرض هذه الصفحة ما يرسله zapbip وكيف تعدّه يدويًا.
+
+بعد ذلك يقرأ الوكيل الرسائل بـ [check_inbox](/ar/mcp-reference/check-inbox) أو [get_messages](/ar/mcp-reference/get-messages) ويجيب. ويُحفظ الرابط بـ [set_wake](/ar/mcp-reference/set-wake).
+
+لا يحمل هذا الاستدعاء أي نص منك: جسم الطلب دائمًا `{"event":"inbox_has_messages"}`. والرسائل المتتالية تتشارك إيقاظًا واحدًا، يُرسَل بعد ثوانٍ من الرسالة الأولى.
+
+## روتين Grok Bot
+
+أنشئ روتينًا بمُشغّل webhook، ثم احفظ:
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+يرسل zapbip الترويسة `Authorization: Bearer <token>`.
+
+## مهمة مجدولة في claude.ai
+
+أنشئ مهمة مجدولة بمُشغّل API، ثم احفظ:
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+يرسل zapbip الترويسة `Authorization: Bearer <token>` وترويسات الروتين.
+
+## خدمتك الخاصة
+
+يصلح أي مضيف `https` عام. الرمز هو مفتاح توقيعك، وطوله 32 حرفًا على الأقل، ولا يُرسَل أبدًا. يحمل كل طلب `X-Zapbip-Timestamp` (ثوانٍ بنظام Unix) و`X-Zapbip-Signature`، وهو `sha256=` متبوعًا بـ HMAC-SHA256 سداسي عشري للنص `<timestamp>.<body>`. ارفض الطوابع الزمنية الأقدم من 300 ثانية.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## عندما يفشل الإيقاظ
+
+- يُعاد `408` و`425` و`429` و`5xx` وانتهاء المهلة وأخطاء الشبكة حتى 5 مرات، بانتظار 5 و10 و20 و40 ثانية، مع احترام `Retry-After` عند `429` و`503` حتى 60 ثانية.
+- تُرفض عمليات إعادة التوجيه وأي استجابة `4xx` أخرى فورًا ولا تُعاد.
+- عندما يُرفض الإيقاظ أو يُتخلى عنه، تصلك رسالة على WhatsApp تقول إن الرسائل تنتظر في صندوق الوارد، ويُوسَم الاتصال بـ `failing`. استدعِ [set_wake](/ar/mcp-reference/set-wake) من جديد لتصحيح الوجهة؛ وأول إيقاظ يُسلَّم بنجاح يعيده إلى `active`.
+- إذا قرأ الوكيل الرسائل قبل أن يُطلَق الإيقاظ، فلا يُرسَل أي طلب.

@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: 'اقرأ حالة هذا الحساب وخطته.'
+---
+
+يقرأ الحساب الذي ينتمي إليه هذا الاتصال. للقراءة فقط: لا يحتاج إلى موافقة ولا يُحتسب ضمن أي حد.
+
+## المدخلات
+
+لا شيء.
+
+## المخرجات
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`. ولا يظهر رقم الهاتف أبدًا في النتيجة. و`free_messages` هو الحصة التي تتضمنها الخطة؛ ولا يبلّغ zapbip كم بقي منها.
+
+والبيانات نفسها في [تطبيق الويب](/ar/features/web-app): للجلسة المسجَّلة تعيد الصفحة الرئيسية عند `Accept: application/json` الكائن `{ "state", "phone", "plan", "free_messages", "agents" }`، حيث لا يظهر في `phone` إلا آخر أربعة أرقام؛ وعند عدم تسجيل الدخول تعيد `401` مع `{ "error": "sign_in_required" }`.
