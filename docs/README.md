@@ -10,3 +10,4 @@ How zapbip is built and run. The product documentation for people who use zapbip
 | [runbooks](runbooks/) | The operator's step-by-step path from zero accounts to zapbip running, and releases |
 | [scenarios](scenarios/) | Agentic walks of the product core in real browsers, one file per flow |
 | [contributing](contributing/) | How to run the whole stack locally with a test double for WhatsApp |
+| [media](media/) | The images the repository README shows, such as the demo |

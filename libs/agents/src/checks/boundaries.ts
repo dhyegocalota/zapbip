@@ -11,11 +11,12 @@ type BoundaryRule = {
 
 const SPECIFIER_PATTERN = /(?:from|import\s*\(?)\s*['"]([^'"]+)['"]/g;
 const AGENTS_PACKAGE = '@zapbip/agents';
-const WORKER_FACETS = [`${AGENTS_PACKAGE}/install`, `${AGENTS_PACKAGE}/plugins`];
+const WORKER_FACETS = [`${AGENTS_PACKAGE}/install`, `${AGENTS_PACKAGE}/plugins`, `${AGENTS_PACKAGE}/wake`];
 const SUPPORTED_ROOT = 'libs/agents/supported';
-const WORKER_FACET_FILES = ['definition.ts', 'install.ts', 'install-copy.ts', 'plugin.ts'];
+const WORKER_FACET_FILES = ['definition.ts', 'install.ts', 'install-copy.ts', 'plugin.ts', 'wake.ts'];
 const NODE_PREFIX = 'node:';
-const AGENT_ENUM_PATTERN = /export enum (AgentId|InstallClient|ConnectorClient|DocsOnlyClient|ChannelPluginProduct)\b/g;
+const AGENT_ENUM_PATTERN =
+  /export enum (AgentId|InstallClient|ConnectorClient|DocsOnlyClient|ChannelPluginProduct|WakeAgent|ChannelAgent)\b/g;
 const SHARED_LIBRARY_ROOTS = ['libs/core/', 'libs/types/'];
 const WORKER_SOURCE_ROOT = 'apps/api/src/';
 const TYPES_SOURCE_ROOT = 'libs/types/src/';
@@ -55,7 +56,7 @@ const RULES: BoundaryRule[] = [
   },
   {
     name: 'B4',
-    message: 'the Worker imports only the install and plugins facets',
+    message: 'the Worker imports only the install, plugins and wake facets',
     appliesTo: ({ path }) => path.startsWith(WORKER_SOURCE_ROOT),
     forbids: ({ specifier }) => specifier.startsWith(AGENTS_PACKAGE) && !WORKER_FACETS.includes(specifier),
   },
