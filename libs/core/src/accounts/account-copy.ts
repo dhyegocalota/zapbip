@@ -56,7 +56,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   },
   [AccountReplyIntent.Created]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Agente {agent_name} criado. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "girar {agent_name}".',
+      'Agente {agent_name} criado. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "renovar {agent_name}".',
     [OwnerLocale.EnglishUs]:
       'Agent {agent_name} created. Paste this into your agent:\n\n{install_prompt}\n\nIf the link expires or was used, send "rotate {agent_name}".',
     [OwnerLocale.Spanish]:
@@ -136,7 +136,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   },
   [AccountReplyIntent.Rotated]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Link do agente {agent_name} trocado. O link antigo deixou de funcionar. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "girar {agent_name}".',
+      'Link do agente {agent_name} trocado. O link antigo deixou de funcionar. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "renovar {agent_name}".',
     [OwnerLocale.EnglishUs]:
       'Link of agent {agent_name} replaced. The old link no longer works. Paste this into your agent:\n\n{install_prompt}\n\nIf the link expires or was used, send "rotate {agent_name}".',
     [OwnerLocale.Spanish]:
@@ -381,7 +381,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.ChineseSimplified]: '撤销智能体',
   },
   [CommandKind.RotateAgent]: {
-    [OwnerLocale.PortugueseBrazil]: 'Girar link',
+    [OwnerLocale.PortugueseBrazil]: 'Renovar link',
     [OwnerLocale.EnglishUs]: 'Rotate link',
     [OwnerLocale.Spanish]: 'Rotar enlace',
     [OwnerLocale.German]: 'Link erneuern',

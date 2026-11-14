@@ -39,7 +39,7 @@ const WAITLIST_ANSWER_TOKENS: Record<DocsPageLanguage, string[]> = {
 };
 const REVOKE_TOKENS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: ['revoke', 'rotate', 'once'],
-  [DocsPageLanguage.PortugueseBrazil]: ['revogar', 'girar', 'uma vez'],
+  [DocsPageLanguage.PortugueseBrazil]: ['revogar', 'renovar', 'uma vez'],
   [DocsPageLanguage.Spanish]: ['revoke', 'rotate', 'una vez'],
   [DocsPageLanguage.German]: ['revoke', 'rotate', 'einmal'],
   [DocsPageLanguage.French]: ['revoke', 'rotate', 'une fois'],

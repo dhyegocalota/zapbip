@@ -37,7 +37,7 @@ describe('isReservedAgentName', () => {
     'agents',
     'revogar',
     'revoke',
-    'girar',
+    'renovar',
     'rotate',
     'ajuda',
     'help',

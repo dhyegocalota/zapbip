@@ -26,7 +26,7 @@ type Locale = {
 const PORTUGUESE: Locale = {
   prefix: BRAZIL_PREFIX,
   create: (name) => `novo agente ${name}`,
-  rotate: (name) => `girar ${name}`,
+  rotate: (name) => `renovar ${name}`,
   revoke: (name) => `revogar ${name}`,
   list: 'agentes',
   requestDeletion: 'apagar conta',

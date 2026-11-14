@@ -12,7 +12,7 @@ export const INSTALL_PAGE_COPY: Record<OwnerLocale, InstallPageTexts> = {
   [OwnerLocale.PortugueseBrazil]: {
     ownerLanguage: 'Brazilian Portuguese',
     unsupportedProduct: 'O zapbip ainda não conhece este produto. Não consegui instalar.',
-    expired: 'Este link expirou ou já foi usado. Peça um novo ao zapbip no WhatsApp: envie `girar <nome>`.',
+    expired: 'Este link expirou ou já foi usado. Peça um novo ao zapbip no WhatsApp: envie `renovar <nome>`.',
     notFound: 'Não encontrado.',
     footer: `zapbip é um produto da ${COMPANY.tradeName}`,
   },

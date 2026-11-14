@@ -33,7 +33,7 @@ const LOCALE_WORDS: Record<OwnerLocale, LocaleWords> = {
     createAgent: 'novo agente',
     listAgents: 'agentes',
     revokeAgent: 'revogar',
-    rotateAgent: 'girar',
+    rotateAgent: 'renovar',
     help: ['ajuda', 'menu'],
     requestDeletion: 'apagar conta',
     confirmDeletion: 'apagar conta definitivamente',

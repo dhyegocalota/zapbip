@@ -7,7 +7,7 @@
 
 ## Context
 
-Creating a connection (`novo agente`, or `girar` for a new link) replies on WhatsApp. The first design put every client's steps into one long prompt, sent in parts, with the connection URL inside it. That makes the owner paste a long text, and it puts the connection secret into the WhatsApp chat, where Meta and the chat history see it (ADR 0006).
+Creating a connection (`novo agente`, or `renovar` for a new link) replies on WhatsApp. The first design put every client's steps into one long prompt, sent in parts, with the connection URL inside it. That makes the owner paste a long text, and it puts the connection secret into the WhatsApp chat, where Meta and the chat history see it (ADR 0006).
 
 The AI that receives the paste can fetch a URL. So the WhatsApp message can carry a short link to instructions, and the instructions can be written for the AI. The steps for each client can then change without a new WhatsApp message.
 
@@ -15,7 +15,7 @@ Two facts still limit the design. Clients expose different names before the inst
 
 ## Decision
 
-1. The WhatsApp reply to `novo agente` and `girar` carries one or two localized lines with `https://<public-host>/i/<install-code>`. The lines never contain the connection secret.
+1. The WhatsApp reply to `novo agente` and `renovar` carries one or two localized lines with `https://<public-host>/i/<install-code>`. The lines never contain the connection secret.
 2. `GET /i/<install-code>` serves Markdown for the AI, in English, with every sentence for the owner in the owner's locale. The AI detects its product and follows only that section. Every section ends with the same self-test, `send_message` of the localized `✅ instalado` or `✅ installed`.
 3. The page embeds the connection URL only while its install code is valid: 30 minutes, one connection, and only until the connection's first successful MCP call.
 4. The install code is stored as a digest. The connection secret is kept sealed under a key derived from the install code (AES-256-GCM, the key from HKDF-SHA-256 of the code), in the same row, and cleared at the first MCP call or by a daily sweep after expiry. The code is not stored, so the sealed secret opens only with the code.
@@ -33,7 +33,7 @@ Two facts still limit the design. Clients expose different names before the inst
 ## Consequences
 
 - The sealed secret is an exception to ADR 0017 ("never stored") for at most 30 minutes, and it is cleared on first use. ADR 0017 gets a dated amendment in the same change that ships the install code.
-- A link used once or expired shows `410` with a message that asks the owner to send `girar <nome>`. The owner has one step to recover, and no connection is lost.
+- A link used once or expired shows `410` with a message that asks the owner to send `renovar <nome>`. The owner has one step to recover, and no connection is lost.
 - The page is the one place where the AI learns the steps, so its text is snapshot-tested per client and locale.
 - A misdetection is caught by the self-test: no `✅` reaches the owner. The connection records the client name from the first `initialize`, so the owner can see what the agent claimed to be.
 - Each section names its product in a way the AI can recognise from its own environment.

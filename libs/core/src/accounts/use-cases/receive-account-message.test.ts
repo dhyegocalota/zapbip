@@ -144,9 +144,9 @@ describe('receiveAccountMessage rule 0', () => {
     expect(fixture.environment.sender.sessions).toHaveLength(1);
   });
 
-  test('girar a imagem is read as a rotate and is not routed', async () => {
+  test('renovar a imagem is read as a rotate and is not routed', async () => {
     const fixture = await createAccountFixture();
-    const result = await receiveAccountText({ ...fixture, text: 'girar a imagem' });
+    const result = await receiveAccountText({ ...fixture, text: 'renovar a imagem' });
     expect(result.messageId).toBeNull();
     expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.NotFound })]);
   });
@@ -154,10 +154,10 @@ describe('receiveAccountMessage rule 0', () => {
   test('the mention form routes the words to the agent', async () => {
     const fixture = await createAccountFixture();
     await touchAgent({ dependencies: fixture.environment.dependencies, agent: 'claude' });
-    const result = await receiveAccountText({ ...fixture, text: '@claude girar a imagem' });
+    const result = await receiveAccountText({ ...fixture, text: '@claude renovar a imagem' });
     expect(result.agent).toBe('claude');
     expect((await storedOwnerMessages(fixture)).map((message) => (message.kind === MessageKind.Text ? message.text : null))).toEqual([
-      'girar a imagem',
+      'renovar a imagem',
     ]);
   });
 
@@ -373,7 +373,7 @@ describe('receiveAccountMessage compensation', () => {
     const oldDigest = await addAgent({ ...fixture, agent: 'claude' });
     const before = await fixture.environment.registry.findActiveByAgent({ accountId: fixture.account.accountId, agent: 'claude' });
     fixture.environment.sender.failSessionCalls({ callNumbers: [1] });
-    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    await receiveAccountText({ ...fixture, text: 'renovar claude' });
     const [, rotated] = fixture.environment.secrets.issued;
     const after = await fixture.environment.registry.findActiveByAgent({ accountId: fixture.account.accountId, agent: 'claude' });
     expect(after).toEqual(before);
@@ -392,7 +392,7 @@ describe('receiveAccountMessage compensation', () => {
     expect(before?.installCodeSealedSecret).not.toBeNull();
     expect(before?.installCodeExpiresAt).not.toBeNull();
     fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
-    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    await receiveAccountText({ ...fixture, text: 'renovar claude' });
     const after = await fixture.environment.registry.findActiveByAgent({ accountId, agent: 'claude' });
     expect(after).toEqual(before);
   });
@@ -400,7 +400,7 @@ describe('receiveAccountMessage compensation', () => {
   test('a delivered rotate cancels the waiters of that agent only', async () => {
     const fixture = await createAccountFixture();
     await addAgent({ ...fixture, agent: 'claude' });
-    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    await receiveAccountText({ ...fixture, text: 'renovar claude' });
     expect(fixture.environment.revocations.cancelled).toEqual(['claude']);
     expect(fixture.environment.revocations.revoked).toEqual([]);
   });
@@ -408,14 +408,14 @@ describe('receiveAccountMessage compensation', () => {
   test('a delivered rotate closes the connector sockets of that agent only', async () => {
     const fixture = await createAccountFixture();
     await addAgent({ ...fixture, agent: 'claude' });
-    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    await receiveAccountText({ ...fixture, text: 'renovar claude' });
     expect(fixture.environment.revocations.closed).toEqual(['claude']);
   });
 
   test('a delivered rotate hands the new key digest to the object', async () => {
     const fixture = await createAccountFixture();
     await addAgent({ ...fixture, agent: 'claude' });
-    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    await receiveAccountText({ ...fixture, text: 'renovar claude' });
     const newDigest = fixture.environment.secrets.issued.at(-1)?.digest;
     expect(fixture.environment.revocations.rotated).toEqual([{ agent: 'claude', secretDigest: newDigest }]);
   });
@@ -442,7 +442,7 @@ describe('receiveAccountMessage command facts', () => {
   test('revoke reports the revoked connection id and rotate the same id', async () => {
     const fixture = await createAccountFixture();
     const created = await receiveAccountText({ ...fixture, text: 'novo agente alpha' });
-    const rotated = await receiveAccountText({ ...fixture, text: 'girar alpha' });
+    const rotated = await receiveAccountText({ ...fixture, text: 'renovar alpha' });
     const revoked = await receiveAccountText({ ...fixture, text: 'revogar alpha' });
     expect([rotated.commandKind, revoked.commandKind]).toEqual([CommandKind.RotateAgent, CommandKind.RevokeAgent]);
     expect([rotated.connectionId, revoked.connectionId]).toEqual([created.connectionId, created.connectionId]);
