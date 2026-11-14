@@ -1,0 +1,16 @@
+.git
+**/node_modules
+**/dist
+**/.wrangler
+**/.dev.vars
+.env
+.env.*
+!.env.example
+.pr-media
+.playwright-mcp
+test-results
+playwright-report
+apps/docs
+apps/hermes-plugin
+apps/openclaw-plugin
+apps/connector

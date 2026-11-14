@@ -115,7 +115,14 @@ function pagesOf({ navigation }: { navigation: unknown }): Set<string> {
   return pages;
 }
 
+function isAddedGroup({ entry, knownPages }: { entry: unknown; knownPages: Set<string> }): boolean {
+  const pages = (entry as { pages?: unknown[] }).pages;
+  if (!Array.isArray(pages) || pages.length === 0) return false;
+  return pages.every((page) => typeof page === 'string' && !knownPages.has(page));
+}
+
 function withoutAddedPages({ key, value, knownPages }: { key: string; value: unknown; knownPages: Set<string> }): unknown {
+  if (key === 'groups' && Array.isArray(value)) return value.filter((entry) => !isAddedGroup({ entry, knownPages }));
   if (key !== 'pages' || !Array.isArray(value)) return value;
   return value.filter((page) => typeof page !== 'string' || knownPages.has(page));
 }

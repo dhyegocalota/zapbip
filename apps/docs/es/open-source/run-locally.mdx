@@ -1,0 +1,68 @@
+---
+title: 'Ejecutar zapbip en local'
+description: 'Inicia tu propia copia de zapbip en tu computadora o en Docker, sin cuenta de Meta.'
+---
+
+En local, zapbip ejecuta el mismo Worker que producción. Un entorno de pruebas de desarrollo responde en lugar de WhatsApp, como el teléfono del dueño, así que no necesitas cuenta de Meta y nada llega a un teléfono real.
+
+## Qué necesitas
+
+- Node 24 o más reciente y pnpm
+- Git
+- O Docker con Compose, para la opción Docker
+
+## En tu computadora
+
+Descarga el código e instálalo:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+Crea `apps/api/.dev.vars` con cuatro secretos aleatorios y prepara la base de datos local:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+Inicia el Worker y compruébalo:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+Crea un dueño y un agente. El comando muestra el secreto del agente una sola vez:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+Conecta tu IA con el secreto que mostró:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+La [guía del entorno local](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md) recorre una conversación completa, en inglés.
+
+## Docker
+
+Un comando construye la imagen e inicia el Worker en el puerto 8787:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+La base de datos, los archivos y los secretos generados viven en el volumen `zapbip-data`, así que sobreviven a un reinicio. Define `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `NUMBER_REGISTRY_KEY` o `META_APP_SECRET` en tu entorno para elegirlos tú.
+
+Crea un dueño y un agente dentro del contenedor:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

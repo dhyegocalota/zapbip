@@ -5,7 +5,7 @@ import { DOCS_GROUPS, docsNavigationOf, languageOfPage, navigationPagesOf, snipp
 import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, repositoryPath } from './repository-files';
 
 const SNIPPETS_DIRECTORY = 'snippets';
-const GROUP_COUNT = 5;
+const GROUP_COUNT = 6;
 
 const LANGUAGES = Object.values(DocsPageLanguage);
 const TRANSLATED_LANGUAGES = LANGUAGES.filter((language) => language !== DocsPageLanguage.English);

@@ -169,16 +169,16 @@ export const LISTEN_STATEMENT_TOKENS: Record<DocsPageLanguage, { pending: string
 export const AGENTS_GROUP_INDEX = 1;
 
 export const DOCS_GROUPS: Record<DocsPageLanguage, string[]> = {
-  [DocsPageLanguage.English]: ['Get started', 'Agents', 'Features', 'Help', 'For developers'],
-  [DocsPageLanguage.PortugueseBrazil]: ['Primeiros passos', 'IAs', 'Funcionalidades', 'Ajuda', 'Para desenvolvedores'],
-  [DocsPageLanguage.Spanish]: ['Primeros pasos', 'IAs', 'Funciones', 'Ayuda', 'Para desarrolladores'],
-  [DocsPageLanguage.German]: ['Erste Schritte', 'KIs', 'Funktionen', 'Hilfe', 'Für Entwickler'],
-  [DocsPageLanguage.French]: ['Premiers pas', 'IA', 'Fonctionnalités', 'Aide', 'Pour les développeurs'],
-  [DocsPageLanguage.Japanese]: ['はじめに', 'AI', '機能', 'ヘルプ', '開発者向け'],
-  [DocsPageLanguage.Korean]: ['시작하기', 'AI', '기능', '도움말', '개발자용'],
-  [DocsPageLanguage.Chinese]: ['快速开始', 'AI', '功能', '帮助', '开发者'],
-  [DocsPageLanguage.Arabic]: ['البدء', 'الذكاء الاصطناعي', 'الميزات', 'المساعدة', 'للمطورين'],
-  [DocsPageLanguage.Hindi]: ['शुरुआत', 'AI', 'फ़ीचर', 'मदद', 'डेवलपर्स के लिए'],
+  [DocsPageLanguage.English]: ['Get started', 'Agents', 'Features', 'Help', 'For developers', 'Open source'],
+  [DocsPageLanguage.PortugueseBrazil]: ['Primeiros passos', 'IAs', 'Funcionalidades', 'Ajuda', 'Para desenvolvedores', 'Código aberto'],
+  [DocsPageLanguage.Spanish]: ['Primeros pasos', 'IAs', 'Funciones', 'Ayuda', 'Para desarrolladores', 'Código abierto'],
+  [DocsPageLanguage.German]: ['Erste Schritte', 'KIs', 'Funktionen', 'Hilfe', 'Für Entwickler', 'Open Source'],
+  [DocsPageLanguage.French]: ['Premiers pas', 'IA', 'Fonctionnalités', 'Aide', 'Pour les développeurs', 'Open source'],
+  [DocsPageLanguage.Japanese]: ['はじめに', 'AI', '機能', 'ヘルプ', '開発者向け', 'オープンソース'],
+  [DocsPageLanguage.Korean]: ['시작하기', 'AI', '기능', '도움말', '개발자용', '오픈 소스'],
+  [DocsPageLanguage.Chinese]: ['快速开始', 'AI', '功能', '帮助', '开发者', '开源'],
+  [DocsPageLanguage.Arabic]: ['البدء', 'الذكاء الاصطناعي', 'الميزات', 'المساعدة', 'للمطورين', 'المصدر المفتوح'],
+  [DocsPageLanguage.Hindi]: ['शुरुआत', 'AI', 'फ़ीचर', 'मदद', 'डेवलपर्स के लिए', 'ओपन सोर्स'],
 };
 
 export function perLanguage<Value>(input: { valueOf: (language: DocsPageLanguage) => Value }): Record<DocsPageLanguage, Value> {

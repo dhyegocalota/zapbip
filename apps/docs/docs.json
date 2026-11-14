@@ -122,6 +122,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Open source",
+            "pages": ["open-source/overview", "open-source/run-locally", "open-source/deploy"]
           }
         ]
       },
@@ -216,6 +220,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Código aberto",
+            "pages": ["pt-br/open-source/overview", "pt-br/open-source/run-locally", "pt-br/open-source/deploy"]
           }
         ]
       },
@@ -310,6 +318,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Código abierto",
+            "pages": ["es/open-source/overview", "es/open-source/run-locally", "es/open-source/deploy"]
           }
         ]
       },
@@ -404,6 +416,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Open Source",
+            "pages": ["de/open-source/overview", "de/open-source/run-locally", "de/open-source/deploy"]
           }
         ]
       },
@@ -498,6 +514,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "Open source",
+            "pages": ["fr/open-source/overview", "fr/open-source/run-locally", "fr/open-source/deploy"]
           }
         ]
       },
@@ -592,6 +612,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "オープンソース",
+            "pages": ["ja/open-source/overview", "ja/open-source/run-locally", "ja/open-source/deploy"]
           }
         ]
       },
@@ -686,6 +710,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "오픈 소스",
+            "pages": ["ko/open-source/overview", "ko/open-source/run-locally", "ko/open-source/deploy"]
           }
         ]
       },
@@ -780,6 +808,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "开源",
+            "pages": ["zh/open-source/overview", "zh/open-source/run-locally", "zh/open-source/deploy"]
           }
         ]
       },
@@ -874,6 +906,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "المصدر المفتوح",
+            "pages": ["ar/open-source/overview", "ar/open-source/run-locally", "ar/open-source/deploy"]
           }
         ]
       },
@@ -968,6 +1004,10 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "ओपन सोर्स",
+            "pages": ["hi/open-source/overview", "hi/open-source/run-locally", "hi/open-source/deploy"]
           }
         ]
       }

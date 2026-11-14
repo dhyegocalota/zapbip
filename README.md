@@ -11,7 +11,7 @@
 
 <p align="center">
 
-[![license](https://img.shields.io/github/license/dhyegocalota/zapbip?color=128C7E)](LICENSE)
+[![license](https://img.shields.io/github/license/dhyegocalota/zapbip?color=128C7E&cacheSeconds=3600)](LICENSE)
 [![stars](https://img.shields.io/github/stars/dhyegocalota/zapbip?style=flat&color=128C7E)](https://github.com/dhyegocalota/zapbip/stargazers)
 [![docs](https://img.shields.io/badge/docs-docs.zapbip.com-128C7E)](https://docs.zapbip.com)
 [![website](https://img.shields.io/badge/website-zapbip.com-128C7E)](https://zapbip.com)
@@ -86,11 +86,19 @@ Coding agents, chat apps and any MCP client connect the same way. [The supported
 
 ## 🧪 Run it locally
 
-[docs/contributing/local-stack.md](docs/contributing/local-stack.md) starts the Worker with a test double for WhatsApp and walks an agent through a full conversation, with no Meta account needed.
+With Docker, one command builds the image and starts the Worker on port 8787, with its data in a volume:
+
+```bash
+docker compose up --build
+```
+
+Without Docker, [Run zapbip locally](https://docs.zapbip.com/open-source/run-locally) starts it from the source. [docs/contributing/local-stack.md](docs/contributing/local-stack.md) starts the Worker with a test double for WhatsApp and walks an agent through a full conversation, with no Meta account needed.
 
 ## 🏠 Self-hosting
 
 zapbip runs on Cloudflare (Workers, Durable Objects, D1, R2) and a Meta app with the WhatsApp Cloud API. The [runbooks](docs/runbooks/) are the exact path the hosted service follows, from zero accounts to go-live. To run your own copy, follow them with your own accounts and replace the hosted service's identifiers: the routes and resource ids in `apps/api/wrangler.jsonc`, the zone and the Meta app constants in `libs/types`, and the company facts the legal pages use. First-class configuration for self-hosting is not there yet; issues and pull requests that move it there are welcome.
+
+[Deploy to Cloudflare](https://docs.zapbip.com/open-source/deploy) walks the same path in the docs. Railway, Heroku, Fly.io, Render and a plain server cannot run production zapbip, because it needs Durable Objects, D1 and R2, which exist only on Cloudflare; the Docker image runs the development sandbox for trying it anywhere.
 
 ## 🛠️ Built with agents
 
@@ -110,7 +118,7 @@ What ships and what is next lives in [docs/features](docs/features/): one folder
 ## 👥 Contributors
 
 <a href="https://github.com/dhyegocalota/zapbip/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=dhyegocalota/zapbip" alt="Contributors">
+  <img src="https://contributors-img.web.app/image?repo=dhyegocalota/zapbip" alt="Contributors">
 </a>
 
 ## ⭐ Star history

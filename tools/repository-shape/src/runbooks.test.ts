@@ -10,6 +10,7 @@ const INDEX_FILE_NAME = 'README.md';
 const DEPLOY_RUNBOOK = 'deploy.md';
 const DOCS_APPLICATION_DIRECTORY = 'apps/docs';
 const RUNBOOKS_REFERENCE = 'runbooks';
+const OPEN_SOURCE_SEGMENT = '/open-source/';
 const MARKDOWN_EXTENSION = '.md';
 const ROOT_PACKAGE_FILE = 'package.json';
 const NODE_MODULES_DIRECTORY = 'node_modules';
@@ -280,7 +281,9 @@ describe('runbooks', () => {
   });
 
   test('no file of the Mintlify site points at the runbooks', () => {
-    const pointing = filesUnder(DOCS_APPLICATION_DIRECTORY).filter((path) => readRepositoryFile(path).includes(RUNBOOKS_REFERENCE));
+    const pointing = filesUnder(DOCS_APPLICATION_DIRECTORY)
+      .filter((path) => !path.includes(OPEN_SOURCE_SEGMENT))
+      .filter((path) => readRepositoryFile(path).includes(RUNBOOKS_REFERENCE));
     expect(pointing).toEqual([]);
   });
 

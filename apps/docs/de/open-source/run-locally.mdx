@@ -1,0 +1,68 @@
+---
+title: 'zapbip lokal ausführen'
+description: 'Starte deine eigene Kopie von zapbip auf deinem Computer oder in Docker, ohne Meta-Konto.'
+---
+
+Lokal führt zapbip denselben Worker aus wie die Produktion. Eine Entwicklungs-Sandbox antwortet anstelle von WhatsApp, als Telefon des Eigentümers, du brauchst also kein Meta-Konto und nichts erreicht ein echtes Telefon.
+
+## Was du brauchst
+
+- Node 24 oder neuer und pnpm
+- Git
+- Oder Docker mit Compose, für die Docker-Option
+
+## Auf deinem Computer
+
+Hole den Code und installiere ihn:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+Lege `apps/api/.dev.vars` mit vier zufälligen Geheimnissen an und bereite die lokale Datenbank vor:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+Starte den Worker und prüfe ihn:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+Lege einen Eigentümer und einen Agenten an. Der Befehl gibt das Geheimnis des Agenten nur einmal aus:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+Verbinde deine KI mit dem ausgegebenen Geheimnis:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+Der [Leitfaden zum lokalen Stack](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md) führt durch ein vollständiges Gespräch, auf Englisch.
+
+## Docker
+
+Ein Befehl baut das Image und startet den Worker auf Port 8787:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+Die Datenbank, die Dateien und die erzeugten Geheimnisse liegen im Volume `zapbip-data` und überstehen einen Neustart. Setze `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `NUMBER_REGISTRY_KEY` oder `META_APP_SECRET` in deiner Umgebung, um sie selbst zu wählen.
+
+Lege im Container einen Eigentümer und einen Agenten an:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```
