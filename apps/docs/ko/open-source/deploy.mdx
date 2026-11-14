@@ -1,0 +1,33 @@
+---
+title: 'Cloudflare에 배포하기'
+description: '내 Meta 앱으로 zapbip을 Cloudflare 프로덕션에서 실행하는 방법과 다른 호스트에 대한 안내입니다.'
+---
+
+프로덕션 zapbip은 Durable Objects, D1, R2를 쓰는 Cloudflare Worker이며 Meta의 WhatsApp Cloud API와 통신합니다.
+
+## 필요한 것
+
+- Cloudflare 계정(무료 요금제로 실행 가능)과 그 계정의 도메인
+- WhatsApp Cloud API가 있는 Meta 개발자 앱과 번호
+- 선택: 환영 이메일용 Resend 계정
+
+## 단계
+
+저장소의 runbook은 계정이 하나도 없는 상태에서 서비스 시작까지의 정확한 경로입니다. 각 단계에는 기대 결과와 "실패하면" 줄이 있습니다. 영어로 작성되어 있습니다.
+
+| Runbook                                                                                                | 다루는 내용                                     |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| [cloudflare-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/cloudflare-setup.md) | Cloudflare 계정, R2, API 토큰                   |
+| [dns](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/dns.md)                           | 존과 호스트                                     |
+| [meta-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/meta-setup.md)             | Meta 앱, 번호, 웹훅, 템플릿                     |
+| [backoffice](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/backoffice.md)             | 운영자와 번호 연결                              |
+| [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend와 환영 이메일                            |
+| [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | 시크릿, 마이그레이션, 배포, 스모크 테스트, 롤백 |
+
+호스팅 서비스의 식별자를 내 것으로 바꾸세요. `apps/api/wrangler.jsonc`의 라우트와 리소스 ID, `libs/types`의 존과 Meta 상수, 법적 고지 페이지의 회사 정보입니다.
+
+## 다른 호스트
+
+Railway, Heroku, Fly.io, Render, 일반 서버에서는 프로덕션 zapbip을 실행할 수 없습니다. Cloudflare에만 있는 Durable Objects, D1, R2가 필요하며, 저장소에는 다른 런타임용 포팅이 없습니다.
+
+Docker 이미지는 개발용 샌드박스만 실행합니다. 어떤 컨테이너 호스트에서든 zapbip을 써 보는 용도로만 쓰고, 프로덕션으로는 쓰지 마세요. 실제 WhatsApp 번호에 연결되어 있지 않습니다.

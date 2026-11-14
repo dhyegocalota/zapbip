@@ -1,0 +1,33 @@
+---
+title: 'النشر على Cloudflare'
+description: 'شغّل zapbip في الإنتاج على Cloudflare بتطبيق Meta الخاص بك، وما يجب معرفته عن المضيفين الآخرين.'
+---
+
+zapbip في الإنتاج هو Worker على Cloudflare مع Durable Objects وD1 وR2، ويتحدث مع WhatsApp Cloud API من Meta.
+
+## ما تحتاج إليه
+
+- حساب Cloudflare (تكفي الخطة المجانية) ونطاق عليه
+- تطبيق مطوّر من Meta مع WhatsApp Cloud API ورقم
+- اختياري: حساب Resend لرسالة الترحيب
+
+## الخطوات
+
+أدلة runbook في المستودع هي المسار الدقيق من لا حسابات إلى الإطلاق. لكل خطوة نتيجة متوقعة وسطر «إذا فشلت». وهي بالإنجليزية.
+
+| Runbook                                                                                                | ما يغطيه                                          |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| [cloudflare-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/cloudflare-setup.md) | حساب Cloudflare وR2 ورمز API                      |
+| [dns](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/dns.md)                           | النطاق والمضيفات                                  |
+| [meta-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/meta-setup.md)             | تطبيق Meta والرقم وال webhook والقوالب            |
+| [backoffice](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/backoffice.md)             | المشغّل وربط رقم                                  |
+| [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend ورسالة الترحيب                             |
+| [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | الأسرار والترحيلات والنشر واختبار الدخان والتراجع |
+
+استبدل معرّفات الخدمة المستضافة بمعرّفاتك: المسارات ومعرّفات الموارد في `apps/api/wrangler.jsonc`، والنطاق وثوابت Meta في `libs/types`، وبيانات الشركة في الصفحات القانونية.
+
+## مضيفون آخرون
+
+لا يمكن لـ Railway وHeroku وFly.io وRender وخادم عادي تشغيل zapbip في الإنتاج. فهو يحتاج إلى Durable Objects وD1 وR2 التي لا توجد إلا على Cloudflare، وليس في المستودع نقل إلى بيئة تشغيل أخرى.
+
+تشغّل صورة Docker البيئة التجريبية للتطوير فقط. استخدمها لتجربة zapbip على أي مضيف حاويات، وليس للإنتاج أبدًا: فهي غير متصلة برقم WhatsApp حقيقي.

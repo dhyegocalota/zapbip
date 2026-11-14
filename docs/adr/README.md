@@ -81,3 +81,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0058](0058-email-is-sent-through-resend-with-react-email-templates.md) | Email is sent through Resend with React Email templates | Accepted | 2026-11-14 |
 | [0059](0059-pull-request-media-is-attached-with-the-github-cli.md) | Pull request media is attached with the GitHub CLI | Accepted | 2026-11-14 |
 | [0060](0060-the-site-shows-the-github-star-count-the-worker-reads-and-caches-and-says-it-is-open-source.md) | The site shows the GitHub star count the Worker reads and caches, and says it is open source | Accepted | 2026-11-14 |
+| [0061](0061-the-public-docs-carry-an-open-source-section-and-link-the-runbooks.md) | The public docs carry an open source section and link the runbooks | Accepted | 2026-11-14 |

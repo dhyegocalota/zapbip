@@ -1,0 +1,68 @@
+---
+title: 'zapbip をローカルで動かす'
+description: 'Meta アカウントなしで、自分のコンピューターまたは Docker で zapbip のコピーを起動します。'
+---
+
+ローカルでは、本番と同じ Worker が動きます。WhatsApp の代わりに開発用のサンドボックスがオーナーの電話として応答するため、Meta アカウントは不要で、実際の電話には何も届きません。
+
+## 必要なもの
+
+- Node 24 以降と pnpm
+- Git
+- Docker を使う場合は、Compose 付きの Docker
+
+## 自分のコンピューターで
+
+コードを取得してインストールします。
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+ランダムなシークレットを 4 つ入れた `apps/api/.dev.vars` を作成し、ローカルデータベースを準備します。
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+Worker を起動して確認します。
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+オーナーとエージェントを作成します。エージェントのシークレットは一度だけ表示されます。
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+表示されたシークレットで AI を接続します。
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+[ローカルスタックのガイド](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md)では、会話の流れを最初から最後まで確認できます(英語)。
+
+## Docker
+
+コマンド 1 つでイメージをビルドし、ポート 8787 で Worker を起動します。
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+データベース、ファイル、生成されたシークレットは `zapbip-data` ボリュームに保存されるため、再起動後も残ります。自分で決めたい場合は、環境に `MEDIA_LINK_SIGNING_KEY`、`UPLOAD_LINK_SIGNING_KEY`、`NUMBER_REGISTRY_KEY`、`META_APP_SECRET` を設定してください。
+
+コンテナ内でオーナーとエージェントを作成します。
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

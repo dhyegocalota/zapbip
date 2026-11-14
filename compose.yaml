@@ -1,0 +1,15 @@
+services:
+  zapbip:
+    build: .
+    ports:
+      - "8787:8787"
+    volumes:
+      - zapbip-data:/data
+    environment:
+      MEDIA_LINK_SIGNING_KEY: ${MEDIA_LINK_SIGNING_KEY:-}
+      UPLOAD_LINK_SIGNING_KEY: ${UPLOAD_LINK_SIGNING_KEY:-}
+      NUMBER_REGISTRY_KEY: ${NUMBER_REGISTRY_KEY:-}
+      META_APP_SECRET: ${META_APP_SECRET:-}
+
+volumes:
+  zapbip-data:

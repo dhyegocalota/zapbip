@@ -41,7 +41,7 @@ const README_HEADING_FRAGMENTS = [
   'License',
 ];
 const README_IMAGE_HOSTS = [
-  'https://contrib.rocks/image?repo=dhyegocalota/zapbip',
+  'https://contributors-img.web.app/image?repo=dhyegocalota/zapbip',
   'https://api.star-history.com/svg?repos=dhyegocalota/zapbip',
 ];
 const RELEASE_ASSET_PATTERN = /releases\/download/;

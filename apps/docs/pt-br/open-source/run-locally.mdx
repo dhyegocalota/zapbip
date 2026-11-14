@@ -1,0 +1,68 @@
+---
+title: 'Rodar o zapbip localmente'
+description: 'Inicie sua própria cópia do zapbip no seu computador ou no Docker, sem conta da Meta.'
+---
+
+Localmente, o zapbip roda o mesmo Worker da produção. Um sandbox de desenvolvimento responde no lugar do WhatsApp, como o celular do dono, então você não precisa de conta da Meta e nada chega a um celular de verdade.
+
+## O que você precisa
+
+- Node 24 ou mais novo e pnpm
+- Git
+- Ou Docker com Compose, para a opção Docker
+
+## No seu computador
+
+Baixe o código e instale:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+Crie `apps/api/.dev.vars` com quatro segredos aleatórios e prepare o banco local:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+Inicie o Worker e confira:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+Crie um dono e um agente. O comando mostra o segredo do agente uma única vez:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+Conecte sua IA com o segredo mostrado:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+O [guia da pilha local](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md) percorre uma conversa completa, em inglês.
+
+## Docker
+
+Um comando constrói a imagem e inicia o Worker na porta 8787:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+O banco, os arquivos e os segredos gerados ficam no volume `zapbip-data`, então sobrevivem a uma reinicialização. Defina `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `NUMBER_REGISTRY_KEY` ou `META_APP_SECRET` no seu ambiente para escolhê-los você mesmo.
+
+Crie um dono e um agente dentro do contêiner:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

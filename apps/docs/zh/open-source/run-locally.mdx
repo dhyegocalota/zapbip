@@ -1,0 +1,68 @@
+---
+title: '在本地运行 zapbip'
+description: '无需 Meta 账号,在你的电脑或 Docker 中启动自己的 zapbip 副本。'
+---
+
+在本地,zapbip 运行与生产环境相同的 Worker。开发沙盒代替 WhatsApp,以所有者手机的身份应答,因此不需要 Meta 账号,也不会有任何内容发到真实的手机。
+
+## 你需要
+
+- Node 24 或更高版本以及 pnpm
+- Git
+- 若使用 Docker 方式,需要带 Compose 的 Docker
+
+## 在你的电脑上
+
+获取代码并安装:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+创建包含四个随机密钥的 `apps/api/.dev.vars`,然后准备本地数据库:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+启动 Worker 并检查:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+创建一个所有者和一个智能体。命令只会显示一次智能体的密钥:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+用显示的密钥连接你的 AI:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+[本地环境指南](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md)演示了一次完整的对话(英文)。
+
+## Docker
+
+一条命令构建镜像并在 8787 端口启动 Worker:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+数据库、文件和生成的密钥保存在 `zapbip-data` 卷中,重启后依然保留。如需自行指定,请在环境中设置 `MEDIA_LINK_SIGNING_KEY`、`UPLOAD_LINK_SIGNING_KEY`、`NUMBER_REGISTRY_KEY` 或 `META_APP_SECRET`。
+
+在容器内创建一个所有者和一个智能体:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

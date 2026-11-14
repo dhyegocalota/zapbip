@@ -1,0 +1,68 @@
+---
+title: 'تشغيل zapbip محليًا'
+description: 'ابدأ نسختك الخاصة من zapbip على حاسوبك أو في Docker دون حساب Meta.'
+---
+
+محليًا يشغّل zapbip نفس Worker الإنتاج. وتجيب بيئة تجريبية للتطوير بدلًا من WhatsApp، بصفتها هاتف المالك، فلا تحتاج إلى حساب Meta ولا يصل شيء إلى هاتف حقيقي.
+
+## ما تحتاج إليه
+
+- Node 24 أو أحدث وpnpm
+- Git
+- أو Docker مع Compose لخيار Docker
+
+## على حاسوبك
+
+احصل على الشيفرة وثبّتها:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+أنشئ `apps/api/.dev.vars` بأربعة أسرار عشوائية، ثم جهّز قاعدة البيانات المحلية:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+شغّل الـ Worker وتحقق منه:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+أنشئ مالكًا ووكيلًا. يطبع الأمر سر الوكيل مرة واحدة فقط:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+اربط الذكاء الاصطناعي لديك بالسر الذي طُبع:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+يمر [دليل البيئة المحلية](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md) بمحادثة كاملة، بالإنجليزية.
+
+## Docker
+
+أمر واحد يبني الصورة ويشغّل الـ Worker على المنفذ 8787:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+تعيش قاعدة البيانات والملفات والأسرار المولَّدة في وحدة التخزين `zapbip-data`، فتبقى بعد إعادة التشغيل. اضبط `MEDIA_LINK_SIGNING_KEY` أو `UPLOAD_LINK_SIGNING_KEY` أو `NUMBER_REGISTRY_KEY` أو `META_APP_SECRET` في بيئتك لتختارها بنفسك.
+
+أنشئ مالكًا ووكيلًا داخل الحاوية:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

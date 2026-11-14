@@ -1,0 +1,68 @@
+---
+title: 'zapbip को लोकल चलाएँ'
+description: 'Meta अकाउंट के बिना अपने कंप्यूटर या Docker में zapbip की अपनी कॉपी शुरू करें।'
+---
+
+लोकल में zapbip वही Worker चलाता है जो प्रोडक्शन में चलता है। WhatsApp की जगह एक डेवलपमेंट सैंडबॉक्स मालिक के फ़ोन की तरह जवाब देता है, इसलिए Meta अकाउंट की ज़रूरत नहीं और कुछ भी असली फ़ोन तक नहीं पहुँचता।
+
+## आपको क्या चाहिए
+
+- Node 24 या नया और pnpm
+- Git
+- या Compose के साथ Docker, Docker विकल्प के लिए
+
+## आपके कंप्यूटर पर
+
+कोड लें और इंस्टॉल करें:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+चार रैंडम सीक्रेट के साथ `apps/api/.dev.vars` बनाएँ, फिर लोकल डेटाबेस तैयार करें:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+Worker शुरू करें और जाँचें:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+एक मालिक और एक एजेंट बनाएँ। कमांड एजेंट का सीक्रेट सिर्फ़ एक बार दिखाती है:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+दिखाए गए सीक्रेट से अपना AI कनेक्ट करें:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+[लोकल स्टैक गाइड](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md) एक पूरी बातचीत दिखाती है, अंग्रेज़ी में।
+
+## Docker
+
+एक कमांड इमेज बनाती है और पोर्ट 8787 पर Worker शुरू करती है:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+डेटाबेस, फ़ाइलें और बनाए गए सीक्रेट `zapbip-data` वॉल्यूम में रहते हैं, इसलिए रीस्टार्ट के बाद भी बचे रहते हैं। उन्हें खुद चुनने के लिए अपने एनवायरनमेंट में `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `NUMBER_REGISTRY_KEY` या `META_APP_SECRET` सेट करें।
+
+कंटेनर के अंदर एक मालिक और एक एजेंट बनाएँ:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

@@ -30,6 +30,7 @@ docs/scenarios          agentic walks of the product core, one file per flow, ru
 .agents/skills          skills (single source; `.claude/skills` links here)
 .agents/roles           agent role bodies shared by `.claude/agents` and `.codex/agents`
 .agents/hooks           hook scripts shared by `.claude/settings.json` and `.codex/hooks.json`
+Dockerfile              the container image of the development sandbox; `compose.yaml` runs it with a data volume and `scripts/docker-entrypoint.sh` starts it
 scripts                 the local gate and its tests; scripts/e2e/clients holds the shared Docker helpers of the client end-to-end suite, and each plugin keeps its own fixtures in its package
 ```
 

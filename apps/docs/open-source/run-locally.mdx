@@ -1,0 +1,68 @@
+---
+title: 'Run zapbip locally'
+description: 'Start your own copy of zapbip on your computer or in Docker, with no Meta account.'
+---
+
+Locally, zapbip runs the same Worker as production. A development sandbox answers in place of WhatsApp, as the owner's phone, so you need no Meta account and nothing reaches a real phone.
+
+## What you need
+
+- Node 24 or newer and pnpm
+- Git
+- Or Docker with Compose, for the Docker option
+
+## On your computer
+
+Get the code and install it:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+pnpm install
+```
+
+Create `apps/api/.dev.vars` with four random secrets, then prepare the local database:
+
+```bash
+printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\nNUMBER_REGISTRY_KEY=%s\nMETA_APP_SECRET=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" "$(openssl rand -base64 32)" "$(openssl rand -hex 16)" > apps/api/.dev.vars
+pnpm migrate:development
+```
+
+Start the Worker and check it:
+
+```bash
+pnpm --filter @zapbip/api dev
+curl http://localhost:8787/health
+```
+
+Create an owner and an agent. The command prints the agent's secret once:
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone <digits> --agents alpha
+```
+
+Connect your AI with the secret it printed:
+
+```bash
+claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+```
+
+The [local stack guide](https://github.com/dhyegocalota/zapbip/blob/main/docs/contributing/local-stack.md) walks a full conversation, in English.
+
+## Docker
+
+One command builds the image and starts the Worker on port 8787:
+
+```bash
+git clone https://github.com/dhyegocalota/zapbip.git
+cd zapbip
+docker compose up --build
+```
+
+The database, the files and the generated secrets live in the `zapbip-data` volume, so they survive a restart. Set `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `NUMBER_REGISTRY_KEY` or `META_APP_SECRET` in your environment to choose them yourself.
+
+Create an owner and an agent inside the container:
+
+```bash
+docker compose exec zapbip pnpm --silent dev:seed --phone <digits> --agents alpha
+```

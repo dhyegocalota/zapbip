@@ -1,0 +1,33 @@
+---
+title: 'Cloudflare पर डिप्लॉय करें'
+description: 'अपने Meta ऐप के साथ zapbip को Cloudflare पर प्रोडक्शन में चलाएँ, और दूसरे होस्ट के बारे में जानकारी।'
+---
+
+प्रोडक्शन में zapbip एक Cloudflare Worker है जिसमें Durable Objects, D1 और R2 हैं, और वह Meta की WhatsApp Cloud API से बात करता है।
+
+## आपको क्या चाहिए
+
+- एक Cloudflare अकाउंट (फ़्री प्लान काफ़ी है) और उस पर एक डोमेन
+- WhatsApp Cloud API वाला एक Meta डेवलपर ऐप और एक नंबर
+- वैकल्पिक: वेलकम ईमेल के लिए Resend अकाउंट
+
+## चरण
+
+रिपॉज़िटरी के runbook शून्य अकाउंट से गो-लाइव तक का सटीक रास्ता हैं। हर चरण में अपेक्षित नतीजा और "अगर फ़ेल हो" वाली एक पंक्ति है। वे अंग्रेज़ी में हैं।
+
+| Runbook                                                                                                | क्या शामिल है                                      |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| [cloudflare-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/cloudflare-setup.md) | Cloudflare अकाउंट, R2 और API टोकन                  |
+| [dns](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/dns.md)                           | ज़ोन और होस्ट                                      |
+| [meta-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/meta-setup.md)             | Meta ऐप, नंबर, वेबहुक और टेम्पलेट                  |
+| [backoffice](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/backoffice.md)             | ऑपरेटर और नंबर कनेक्ट करना                         |
+| [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend और वेलकम ईमेल                               |
+| [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | सीक्रेट, माइग्रेशन, डिप्लॉय, स्मोक टेस्ट और रोलबैक |
+
+होस्टेड सेवा की पहचानें अपनी पहचानों से बदलें: `apps/api/wrangler.jsonc` में रूट और रिसोर्स आईडी, `libs/types` में ज़ोन और Meta के स्थिरांक, और कानूनी पेजों की कंपनी की जानकारी।
+
+## दूसरे होस्ट
+
+Railway, Heroku, Fly.io, Render और सामान्य सर्वर प्रोडक्शन में zapbip नहीं चला सकते। इसे Durable Objects, D1 और R2 चाहिए, जो सिर्फ़ Cloudflare पर हैं, और रिपॉज़िटरी में किसी दूसरे रनटाइम के लिए पोर्ट नहीं है।
+
+Docker इमेज सिर्फ़ डेवलपमेंट सैंडबॉक्स चलाती है। इसका उपयोग किसी भी कंटेनर होस्ट पर zapbip आज़माने के लिए करें, प्रोडक्शन के रूप में कभी नहीं: यह असली WhatsApp नंबर से जुड़ी नहीं है।

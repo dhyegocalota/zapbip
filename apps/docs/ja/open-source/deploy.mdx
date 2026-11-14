@@ -1,0 +1,33 @@
+---
+title: 'Cloudflare にデプロイする'
+description: '自分の Meta アプリで zapbip を Cloudflare の本番環境で動かす方法と、他のホスティングについて。'
+---
+
+本番の zapbip は、Durable Objects、D1、R2 を使う Cloudflare Worker で、Meta の WhatsApp Cloud API と通信します。
+
+## 必要なもの
+
+- Cloudflare アカウント(無料プランで動作)と、そこに登録したドメイン
+- WhatsApp Cloud API を有効にした Meta 開発者アプリと番号
+- 任意: ウェルカムメール用の Resend アカウント
+
+## 手順
+
+リポジトリの runbook は、アカウントが 1 つもない状態から公開までの正確な手順です。各ステップに期待される結果と「失敗したら」の行があります。英語で書かれています。
+
+| Runbook                                                                                                | 内容                                                                   |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [cloudflare-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/cloudflare-setup.md) | Cloudflare アカウント、R2、API トークン                                |
+| [dns](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/dns.md)                           | ゾーンとホスト                                                         |
+| [meta-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/meta-setup.md)             | Meta アプリ、番号、Webhook、テンプレート                               |
+| [backoffice](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/backoffice.md)             | オペレーターと番号の接続                                               |
+| [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend とウェルカムメール                                              |
+| [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | シークレット、マイグレーション、デプロイ、スモークテスト、ロールバック |
+
+ホスト版サービスの識別子を自分のものに置き換えてください。`apps/api/wrangler.jsonc` のルートとリソース ID、`libs/types` のゾーンと Meta の定数、法務ページの会社情報です。
+
+## 他のホスティング
+
+Railway、Heroku、Fly.io、Render、一般的なサーバーでは、本番の zapbip は動かせません。Cloudflare にしかない Durable Objects、D1、R2 が必要で、別のランタイムへの移植はリポジトリにありません。
+
+Docker イメージが動かすのは開発用サンドボックスだけです。任意のコンテナホストで zapbip を試すために使い、本番には使わないでください。実際の WhatsApp 番号には接続されていません。

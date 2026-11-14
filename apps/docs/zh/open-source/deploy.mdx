@@ -1,0 +1,33 @@
+---
+title: '部署到 Cloudflare'
+description: '用你自己的 Meta 应用在 Cloudflare 上运行生产环境的 zapbip,以及关于其他托管的说明。'
+---
+
+生产环境的 zapbip 是一个使用 Durable Objects、D1 和 R2 的 Cloudflare Worker,并与 Meta 的 WhatsApp Cloud API 通信。
+
+## 你需要
+
+- 一个 Cloudflare 账号(免费套餐即可)以及其中的一个域名
+- 一个启用 WhatsApp Cloud API 的 Meta 开发者应用和一个号码
+- 可选:用于欢迎邮件的 Resend 账号
+
+## 步骤
+
+仓库中的 runbook 是从零账号到上线的准确路径。每一步都有预期结果和一行“如果失败”。它们是英文的。
+
+| Runbook                                                                                                | 内容                             |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| [cloudflare-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/cloudflare-setup.md) | Cloudflare 账号、R2 和 API 令牌  |
+| [dns](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/dns.md)                           | 区域和主机                       |
+| [meta-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/meta-setup.md)             | Meta 应用、号码、webhook 和模板  |
+| [backoffice](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/backoffice.md)             | 运营者以及连接号码               |
+| [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend 和欢迎邮件                |
+| [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | 密钥、迁移、部署、冒烟测试和回滚 |
+
+把托管服务的标识换成你自己的:`apps/api/wrangler.jsonc` 中的路由和资源 ID,`libs/types` 中的区域和 Meta 常量,以及法律页面里的公司信息。
+
+## 其他托管
+
+Railway、Heroku、Fly.io、Render 和普通服务器都无法运行生产环境的 zapbip。它需要只有 Cloudflare 才有的 Durable Objects、D1 和 R2,仓库里也没有移植到其他运行时的版本。
+
+Docker 镜像只运行开发沙盒。可以用它在任何容器主机上试用 zapbip,但绝不要用作生产环境:它没有连接真实的 WhatsApp 号码。

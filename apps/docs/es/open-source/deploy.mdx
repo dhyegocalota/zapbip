@@ -1,0 +1,33 @@
+---
+title: 'Desplegar en Cloudflare'
+description: 'Ejecuta zapbip en producción en Cloudflare con tu propia app de Meta, y qué saber sobre otros hosts.'
+---
+
+zapbip en producción es un Worker de Cloudflare con Durable Objects, D1 y R2, y habla con la WhatsApp Cloud API de Meta.
+
+## Qué necesitas
+
+- Una cuenta de Cloudflare (el plan gratuito basta) y un dominio en ella
+- Una app de desarrollador de Meta con la WhatsApp Cloud API y un número
+- Opcional: una cuenta de Resend para el correo de bienvenida
+
+## Pasos
+
+Los runbooks del repositorio son el camino exacto, de cero cuentas hasta salir en vivo. Cada paso tiene un resultado esperado y una línea "Si falla". Están en inglés.
+
+| Runbook                                                                                                | Qué cubre                                                    |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| [cloudflare-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/cloudflare-setup.md) | La cuenta de Cloudflare, R2 y el token de API                |
+| [dns](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/dns.md)                           | La zona y los hosts                                          |
+| [meta-setup](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/meta-setup.md)             | La app de Meta, el número, el webhook y las plantillas       |
+| [backoffice](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/backoffice.md)             | El operador y la conexión de un número                       |
+| [email](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/email.md)                       | Resend y el correo de bienvenida                             |
+| [deploy](https://github.com/dhyegocalota/zapbip/blob/main/docs/runbooks/deploy.md)                     | Secretos, migraciones, despliegue, prueba de humo y rollback |
+
+Cambia los identificadores del servicio alojado por los tuyos: las rutas y los ids de recursos en `apps/api/wrangler.jsonc`, la zona y las constantes de Meta en `libs/types`, y los datos de la empresa de las páginas legales.
+
+## Otros hosts
+
+Railway, Heroku, Fly.io, Render y un servidor común no pueden ejecutar zapbip en producción. Necesita Durable Objects, D1 y R2, que solo existen en Cloudflare, y el repositorio no tiene un port a otro runtime.
+
+La imagen de Docker ejecuta solo el entorno de pruebas de desarrollo. Úsala para probar zapbip en cualquier host de contenedores, nunca como producción: no está conectada a un número de WhatsApp real.
