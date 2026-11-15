@@ -33,7 +33,7 @@ const AGENT_SKILLS: AgentSkill[] = [
     id: 'help_join',
     name: 'Help a person join',
     description:
-      'Open the home page with ?email=<address> so the early access form is already filled in, then ask the person to press its button: the form has a captcha only a human can pass.',
+      'Open the home page with ?email=<address>, writing a plus sign in the address as %2B, so the early access form is already filled in, then ask the person to press its button: the form has a captcha only a human can pass.',
     tags: ['waitlist', 'access'],
     examples: ['Help maria@example.com join the zapbip early access list'],
   },

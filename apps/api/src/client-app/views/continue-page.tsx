@@ -11,7 +11,7 @@ export function ContinuePage(props: { locale: OwnerLocale; theme: ShellTheme; to
   const path = `${CLIENT_APP_SIGN_IN_PATH_PREFIX}${props.token}`;
   return (
     <Layout locale={locale} theme={props.theme} title={translate(ClientAppCopyKey.ContinueTitle)} currentPath={path} csrfToken={null}>
-      <section class="panel">
+      <section class="panel panel-hero">
         <h1>{translate(ClientAppCopyKey.ContinueTitle)}</h1>
         <p class="lead">{translate(ClientAppCopyKey.ContinueLead)}</p>
         <p class="note">{translate(ClientAppCopyKey.ContinueAs, { phone: props.phone })}</p>

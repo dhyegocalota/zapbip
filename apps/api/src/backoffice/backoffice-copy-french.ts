@@ -16,7 +16,6 @@ export const FRENCH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'zapbip backoffice · {environment}',
   [BackofficeCopyKey.SignInTitle]: 'Connexion',
   [BackofficeCopyKey.SignInEyebrow]: 'Accès opérateur',
-  [BackofficeCopyKey.SignInLead]: 'D’abord votre e-mail et votre mot de passe, puis le code de votre application d’authentification.',
   [BackofficeCopyKey.SignInEmailLabel]: 'E-mail',
   [BackofficeCopyKey.SignInPasswordLabel]: 'Mot de passe',
   [BackofficeCopyKey.SignInCodeLead]:

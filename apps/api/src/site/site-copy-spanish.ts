@@ -279,5 +279,5 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'Página no encontrada',
   [SiteCopyKey.AgentsTitle]: 'Para agentes de IA',
   [SiteCopyKey.AgentsBody]:
-    'Un agente puede ayudar a la persona para la que trabaja a unirse a la lista, pero es la persona quien pulsa el botón: el formulario tiene un captcha que solo un humano resuelve. Abre {joinLink}, cambiando name@example.com por el correo de la persona, para que el formulario se abra ya relleno, y pídele que pulse el botón del formulario. La misma ayuda es una herramienta de WebMCP en cada página.',
+    'Un agente puede ayudar a la persona para la que trabaja a unirse a la lista, pero es la persona quien pulsa el botón: el formulario tiene un captcha que solo un humano resuelve. Abre {joinLink}, cambiando name@example.com por el correo de la persona, para que el formulario se abra ya relleno, y pídele que pulse el botón del formulario. La misma ayuda es una herramienta de WebMCP en cada página. Escribe el signo más de la dirección como %2B, porque un + literal llega como espacio.',
 };

@@ -89,6 +89,11 @@ describe('GET /', () => {
     expect(portuguese).toContain('value="maria@example.com"');
   });
 
+  it('reads a plus sign that a link turned into a space, because an address holds no space', async () => {
+    const html = await pageOf({ path: '/?email=maria+news@example.com', headers: ENGLISH_HEADERS });
+    expect(html).toContain('value="maria+news@example.com"');
+  });
+
   it('leaves the form empty for an email that is not valid and never writes the raw value into the page', async () => {
     const html = await pageOf({ path: '/?email=%22%3E%3Cscript%3Ealert(1)%3C/script%3E', headers: ENGLISH_HEADERS });
     expect(html).not.toContain('alert(1)');

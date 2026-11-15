@@ -368,6 +368,36 @@ main > * + * {
   box-shadow: var(--shadow-raised);
 }
 
+.shell-signed-out .hero-card {
+  padding: var(--space-7) var(--space-6);
+}
+
+.shell-signed-out .hero-card .button-primary {
+  width: 100%;
+  margin-top: var(--space-3);
+}
+
+.shell-signed-out .hero-card .field > input {
+  min-height: var(--size-tap);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shell-signed-out .hero-card {
+    animation: auth-rise 420ms ease-out both;
+  }
+
+  @keyframes auth-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 .eyebrow {
   margin: 0 0 var(--space-2);
   color: var(--color-action);
@@ -686,6 +716,7 @@ legend {
 
 .field label {
   display: block;
+  margin-bottom: var(--space-2);
   font-weight: 600;
 }
 
