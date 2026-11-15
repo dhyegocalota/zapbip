@@ -43,4 +43,4 @@ Each row is a checkbox with the input and the exact expected outcome. Ticks carr
 ## Regression
 
 - [x] every existing inbound, onboarding and command integration test stays green
-- [ ] `pnpm verify` (scoped) green on the branch after merging origin/main
+- [x] `pnpm verify` (scoped) green on the branch after merging origin/main
