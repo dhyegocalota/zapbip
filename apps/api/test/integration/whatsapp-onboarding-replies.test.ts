@@ -43,6 +43,7 @@ function deliverOnSecondNumber(input: { waId: string }) {
     number: { ...TEST_REGISTERED_NUMBER, numberId: SECOND_NUMBER.numberId, phoneNumberId: SECOND_NUMBER.phoneNumberId },
     bindings: bindingsWith({ waitlistEnabled: true }),
     waId: input.waId,
+    writtenText: null,
     channelMessageId: nextWamid(),
     entryOf: async () => textEntry({ text: 'oi' }),
   });

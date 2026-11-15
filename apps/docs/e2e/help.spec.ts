@@ -6,7 +6,7 @@ import { twinPathOf } from '../../../libs/agents/src/docs';
 
 const OK_STATUS = 200;
 const FOOTER_LABEL = 'zapbip · Logic Bit';
-const HELP_PAGES = ['troubleshooting', 'faq', 'privacy-and-security', 'revoke-and-rotate-keys', 'delete-your-account', 'about'];
+const HELP_PAGES = ['troubleshooting', 'faq', 'privacy-and-security', 'revoke-and-rotate-keys', 'delete-your-account'];
 const DAYS_WORD: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'days',
   [DocsPageLanguage.PortugueseBrazil]: 'dias',

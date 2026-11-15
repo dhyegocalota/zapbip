@@ -94,3 +94,25 @@ describe('an owner of each language through the inbound handler', () => {
     expect(await storedLocale({ waId: HONG_KONG_WA_ID })).toBe(OwnerLocale.EnglishUs);
   });
 });
+
+describe('a number with no account that writes in another language than its calling code', () => {
+  const bindings = (): ReturnType<typeof bindingsWith> => bindingsWith({ waitlistEnabled: false });
+
+  it.each([
+    [OwnerLocale.Spanish, '12025550101'],
+    [OwnerLocale.German, '12025550102'],
+    [OwnerLocale.Japanese, '12025550103'],
+  ])('stores %s and answers its help command in that language from a US number', async (locale, waId) => {
+    await deliver({ bindings: bindings(), text: wordsOf({ kind: CommandKind.Help, locale }), waId });
+    expect(await storedLocale({ waId })).toBe(locale);
+    const menu: AccountReply = { intent: AccountReplyIntent.Menu, kind: ReplyKind.List, locale, parameters: {}, menuRows: [] };
+    expect(await screenOf({ waId })).toContain(renderAccountReply({ reply: menu }));
+  });
+
+  it('keeps the stored language when a later message is written in another language', async () => {
+    const waId = '12025550104';
+    await deliver({ bindings: bindings(), text: wordsOf({ kind: CommandKind.Help, locale: OwnerLocale.Spanish }), waId });
+    await deliver({ bindings: bindings(), text: wordsOf({ kind: CommandKind.Help, locale: OwnerLocale.German }), waId });
+    expect(await storedLocale({ waId })).toBe(OwnerLocale.Spanish);
+  });
+});

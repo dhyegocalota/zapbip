@@ -1,17 +1,37 @@
 ---
 title: '24-hour window'
-description: 'Why a message may be queued and what the owner receives.'
+description: 'Why a message may wait, what you get on your phone and what the tools return.'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
 
 WhatsApp lets zapbip send free-form messages only within 24 hours of the last message from the owner. zapbip closes its own window 10 minutes early. A reaction from the owner does not open the window.
 
-While the window is open, messages go out at once with `delivery: "sent"`.
+## Window open
 
-When it is closed:
+Messages go out at once, and the tool returns `delivery: "sent"`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Tell me when the nightly job finishes.', time: '22:10' },
+    { name: 'Claude Code', text: 'Nightly job finished ✅', time: '23:31' },
+  ]}
+/>
+
+## Window closed
 
 - the tool returns `delivery: "queued"` and the message waits in the outbound queue;
-- the first queued message sends the owner one approved notice, once per closed window;
+- the first queued message sends the owner one notice naming the AI and a short preview, once per closed window;
 - the next message from the owner opens the window and flushes the queue in order;
 - queued messages older than 7 days become `expired`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Tell me when the nightly job finishes.', time: 'Yesterday 22:10' },
+    { notice: true, text: 'The agent claude-code has a message for you: Nightly job finished ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Nightly job finished ✅', time: '08:05' },
+  ]}
+/>
 
 A send that the channel rejects is stored with `delivery: "failed"`, and the tool returns an error naming the kind.

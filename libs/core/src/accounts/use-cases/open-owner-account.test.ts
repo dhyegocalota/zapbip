@@ -34,7 +34,7 @@ function openLookup(input: {
   waitlistEnabled?: boolean;
 }) {
   const { environment, waId, homeNumberId = HOME_NUMBER_ID, waitlistEnabled = false } = input;
-  return openOwnerAccount({ dependencies: environment.lifecycle, waId, homeNumberId, waitlistEnabled, createdAt: NOW });
+  return openOwnerAccount({ dependencies: environment.lifecycle, waId, writtenText: null, homeNumberId, waitlistEnabled, createdAt: NOW });
 }
 
 async function open(input: { environment: Awaited<ReturnType<typeof seedAccounts>>; waId: string; waitlistEnabled?: boolean }) {

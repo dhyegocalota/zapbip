@@ -1,5 +1,5 @@
 import { RECEIPT_RETENTION_MS, type ChannelInboundEntry, type OwnerInboundContent, type UnavailableOwnerMedia } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, HttpStatus, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, DeliveryState, HttpStatus, MessageKind, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
@@ -172,6 +172,12 @@ async function hasCommittedReceipt(input: { context: NumberContext; accountId: s
   return isCommitted;
 }
 
+function writtenTextOf(input: { entry: ParsedInboundEntry }): string | null {
+  const { entry } = input;
+  if (entry.kind !== ChannelInboundKind.Owner) return null;
+  return entry.content.kind === MessageKind.Text ? entry.content.text : null;
+}
+
 async function processEntry(input: { context: NumberContext; parsed: ParsedEntry }): Promise<void> {
   const { context, parsed } = input;
   if (parsed.kind === ParsedEntryKind.Rejected) {
@@ -192,6 +198,7 @@ async function processEntry(input: { context: NumberContext; parsed: ParsedEntry
     bindings: context.bindings,
     number: context.number,
     waId: parsed.fromWaId,
+    writtenText: writtenTextOf({ entry: parsed.entry }),
     channelMessageId: parsed.channelMessageId,
     entryOf: async ({ accountId, ownerLocale, downloadsMedia }) => {
       const isCommitted = downloadsMedia && (await hasCommittedReceipt({ context, accountId, channelMessageId: parsed.channelMessageId }));

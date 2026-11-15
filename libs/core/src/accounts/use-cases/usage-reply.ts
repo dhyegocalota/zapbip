@@ -1,20 +1,8 @@
 import { AccountReplyIntent, AccountReplyParameter, OwnerLocale, type CommandKind } from '@zapbip/types';
+import { NAME_PLACEHOLDER } from '../account-copy';
 import type { AccountReply } from '../account-types';
 import { COMMAND_WORDS } from '../command-words';
 import { buildTextReply } from './account-reply';
-
-const NAME_PLACEHOLDERS: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: '<nome>',
-  [OwnerLocale.EnglishUs]: '<name>',
-  [OwnerLocale.Spanish]: '<nombre>',
-  [OwnerLocale.German]: '<name>',
-  [OwnerLocale.French]: '<nom>',
-  [OwnerLocale.Japanese]: '<名前>',
-  [OwnerLocale.Korean]: '<이름>',
-  [OwnerLocale.ChineseSimplified]: '<名称>',
-  [OwnerLocale.Arabic]: '<الاسم>',
-  [OwnerLocale.Hindi]: '<नाम>',
-};
 
 export function findCommandWords(input: { kind: CommandKind; locale: OwnerLocale }): string {
   const entry = COMMAND_WORDS.find((word) => word.kind === input.kind && word.locale === input.locale);
@@ -24,6 +12,6 @@ export function findCommandWords(input: { kind: CommandKind; locale: OwnerLocale
 
 export function buildUsageReply(input: { kind: CommandKind; locale: OwnerLocale }): AccountReply {
   const { kind, locale } = input;
-  const usage = `${findCommandWords({ kind, locale })} ${NAME_PLACEHOLDERS[locale]}`;
+  const usage = `${findCommandWords({ kind, locale })} ${NAME_PLACEHOLDER[locale]}`;
   return buildTextReply({ intent: AccountReplyIntent.Usage, locale, parameters: { [AccountReplyParameter.Usage]: usage } });
 }

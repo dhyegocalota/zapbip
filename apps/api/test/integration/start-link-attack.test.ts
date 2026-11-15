@@ -22,7 +22,7 @@ const ENUMERATION_REQUEST_COUNT = 100;
 const BREAK_DISPLAY_NUMBER_STATEMENT = 'ALTER TABLE whatsapp_numbers RENAME COLUMN display_number TO moved_display_number';
 const LEAKED_VALUE_PATTERN = /5511|wa\.me|203\.0\.113|phone-num|waba-num/;
 const DISPLAY_NUMBER = '+5511977770003';
-const EXPECTED_TARGET = `https://wa.me/5511977770003?text=${encodeURIComponent(START_PREFILLED_TEXT[OwnerLocale.PortugueseBrazil])}`;
+const EXPECTED_TARGET = `https://wa.me/5511977770003?text=${encodeURIComponent(START_PREFILLED_TEXT[OwnerLocale.EnglishUs])}`;
 const OPEN_REDIRECT_QUERIES = [
   '?text=free+text',
   '?next=https://evil.example',

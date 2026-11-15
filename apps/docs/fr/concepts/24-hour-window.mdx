@@ -1,17 +1,37 @@
 ---
 title: 'Fenêtre de 24 heures'
-description: 'Pourquoi un message peut être mis en file et ce que reçoit le propriétaire.'
+description: 'Pourquoi un message peut attendre, ce que vous recevez sur votre téléphone et ce que renvoient les outils.'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
 
 WhatsApp ne laisse zapbip envoyer des messages libres que dans les 24 heures qui suivent le dernier message du propriétaire. zapbip ferme sa propre fenêtre 10 minutes plus tôt. Une réaction du propriétaire n'ouvre pas la fenêtre.
 
-Tant que la fenêtre est ouverte, les messages partent aussitôt avec `delivery: "sent"`.
+## Fenêtre ouverte
 
-Quand elle est fermée :
+Les messages partent aussitôt, et l'outil renvoie `delivery: "sent"`.
 
-- l'outil renvoie `delivery: "queued"` et le message attend dans la file d'envoi ;
-- le premier message en file envoie au propriétaire une notification approuvée, une fois par fenêtre fermée ;
-- le message suivant du propriétaire ouvre la fenêtre et vide la file dans l'ordre ;
+<Chat
+  messages={[
+    { you: true, text: 'Préviens-moi quand le job de nuit sera terminé.', time: '22:10' },
+    { name: 'Claude Code', text: 'Job de nuit terminé ✅', time: '23:31' },
+  ]}
+/>
+
+## Fenêtre fermée
+
+- l'outil renvoie `delivery: "queued"` et le message attend dans la file d'envoi ;
+- le premier message en file envoie au propriétaire une notification qui nomme l'IA et un court aperçu, une fois par fenêtre fermée ;
+- le message suivant du propriétaire ouvre la fenêtre et vide la file dans l'ordre ;
 - les messages en file de plus de 7 jours passent à `expired`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Préviens-moi quand le job de nuit sera terminé.', time: 'Hier 22:10' },
+    { notice: true, text: 'L’agent claude-code a un message pour vous : Job de nuit terminé ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Job de nuit terminé ✅', time: '08:05' },
+  ]}
+/>
 
 Un envoi que le canal rejette est stocké avec `delivery: "failed"`, et l'outil renvoie une erreur qui nomme le type.

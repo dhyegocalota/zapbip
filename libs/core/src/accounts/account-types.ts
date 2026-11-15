@@ -96,6 +96,7 @@ export type CommandInput = {
   text: string | null;
   listReplyId: string | null;
   isQuoting: boolean;
+  locale: OwnerLocale;
 };
 
 export type AccountStateVerdict = {

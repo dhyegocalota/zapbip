@@ -218,6 +218,7 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
     bindings: context.env,
     number: await registry.openTheOnlyNumber(),
     waId: phone,
+    writtenText: body.kind === MessageKind.Text ? body.text : null,
     channelMessageId: body.wamid,
     entryOf: ({ accountId, downloadsMedia }) => buildOwnerEntry({ bindings: context.env, accountId, body, downloadsMedia }),
   });

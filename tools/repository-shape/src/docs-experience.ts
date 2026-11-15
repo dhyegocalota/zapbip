@@ -16,7 +16,7 @@ import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS } from '@
 import { DAY_MS, DocsPageLanguage, DocsRetentionKind } from '@zapbip/types';
 import { DOCS_ROOT, capturedNames, readRepositoryFile } from './repository-files';
 
-const DEVELOPER_FOLDERS = ['developers', 'mcp-reference', 'concepts'];
+const DEVELOPER_FOLDERS = ['developers', 'mcp-reference'];
 
 export const DOCS_DEVELOPER_LINK_PREFIXES: string[] = Object.values(DocsPageLanguage).flatMap((language) =>
   DEVELOPER_FOLDERS.map((folder) => `/${twinPathOf({ path: folder, language })}/`),

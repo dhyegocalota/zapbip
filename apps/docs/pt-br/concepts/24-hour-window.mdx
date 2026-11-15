@@ -1,17 +1,37 @@
 ---
 title: 'Janela de 24 horas'
-description: 'Por que uma mensagem pode ir para a fila e o que o dono recebe.'
+description: 'Por que uma mensagem pode esperar, o que chega no seu celular e o que as ferramentas devolvem.'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
 
 O WhatsApp só deixa o zapbip enviar mensagens livres até 24 horas depois da última mensagem do dono. O zapbip fecha a própria janela 10 minutos antes. Uma reação do dono não abre a janela.
 
-Com a janela aberta, as mensagens saem na hora com `delivery: "sent"`.
+## Janela aberta
 
-Com ela fechada:
+As mensagens saem na hora, e a ferramenta devolve `delivery: "sent"`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Me avisa quando a tarefa da noite terminar.', time: '22:10' },
+    { name: 'Claude Code', text: 'Tarefa da noite terminou ✅', time: '23:31' },
+  ]}
+/>
+
+## Janela fechada
 
 - a ferramenta devolve `delivery: "queued"` e a mensagem espera na fila de saída;
-- a primeira mensagem na fila envia ao dono um aviso aprovado, uma vez por janela fechada;
+- a primeira mensagem na fila envia ao dono um aviso com o nome da IA e uma prévia curta, uma vez por janela fechada;
 - a próxima mensagem do dono abre a janela e descarrega a fila em ordem;
 - mensagens na fila com mais de 7 dias viram `expired`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Me avisa quando a tarefa da noite terminar.', time: 'Ontem 22:10' },
+    { notice: true, text: 'O agente claude-code tem uma mensagem para você: Tarefa da noite terminou ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Tarefa da noite terminou ✅', time: '08:05' },
+  ]}
+/>
 
 Um envio que o canal recusa fica registrado com `delivery: "failed"`, e a ferramenta devolve um erro que nomeia o tipo.
