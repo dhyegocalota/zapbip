@@ -15,6 +15,7 @@ export const GENERATED_PATTERNS = [
   new RegExp(`^apps/docs/(?:(?:${TRANSLATED_DOCS_FOLDERS})/)?agents/[a-z0-9-]+\\.mdx$`),
   new RegExp(`^apps/docs/snippets/(?:(?:${TRANSLATED_DOCS_FOLDERS})/)?agents/`),
   /^apps\/docs\/docs\.json$/,
+  /^(?:README\.md|apps\/README\.md)$/,
   /^\.github\/workflows\/verify\.yml$/,
 ];
 
