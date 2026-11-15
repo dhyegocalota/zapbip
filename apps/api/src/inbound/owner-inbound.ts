@@ -45,6 +45,7 @@ export type OwnerInboundInput = {
   bindings: Bindings;
   number: RegisteredNumber;
   waId: string;
+  writtenText: string | null;
   channelMessageId: string;
   entryOf: (input: OwnerInboundEntryRequest) => Promise<ChannelInboundEntry>;
 };
@@ -110,9 +111,9 @@ async function receiveThenNotice(input: {
 }
 
 async function refuseNewAccount(input: OwnerInboundInput): Promise<ReceiveResult> {
-  const { bindings, number, waId } = input;
+  const { bindings, number, waId, writtenText } = input;
   logOperatorEvent({ event: OperatorEvent.InboundNumberClosed, fields: {} });
-  const text = WHATSAPP_COPY[ownerLocaleOf({ waId })][OwnerCopyKey.NumberClosedToNewAccounts];
+  const text = WHATSAPP_COPY[ownerLocaleOf({ waId, writtenText })][OwnerCopyKey.NumberClosedToNewAccounts];
   await sendNumberNotice({ bindings, registry: numberRegistryOf({ bindings }), numberId: number.numberId, waId, text });
   return DROPPED_RESULT;
 }
@@ -142,7 +143,7 @@ async function refuseOtherNumber(input: { bindings: Bindings; number: Registered
 }
 
 export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<ReceiveResult> {
-  const { bindings, waId, channelMessageId, entryOf } = input;
+  const { bindings, waId, writtenText, channelMessageId, entryOf } = input;
   const isAdmitted = await admitSender({ bindings, waId });
   if (!isAdmitted) return DROPPED_RESULT;
   const dependencies = lifecycleDependenciesOf({ environment: bindings });
@@ -152,6 +153,7 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
   const lookup = await openOwnerAccount({
     dependencies,
     waId,
+    writtenText,
     homeNumberId: input.number.numberId,
     waitlistEnabled: readWaitlistEnabled({ bindings }),
     createdAt: createPlatformClock().now(),

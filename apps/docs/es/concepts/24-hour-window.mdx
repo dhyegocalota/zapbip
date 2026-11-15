@@ -1,17 +1,37 @@
 ---
 title: 'Ventana de 24 horas'
-description: 'Por qué un mensaje puede quedar en cola y qué recibe el propietario.'
+description: 'Por qué un mensaje puede esperar, qué recibes en tu teléfono y qué devuelven las herramientas.'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
 
 WhatsApp permite que zapbip envíe mensajes libres solo dentro de las 24 horas posteriores al último mensaje del propietario. zapbip cierra su propia ventana 10 minutos antes. Una reacción del propietario no abre la ventana.
 
-Mientras la ventana está abierta, los mensajes salen al instante con `delivery: "sent"`.
+## Ventana abierta
 
-Cuando está cerrada:
+Los mensajes salen al instante, y la herramienta devuelve `delivery: "sent"`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Avísame cuando termine el job nocturno.', time: '22:10' },
+    { name: 'Claude Code', text: 'Job nocturno terminado ✅', time: '23:31' },
+  ]}
+/>
+
+## Ventana cerrada
 
 - la herramienta devuelve `delivery: "queued"` y el mensaje espera en la cola de salida;
-- el primer mensaje en cola envía al propietario un aviso aprobado, una vez por ventana cerrada;
+- el primer mensaje en cola envía al propietario un aviso con el nombre de la IA y una vista previa corta, una vez por ventana cerrada;
 - el siguiente mensaje del propietario abre la ventana y vacía la cola en orden;
 - los mensajes en cola con más de 7 días pasan a `expired`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Avísame cuando termine el job nocturno.', time: 'Ayer 22:10' },
+    { notice: true, text: 'El agente claude-code tiene un mensaje para ti: Job nocturno terminado ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Job nocturno terminado ✅', time: '08:05' },
+  ]}
+/>
 
 Un envío que el canal rechaza se guarda con `delivery: "failed"`, y la herramienta devuelve un error que nombra el tipo.

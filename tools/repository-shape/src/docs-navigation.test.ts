@@ -2,10 +2,10 @@ import { existsSync } from 'node:fs';
 import { DocsPageLanguage } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { DOCS_GROUPS, docsNavigationOf, languageOfPage, navigationPagesOf, snippetPathOf, twinPathOf } from './docs-experience';
-import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, repositoryPath } from './repository-files';
+import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, readRepositoryFile, repositoryPath } from './repository-files';
 
 const SNIPPETS_DIRECTORY = 'snippets';
-const GROUP_COUNT = 6;
+const GROUP_COUNT = 7;
 
 const LANGUAGES = Object.values(DocsPageLanguage);
 const TRANSLATED_LANGUAGES = LANGUAGES.filter((language) => language !== DocsPageLanguage.English);
@@ -63,5 +63,38 @@ describe('docs navigation', () => {
       .filter((path) => languageOfDocument(path) !== DocsPageLanguage.English)
       .filter((path) => !documents.includes(twinOfDocument({ path, language: DocsPageLanguage.English })));
     expect(orphans).toEqual([]);
+  });
+});
+
+type Redirect = { source: string; destination: string; permanent: boolean };
+
+const DOCS_CONFIG = `${DOCS_ROOT}/docs.json`;
+const LEADING_SLASH = '/';
+
+const redirectsOf = (): Redirect[] => JSON.parse(readRepositoryFile(DOCS_CONFIG)).redirects;
+const pageFileOfRoute = (route: string): string => repositoryPath(`${DOCS_ROOT}/${route.slice(LEADING_SLASH.length)}${PAGE_EXTENSION}`);
+
+describe('docs redirects', () => {
+  test('every redirect has a target that is a page', () => {
+    const missing = redirectsOf()
+      .map((redirect) => redirect.destination)
+      .filter((destination) => !existsSync(pageFileOfRoute(destination)));
+    expect(missing).toEqual([]);
+  });
+
+  test('no redirect source is still a page', () => {
+    const stillPages = redirectsOf()
+      .map((redirect) => redirect.source)
+      .filter((source) => existsSync(pageFileOfRoute(source)));
+    expect(stillPages).toEqual([]);
+  });
+
+  test('every redirect keeps its source and target in one language', () => {
+    const crossing = redirectsOf().filter(
+      (redirect) =>
+        languageOfPage({ path: redirect.source.slice(LEADING_SLASH.length) }) !==
+        languageOfPage({ path: redirect.destination.slice(LEADING_SLASH.length) }),
+    );
+    expect(crossing).toEqual([]);
   });
 });

@@ -4,7 +4,7 @@ import { foldCommandText } from './command-folding';
 import { parseAccountCommand } from './command';
 
 function say(text: string) {
-  return parseAccountCommand({ text, isQuoting: false, listReplyId: null });
+  return parseAccountCommand({ text, isQuoting: false, listReplyId: null, locale: OwnerLocale.EnglishUs });
 }
 
 describe('foldCommandText', () => {

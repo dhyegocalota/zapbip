@@ -12,7 +12,7 @@
 |-------|-------------|---------------------|
 | G1 | `apps/connector/src/*`, `apps/connector/scripts/*`, `apps/connector/test/*`, `libs/types/src/connector.ts`, `libs/agents/src/connector-support/testing/fake-client.mjs`, `libs/agents/supported/*/testing/*` | lead |
 | G2 | `apps/docs/*/developers/local-connector.mdx`, `apps/docs/schemas/connector-config.json` | lead, translations by a sub-agent |
-| G3 | `docs/adr/0065-*`, `docs/features/connector-runtime-config/*`, `docs/adr/README.md`, `docs/features/README.md`, `package.json` | lead |
+| G3 | `docs/adr/0066-*`, `docs/features/connector-runtime-config/*`, `docs/adr/README.md`, `docs/features/README.md`, `package.json` | lead |
 
 ## Sequencing
 
@@ -37,7 +37,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G3
 
-- [ ] **Step 8:** ADR 0065 and its index row
+- [ ] **Step 8:** ADR 0066 and its index row
 - [ ] **Step 9:** feature folder, its index row, status `Shipped` on the branch before the merge
 
 ## Failure modes

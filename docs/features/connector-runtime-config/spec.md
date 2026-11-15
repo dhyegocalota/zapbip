@@ -3,7 +3,7 @@
 **Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** the owner asked on 2026-11-14 that the runtime the local connector launches be changeable, for someone who runs `ccs` instead of `claude`, or who needs other arguments, with one generic JSON file that every AI reads the same way
-**ADRs:** [0065](../../adr/0065-the-connector-runtime-is-set-by-one-zapbip-json-file.md), extending [0064](../../adr/0064-a-wake-provider-and-a-channel-protocol-belong-to-the-agent-folder.md)
+**ADRs:** [0066](../../adr/0066-the-connector-runtime-is-set-by-one-zapbip-json-file.md), extending [0064](../../adr/0064-a-wake-provider-and-a-channel-protocol-belong-to-the-agent-folder.md)
 **Not changing:** the arguments the connector builds for the session (resume, safety, isolation, the prompt on standard input), the agent folders' defaults, the wake queue and the log events
 
 ## Problem

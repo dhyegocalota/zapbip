@@ -1,17 +1,37 @@
 ---
 title: '24-Stunden-Fenster'
-description: 'Warum eine Nachricht in die Warteschlange kommen kann und was der Owner erhält.'
+description: 'Warum eine Nachricht warten kann, was du auf dem Handy bekommst und was die Werkzeuge zurückgeben.'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
 
 WhatsApp erlaubt zapbip, Freitextnachrichten nur innerhalb von 24 Stunden nach der letzten Nachricht des Owners zu senden. zapbip schließt sein eigenes Fenster 10 Minuten früher. Eine Reaktion des Owners öffnet das Fenster nicht.
 
-Solange das Fenster offen ist, gehen Nachrichten sofort mit `delivery: "sent"` hinaus.
+## Fenster offen
 
-Wenn es geschlossen ist:
+Nachrichten gehen sofort hinaus, und das Werkzeug gibt `delivery: "sent"` zurück.
+
+<Chat
+  messages={[
+    { you: true, text: 'Sag mir Bescheid, wenn der nächtliche Job fertig ist.', time: '22:10' },
+    { name: 'Claude Code', text: 'Nächtlicher Job abgeschlossen ✅', time: '23:31' },
+  ]}
+/>
+
+## Fenster geschlossen
 
 - gibt das Werkzeug `delivery: "queued"` zurück und die Nachricht wartet in der Ausgangswarteschlange;
-- sendet die erste Nachricht in der Warteschlange dem Owner einen genehmigten Hinweis, einmal pro geschlossenem Fenster;
+- sendet die erste Nachricht in der Warteschlange dem Owner einen Hinweis mit dem Namen der KI und einer kurzen Vorschau, einmal pro geschlossenem Fenster;
 - öffnet die nächste Nachricht des Owners das Fenster und leert die Warteschlange der Reihe nach;
 - werden Nachrichten in der Warteschlange, die älter als 7 Tage sind, zu `expired`.
+
+<Chat
+  messages={[
+    { you: true, text: 'Sag mir Bescheid, wenn der nächtliche Job fertig ist.', time: 'Gestern 22:10' },
+    { notice: true, text: 'Der Agent claude-code hat eine Nachricht für dich: Nächtlicher Job abgeschlossen ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Nächtlicher Job abgeschlossen ✅', time: '08:05' },
+  ]}
+/>
 
 Ein Senden, das der Kanal ablehnt, wird mit `delivery: "failed"` gespeichert, und das Werkzeug gibt einen Fehler zurück, der die Art nennt.

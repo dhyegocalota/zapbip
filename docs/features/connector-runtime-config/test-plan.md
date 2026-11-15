@@ -51,5 +51,5 @@ Empty on purpose.
 
 ## Adversarial review
 
-- [ ] A config in a folder someone else owns runs a command: documented in the page and in ADR 0065 as trust in the folder, not a code fix.
+- [ ] A config in a folder someone else owns runs a command: documented in the page and in ADR 0066 as trust in the folder, not a code fix.
 - [ ] The connection link cannot reach the child through `environment`: covered by the filter in `childEnvironment`; the test is the integration case plus review.

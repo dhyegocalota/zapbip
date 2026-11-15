@@ -6,9 +6,10 @@ import { COMMAND_WORDS, MENU_COMMAND_KINDS } from './command-words';
 const LOCALES = Object.values(OwnerLocale);
 const COMMAND_TEXTS = [...new Set(COMMAND_WORDS.map((entry) => entry.words))];
 const SPOKEN_KINDS = Object.values(CommandKind).filter((kind) => kind !== CommandKind.Unknown);
-const COMMAND_PHRASE = (words: string): { text: string; isQuoting: boolean; listReplyId: null } => ({
+const COMMAND_PHRASE = (words: string): { text: string; isQuoting: boolean; listReplyId: null; locale: OwnerLocale } => ({
   text: words,
   isQuoting: false,
+  locale: OwnerLocale.EnglishUs,
   listReplyId: null,
 });
 const ORDINARY_MESSAGES = [
