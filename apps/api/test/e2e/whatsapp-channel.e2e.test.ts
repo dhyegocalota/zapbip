@@ -1,6 +1,18 @@
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { WINDOW_MS } from '@zapbip/core';
-import { DeliveryState, InboxStatus, MediaSourceKind, MessageDirection, MessageKind, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { COMMAND_WORDS, renderAccountReply, WINDOW_MS, type AccountReply } from '@zapbip/core';
+import {
+  AccountReplyIntent,
+  CommandKind,
+  DeliveryState,
+  InboxStatus,
+  MediaSourceKind,
+  MessageDirection,
+  MessageKind,
+  OwnerLocale,
+  ReplyKind,
+  ReplyStatus,
+  SECOND_MS,
+} from '@zapbip/types';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import audioVoiceFixture from '../fixtures/whatsapp/inbound/audio-voice.json';
@@ -40,6 +52,7 @@ const TEMPLATE_AGENT_PLACEHOLDER = 'Agente de teste';
 const TEMPLATE_PREVIEW_PLACEHOLDER = 'Mensagem de exemplo';
 const QUESTION_ID_PLACEHOLDER = 'qst_1';
 const QUEUED_TEXT = 'Mensagem fora da janela';
+const UNKNOWN_SPANISH_WRITER_PHONE = '12025550199';
 const MEDIA_UNAVAILABLE_NOTICE = 'Não consegui baixar o arquivo. Envie de novo, por favor.';
 
 type WireMessage = {
@@ -258,5 +271,27 @@ describe('WhatsApp channel end to end', () => {
     const withLink = installReplies.filter((body) => body.text?.body.includes(INSTALL_LINK_MARK));
     expect(withLink).toHaveLength(1);
     expect(withLink[0]?.text?.preview_url).toBe(false);
+  });
+
+  test('an unknown number that writes Spanish from another country gets its menu in Spanish', async () => {
+    const sentBefore = (await sentRequests()).length;
+    const helpWord = COMMAND_WORDS.find((entry) => entry.kind === CommandKind.Help && entry.locale === OwnerLocale.Spanish)!.words;
+    const message = { ...textFixture, from: UNKNOWN_SPANISH_WRITER_PHONE, id: 'wamid.E2EUNKNOWNES', text: { body: helpWord } };
+    const response = await postSignedMessage({ message, offsetMs: NO_OFFSET_MS });
+    expect(response.status).toBe(STATUS_OK);
+    const menu: AccountReply = {
+      intent: AccountReplyIntent.Menu,
+      kind: ReplyKind.List,
+      locale: OwnerLocale.Spanish,
+      parameters: {},
+      menuRows: [],
+    };
+    const repliesToSender = (await sentRequests())
+      .slice(sentBefore)
+      .filter((request) => (request.body as { to?: string }).to === UNKNOWN_SPANISH_WRITER_PHONE);
+    expect(repliesToSender.length).toBeGreaterThan(0);
+    expect(JSON.stringify(repliesToSender.map((request) => request.body))).toContain(
+      JSON.stringify(renderAccountReply({ reply: menu })).slice(1, -1),
+    );
   });
 });
