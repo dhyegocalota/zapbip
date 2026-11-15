@@ -66,6 +66,7 @@ export const GERMAN_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.PlanLine]: 'Kostenlos · {free} Nachrichten zum Ausprobieren',
   [ClientAppCopyKey.AccountTitle]: 'Konto',
   [ClientAppCopyKey.DeleteAccount]: 'Konto löschen',
-  [ClientAppCopyKey.DeleteAccountHint]: 'Das Konto wird über WhatsApp gelöscht. Die Anleitung erklärt, wie.',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    'Das Konto wird über WhatsApp gelöscht. Die Anleitung erklärt, wie. Das Löschen kündigt dein zapbip-Cloud-Abo nicht; zum Kündigen schreibe an {contactEmail}.',
   [ClientAppCopyKey.FooterMaker]: 'zapbip, ein persönlicher WhatsApp-Kanal für deine KI-Agenten',
 };

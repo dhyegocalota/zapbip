@@ -67,6 +67,7 @@ export const HINDI_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.PlanLine]: 'फ़्री · आज़माने के लिए {free} संदेश',
   [ClientAppCopyKey.AccountTitle]: 'अकाउंट',
   [ClientAppCopyKey.DeleteAccount]: 'अकाउंट डिलीट करें',
-  [ClientAppCopyKey.DeleteAccountHint]: 'अकाउंट WhatsApp पर डिलीट किया जाता है। गाइड में तरीका बताया गया है।',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    'अकाउंट WhatsApp पर डिलीट किया जाता है। गाइड में तरीका बताया गया है। अकाउंट डिलीट करने से zapbip Cloud की सदस्यता रद्द नहीं होती; उसे रद्द करने के लिए {contactEmail} पर लिखें।',
   [ClientAppCopyKey.FooterMaker]: 'zapbip, आपके AI एजेंटों के लिए एक निजी WhatsApp चैनल',
 };

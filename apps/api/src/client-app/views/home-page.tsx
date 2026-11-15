@@ -1,4 +1,4 @@
-import { AccountState, OwnerLocale } from '@zapbip/types';
+import { AccountState, COMPANY, OwnerLocale } from '@zapbip/types';
 import { AGENT_NAME_MAX_CHARS } from '@zapbip/core';
 import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH } from '../client-app-constants';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
@@ -117,7 +117,7 @@ function Account(props: { locale: OwnerLocale; phone: string }) {
       <h2>{translate(ClientAppCopyKey.AccountTitle)}</h2>
       <p class="plan">{translate(ClientAppCopyKey.PlanLine, { free: pricingValuesOf({ locale: props.locale }).free })}</p>
       <p class="note">{translate(ClientAppCopyKey.SignedInAs, { phone: props.phone })}</p>
-      <p class="note">{translate(ClientAppCopyKey.DeleteAccountHint)}</p>
+      <p class="note">{translate(ClientAppCopyKey.DeleteAccountHint, { contactEmail: COMPANY.contactEmail })}</p>
       <a class="button button-secondary" href={docsUrlOf({ locale: props.locale, path: DELETE_ACCOUNT_DOCS_PATH })}>
         {translate(ClientAppCopyKey.DeleteAccount)}
       </a>

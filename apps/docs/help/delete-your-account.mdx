@@ -18,11 +18,14 @@ You can delete your account at any time, from WhatsApp. It takes two messages, s
   messages={[
     { you: true, text: 'delete account', time: '09:30' },
     {
-      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently. Deleting your account does not cancel your zapbip Cloud subscription. To cancel it, write to support@zapbip.com.',
       time: '09:30',
     },
     { you: true, text: 'delete account permanently', time: '09:31' },
-    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+    {
+      text: 'Your account is deleted. Your next message starts a new account. Deleting your account does not cancel your zapbip Cloud subscription. To cancel it, write to support@zapbip.com.',
+      time: '09:31',
+    },
   ]}
 />
 
@@ -43,3 +46,7 @@ You can delete your account at any time, from WhatsApp. It takes two messages, s
 A message from the same phone after the deletion creates a new, empty account. It joins the waitlist like any new account; see the [FAQ](/help/faq).
 
 To disconnect only one AI, see [manage your AIs](/features/manage-your-agents).
+
+## Your subscription
+
+Deleting your account does not cancel your zapbip Cloud subscription. To cancel it, write to support@zapbip.com.

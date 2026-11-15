@@ -215,6 +215,8 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqFreeAnswer]: '试用免费：免费版包含 {free} 条消息。使用资格会从抢先体验名单开始分批开放。',
   [SiteCopyKey.FaqPriceQuestion]: '将来要多少钱？',
   [SiteCopyKey.FaqPriceAnswer]: 'Pro 每月 {price}，包含 {included} 条消息，超出部分每 {block} 条收费 {overage}。使用资格开放后才开始计费。',
+  [SiteCopyKey.FaqDeleteQuestion]: '删除账户会取消订阅吗？',
+  [SiteCopyKey.FaqDeleteAnswer]: '不会。删除账户不会取消你的 zapbip Cloud 订阅。要取消订阅，请写信至 {contactEmail}。',
   [SiteCopyKey.FaqDeveloperQuestion]: '我需要是开发者吗？',
   [SiteCopyKey.FaqDeveloperAnswer]: '不需要。只要你在用 AI 助手，粘贴一行内容就能连接。',
   [SiteCopyKey.FaqOthersQuestion]: '它会给其他人发消息吗？',

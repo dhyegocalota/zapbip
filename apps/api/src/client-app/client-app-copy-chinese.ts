@@ -62,6 +62,7 @@ export const CHINESE_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.PlanLine]: '免费 · 可试用 {free} 条消息',
   [ClientAppCopyKey.AccountTitle]: '账户',
   [ClientAppCopyKey.DeleteAccount]: '删除账户',
-  [ClientAppCopyKey.DeleteAccountHint]: '账户需在 WhatsApp 中删除。指南里说明了方法。',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    '账户需在 WhatsApp 中删除。指南里说明了方法。删除账户不会取消 zapbip Cloud 订阅；要取消，请写信至 {contactEmail}。',
   [ClientAppCopyKey.FooterMaker]: 'zapbip，为你的 AI 智能体打造的个人 WhatsApp 渠道',
 };

@@ -75,6 +75,7 @@ export const KOREAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: '계정 종료',
         paragraphs: [
           'WhatsApp에서 zapbip에 "계정 삭제"를 보내면 언제든 계정을 삭제할 수 있습니다. 이 약관을 어긴 계정은 폐쇄하거나, 사전 고지를 거쳐 서비스를 종료할 수 있습니다. 데이터가 어떻게 처리되는지는 개인정보 처리방침에서 설명합니다.',
+          '계정을 삭제해도 zapbip Cloud 구독은 해지되지 않아요. 해지하려면 {contactEmail}으로 문의해 주세요.',
         ],
         items: [],
       },
@@ -172,6 +173,7 @@ export const KOREAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: '회원님의 권리',
         paragraphs: [
           '계정과 그 안의 모든 것을 삭제하려면 WhatsApp에서 zapbip에 "계정 삭제"를 보내세요. 그 밖의 요청은 {contactEmail}로 보내 주세요. 15일 이내에 답변드립니다.',
+          '계정을 삭제해도 zapbip Cloud 구독은 해지되지 않아요. 해지하려면 {contactEmail}으로 문의해 주세요.',
         ],
         items: [
           '데이터를 처리하는지 확인하고 열람하기.',

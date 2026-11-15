@@ -1,4 +1,4 @@
-import { CLIENT_APP_LOGIN_TEXT, PRICING_FREE_MESSAGES, OwnerLocale } from '@zapbip/types';
+import { CLIENT_APP_LOGIN_TEXT, COMPANY, PRICING_FREE_MESSAGES, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { ClientAppCopyKey, renderClientAppCopy } from '../../src/client-app/client-app-copy';
 import { cjkSpacingOffenders, frenchSpacingOffenders, placeholderMismatches, untranslatedEntries } from './copy-rules';
@@ -45,6 +45,15 @@ describe('the customer web app copy', () => {
   it.each(Object.values(OwnerLocale))('names the WhatsApp word of its login in the expired link text in %s', (locale) => {
     expect(renderClientAppCopy({ key: ClientAppCopyKey.ExpiredBody, locale })).toContain(CLIENT_APP_LOGIN_TEXT[locale]);
   });
+
+  it.each(Object.values(OwnerLocale))(
+    '[row 439] says in %s that deleting does not cancel the subscription and names the support address',
+    (locale) => {
+      expect(
+        renderClientAppCopy({ key: ClientAppCopyKey.DeleteAccountHint, locale, values: { contactEmail: COMPANY.contactEmail } }),
+      ).toContain(COMPANY.contactEmail);
+    },
+  );
 
   it('fills a placeholder', () => {
     expect(renderClientAppCopy({ key: ClientAppCopyKey.RevokeTitle, locale: OwnerLocale.EnglishUs, values: { agent: 'alpha' } })).toBe(

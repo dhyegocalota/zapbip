@@ -75,6 +75,7 @@ export const ARABIC_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: 'إنهاء حسابك',
         paragraphs: [
           'يمكنك حذف حسابك في أي وقت بإرسال «حذف الحساب» إلى zapbip على WhatsApp. ويجوز لنا إغلاق الحساب الذي يخالف هذه الشروط، أو إنهاء الخدمة مع إشعار مسبق. وتشرح سياسة الخصوصية ما يحدث لبياناتك.',
+          'حذف الحساب لا يلغي اشتراكك في zapbip Cloud. ولإلغائه، راسل {contactEmail}.',
         ],
         items: [],
       },
@@ -176,6 +177,7 @@ export const ARABIC_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: 'حقوقك',
         paragraphs: [
           'لحذف حسابك وكل ما فيه، أرسل «حذف الحساب» إلى zapbip على WhatsApp. ولأي أمر آخر، راسل {contactEmail}؛ ونردّ خلال 15 يومًا.',
+          'حذف الحساب لا يلغي اشتراكك في zapbip Cloud. ولإلغائه، راسل {contactEmail}.',
         ],
         items: [
           'التأكد مما إذا كنا نعالج بياناتك، والاطلاع عليها.',

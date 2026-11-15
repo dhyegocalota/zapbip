@@ -97,6 +97,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
           heading: 'Ending your account',
           paragraphs: [
             'You can delete your account at any time by sending "delete account" to zapbip on WhatsApp. We may close an account that breaks these terms, or end the service with notice. The privacy policy explains what happens to your data.',
+            'Deleting your account does not cancel your zapbip Cloud subscription. To cancel it, write to {contactEmail}.',
           ],
           items: [],
         },
@@ -194,6 +195,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
           heading: 'Encerramento da conta',
           paragraphs: [
             'Você pode apagar sua conta quando quiser, mandando "apagar conta" para o zapbip no WhatsApp. Podemos encerrar uma conta que descumpra estes termos, ou encerrar o serviço com aviso prévio. A política de privacidade explica o que acontece com seus dados.',
+            'Apagar sua conta não cancela sua assinatura do zapbip Cloud. Para cancelar, escreva para {contactEmail}.',
           ],
           items: [],
         },
@@ -305,6 +307,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
           heading: 'Your rights',
           paragraphs: [
             'To delete your account and everything in it, send "delete account" to zapbip on WhatsApp. For anything else, write to {contactEmail}; we answer within 15 days.',
+            'Deleting your account does not cancel your zapbip Cloud subscription. To cancel it, write to {contactEmail}.',
           ],
           items: [
             'Confirm whether we process your data, and access it.',
@@ -421,6 +424,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
           heading: 'Seus direitos',
           paragraphs: [
             'Para apagar sua conta e tudo o que está nela, mande "apagar conta" para o zapbip no WhatsApp. Para qualquer outro pedido, escreva para {contactEmail}; respondemos em até 15 dias.',
+            'Apagar sua conta não cancela sua assinatura do zapbip Cloud. Para cancelar, escreva para {contactEmail}.',
           ],
           items: [
             'Confirmar se tratamos seus dados e acessá-los.',

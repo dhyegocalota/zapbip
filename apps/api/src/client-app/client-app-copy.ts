@@ -76,7 +76,8 @@ const ENGLISH_COPY: CopyEntries = {
   [ClientAppCopyKey.PlanLine]: 'Free · {free} messages to try it',
   [ClientAppCopyKey.AccountTitle]: 'Account',
   [ClientAppCopyKey.DeleteAccount]: 'Delete account',
-  [ClientAppCopyKey.DeleteAccountHint]: 'Deleting your account is done on WhatsApp. The guide explains how.',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    'Deleting your account is done on WhatsApp. The guide explains how. Deleting it does not cancel your zapbip Cloud subscription; to cancel, write to {contactEmail}.',
   [ClientAppCopyKey.FooterMaker]: 'zapbip, a personal WhatsApp channel for your AI agents',
 };
 
@@ -144,7 +145,8 @@ const PORTUGUESE_COPY: CopyEntries = {
   [ClientAppCopyKey.PlanLine]: 'Grátis · {free} mensagens para testar',
   [ClientAppCopyKey.AccountTitle]: 'Conta',
   [ClientAppCopyKey.DeleteAccount]: 'Apagar conta',
-  [ClientAppCopyKey.DeleteAccountHint]: 'Apagar a conta é feito no WhatsApp. O guia explica como.',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    'Apagar a conta é feito no WhatsApp. O guia explica como. Apagar a conta não cancela sua assinatura do zapbip Cloud; para cancelar, escreva para {contactEmail}.',
   [ClientAppCopyKey.FooterMaker]: 'zapbip, um canal pessoal de WhatsApp para os seus agentes de IA',
 };
 

@@ -219,6 +219,8 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqPriceQuestion]: 'كم سيكلّف؟',
   [SiteCopyKey.FaqPriceAnswer]:
     'تبلغ Pro {price} شهريًا وتشمل {included} رسالة، ثم {overage} عن كل {block} رسالة إضافية. تُفتح الفوترة مع الدعوات.',
+  [SiteCopyKey.FaqDeleteQuestion]: 'هل يلغي حذف حسابي اشتراكي؟',
+  [SiteCopyKey.FaqDeleteAnswer]: 'لا. حذف الحساب لا يلغي اشتراكك في zapbip Cloud. ولإلغائه، راسل {contactEmail}.',
   [SiteCopyKey.FaqDeveloperQuestion]: 'هل يجب أن أكون مطوّرًا؟',
   [SiteCopyKey.FaqDeveloperAnswer]: 'لا. إن كنت تستخدم مساعد ذكاء اصطناعي، فتربطه بلصق سطر واحد.',
   [SiteCopyKey.FaqOthersQuestion]: 'هل يراسل أشخاصًا آخرين؟',

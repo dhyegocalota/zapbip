@@ -16,11 +16,14 @@ import { Chat } from '/snippets/chat.jsx';
   messages={[
     { you: true, text: '删除账户', time: '09:30' },
     {
-      text: '这会删除你的账户、所有智能体、消息和文件，且无法恢复。要在 10 分钟内确认，请发送：永久删除账户',
+      text: '这会删除你的账户、所有智能体、消息和文件，且无法恢复。要在 10 分钟内确认，请发送：永久删除账户。删除账户不会取消你的 zapbip Cloud 订阅。要取消订阅，请写信至 support@zapbip.com。',
       time: '09:30',
     },
     { you: true, text: '永久删除账户', time: '09:31' },
-    { text: '你的账户已删除。你的下一条消息会开启一个新账户。', time: '09:31' },
+    {
+      text: '你的账户已删除。你的下一条消息会开启一个新账户。 删除账户不会取消你的 zapbip Cloud 订阅。要取消订阅，请写信至 support@zapbip.com。',
+      time: '09:31',
+    },
   ]}
 />
 
@@ -41,3 +44,7 @@ import { Chat } from '/snippets/chat.jsx';
 删除之后，同一部手机发来的消息会创建一个新的空账号。它会像其他新账号一样进入候补名单，参见[常见问题](/zh/help/faq)。
 
 如果只想断开某一个 AI，参见[管理你的 AI](/zh/features/manage-your-agents)。
+
+## 订阅
+
+删除账户不会取消你的 zapbip Cloud 订阅。要取消订阅，请写信至 support@zapbip.com。

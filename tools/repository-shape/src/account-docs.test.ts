@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { COMMAND_WORDS } from '@zapbip/core';
-import { CommandKind, DOCS_OWNER_LOCALES, DocsPageLanguage, OwnerLocale } from '@zapbip/types';
+import { COMPANY, CommandKind, DOCS_OWNER_LOCALES, DocsPageLanguage, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { twinPathOf } from './docs-experience';
 import { readRepositoryFile, repositoryPath } from './repository-files';
@@ -12,7 +12,20 @@ const INTERNAL_LINK_PATTERN = /\]\((\/[^)#\s]+)/g;
 const COMMANDS_PAGE = 'features/whatsapp-commands';
 const MANAGE_PAGE = 'features/manage-your-agents';
 const DELETE_PAGE = 'help/delete-your-account';
+const FAQ_PAGE = 'help/faq';
 const ACCOUNT_PAGES = [COMMANDS_PAGE, MANAGE_PAGE, DELETE_PAGE];
+const SUBSCRIPTION_STATEMENTS: Record<DocsPageLanguage, RegExp> = {
+  [DocsPageLanguage.English]: /does not cancel your zapbip Cloud subscription/,
+  [DocsPageLanguage.PortugueseBrazil]: /não cancela sua assinatura do zapbip Cloud/,
+  [DocsPageLanguage.Spanish]: /no cancela tu suscripción a zapbip Cloud/,
+  [DocsPageLanguage.German]: /kündigt dein zapbip-Cloud-Abo nicht/,
+  [DocsPageLanguage.French]: /n’annule pas votre abonnement zapbip Cloud/,
+  [DocsPageLanguage.Japanese]: /zapbip Cloud のサブスクリプションは解約されません/,
+  [DocsPageLanguage.Korean]: /zapbip Cloud 구독은 해지되지 않아요/,
+  [DocsPageLanguage.Chinese]: /不会取消你的 zapbip Cloud 订阅/,
+  [DocsPageLanguage.Arabic]: /لا يلغي اشتراكك في zapbip Cloud/,
+  [DocsPageLanguage.Hindi]: /सदस्यता रद्द नहीं होती/,
+};
 
 type Language = { name: string; docsLanguage: DocsPageLanguage; historyStatement: RegExp };
 
@@ -91,5 +104,14 @@ describe.each(LANGUAGES)('account guides in $name', (language) => {
     const text = readRepositoryFile(pagePath({ docsLanguage: language.docsLanguage, page: DELETE_PAGE }));
     expect(text).toContain(confirmationPhraseOf({ docsLanguage: language.docsLanguage }));
     expect(text).toMatch(language.historyStatement);
+  });
+
+  test('[row 439] the delete page and the FAQ say deleting does not cancel the subscription and name the support address', () => {
+    const statement = SUBSCRIPTION_STATEMENTS[language.docsLanguage];
+    [DELETE_PAGE, FAQ_PAGE].forEach((page) => {
+      const text = readRepositoryFile(pagePath({ docsLanguage: language.docsLanguage, page }));
+      expect(text).toMatch(statement);
+      expect(text).toContain(COMPANY.contactEmail);
+    });
   });
 });

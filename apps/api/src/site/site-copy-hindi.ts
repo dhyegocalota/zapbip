@@ -223,6 +223,9 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqPriceQuestion]: 'इसकी कीमत कितनी होगी?',
   [SiteCopyKey.FaqPriceAnswer]:
     'Pro की कीमत {price} प्रति महीना है, जिसमें {included} संदेश हैं, फिर हर अतिरिक्त {block} के लिए {overage}। बिलिंग इनवाइट के साथ शुरू होगी।',
+  [SiteCopyKey.FaqDeleteQuestion]: 'क्या अकाउंट डिलीट करने से मेरी सदस्यता रद्द हो जाती है?',
+  [SiteCopyKey.FaqDeleteAnswer]:
+    'नहीं। अकाउंट डिलीट करने से आपकी zapbip Cloud सदस्यता रद्द नहीं होती। उसे रद्द करने के लिए {contactEmail} पर लिखें।',
   [SiteCopyKey.FaqDeveloperQuestion]: 'क्या मुझे डेवलपर होना ज़रूरी है?',
   [SiteCopyKey.FaqDeveloperAnswer]: 'नहीं। अगर आप कोई AI असिस्टेंट इस्तेमाल करते हैं, तो एक लाइन पेस्ट करके उसे जोड़ सकते हैं।',
   [SiteCopyKey.FaqOthersQuestion]: 'क्या यह दूसरे लोगों को संदेश भेजता है?',

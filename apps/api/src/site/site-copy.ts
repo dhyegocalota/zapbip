@@ -232,6 +232,9 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqPriceQuestion]: 'How much will it cost?',
     [SiteCopyKey.FaqPriceAnswer]:
       'Pro is {price} a month with {included} messages, then {overage} for each extra {block}. Billing opens with the invites.',
+    [SiteCopyKey.FaqDeleteQuestion]: 'Does deleting my account cancel my subscription?',
+    [SiteCopyKey.FaqDeleteAnswer]:
+      'No. Deleting your account does not cancel your zapbip Cloud subscription. To cancel it, write to {contactEmail}.',
     [SiteCopyKey.FaqDeveloperQuestion]: 'Do I need to be a developer?',
     [SiteCopyKey.FaqDeveloperAnswer]: 'No. If you use an AI assistant, you connect it by pasting one line.',
     [SiteCopyKey.FaqOthersQuestion]: 'Does it message other people?',
@@ -509,6 +512,9 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqPriceQuestion]: 'Quanto vai custar?',
     [SiteCopyKey.FaqPriceAnswer]:
       'O Pro custa {price} por mês com {included} mensagens, depois {overage} a cada {block} a mais. A cobrança só começa quando o acesso for liberado.',
+    [SiteCopyKey.FaqDeleteQuestion]: 'Apagar a conta cancela a assinatura?',
+    [SiteCopyKey.FaqDeleteAnswer]:
+      'Não. Apagar sua conta não cancela sua assinatura do zapbip Cloud. Para cancelar, escreva para {contactEmail}.',
     [SiteCopyKey.FaqDeveloperQuestion]: 'Preciso ser programador?',
     [SiteCopyKey.FaqDeveloperAnswer]: 'Não. Se você usa um assistente de IA, conecta colando uma linha.',
     [SiteCopyKey.FaqOthersQuestion]: 'Ele manda mensagem para outras pessoas?',

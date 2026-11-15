@@ -226,6 +226,9 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqPriceQuestion]: '料金はいくらですか？',
   [SiteCopyKey.FaqPriceAnswer]:
     'Proは月額{price}で{included}通が含まれ、超過分は{block}通ごとに{overage}です。課金はアクセスの開放後に始まります。',
+  [SiteCopyKey.FaqDeleteQuestion]: 'アカウントを削除すると、サブスクリプションも解約されますか？',
+  [SiteCopyKey.FaqDeleteAnswer]:
+    'いいえ。アカウントを削除しても zapbip Cloud のサブスクリプションは解約されません。解約するには {contactEmail} までご連絡ください。',
   [SiteCopyKey.FaqDeveloperQuestion]: '開発者でなくても使えますか？',
   [SiteCopyKey.FaqDeveloperAnswer]: 'はい。AIアシスタントをお使いなら、1行を貼り付けるだけで接続できます。',
   [SiteCopyKey.FaqOthersQuestion]: 'ほかの人にもメッセージを送りますか？',
