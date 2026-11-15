@@ -4,7 +4,11 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { REPOSITORY_ROOT, repositoryPath } from './repository';
 
 export function readSource(path: string): string {
-  return readFileSync(repositoryPath(path), 'utf8');
+  try {
+    return readFileSync(repositoryPath(path), 'utf8');
+  } catch (error) {
+    throw new UnreadableTrackedFileError({ path, code: (error as NodeJS.ErrnoException).code as string });
+  }
 }
 
 export function listSource(directory: string): string[] {

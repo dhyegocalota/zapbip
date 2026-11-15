@@ -30,7 +30,12 @@ const RECORD_PREFIXES = ['docs/', 'pnpm-lock.yaml'];
 const NEXT_STEP_HINT = 'edit the names and the copy, then run pnpm agents:generate';
 
 async function planFromDisk(): Promise<GenerationPlan> {
-  return planGeneratedFiles({ agents: discoverAgents({ roots: [SUPPORTED_FOLDER] }), readSource, listSource });
+  try {
+    return await planGeneratedFiles({ agents: discoverAgents({ roots: [SUPPORTED_FOLDER] }), readSource, listSource });
+  } catch (error) {
+    if (error instanceof UnreadableTrackedFileError) return { writes: [], deletions: [], violations: [error.message] };
+    throw error;
+  }
 }
 
 function guidesOf(input: { agent: { folder: string; facets: AgentFacet[] } }): Record<DocsPageLanguage, string> {

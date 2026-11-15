@@ -1,5 +1,5 @@
 import { BackofficePath } from '../backoffice-paths';
-import { contentHashOf } from './stylesheet';
+import { contentHashOf } from '../../web-shell/content-hash';
 
 const SCRIPT_SOURCE = `(function () {
   var SIGNUP_EVENT_TYPE = 'WA_EMBEDDED_SIGNUP';

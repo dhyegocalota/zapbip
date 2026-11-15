@@ -1,6 +1,7 @@
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { localePathOf } from '../../src/site/site-language';
+import { FLAG_SPRITE_HREF } from '../../src/web-shell/flags';
 import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { REFERRAL_CODE, shellCopyHtml, siteFetch } from '../support/site';
@@ -66,10 +67,11 @@ describe('the language menu', () => {
     expect(menu).toContain(`name="returnTo" value="/pt-br?agent=${PICKED_AGENT}&amp;ref=${REFERRAL_CODE}"`);
   });
 
-  it('draws the flags inline, with no outside image', async () => {
+  it('draws the flags from the sprite of the site, with no image', async () => {
     const html = await (await siteFetch({ path: '/' })).text();
     const menu = MENU_PATTERN.exec(html)![1]!;
     expect(menu).toContain('<svg class="flag" data-flag="us"');
+    expect(menu).toContain(`${FLAG_SPRITE_HREF}#flag-us`);
     expect(menu).not.toMatch(/<img|https?:/);
   });
 

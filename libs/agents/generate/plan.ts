@@ -17,6 +17,7 @@ import { renderMatrix } from './render-matrix';
 import { listedAgentSlugsOf, orphanPagesOf, renderNavigation } from './render-navigation';
 import { planPages } from './render-pages';
 import { renderPluginRegistry } from './render-plugins';
+import { renderReadmeLinks } from './render-readme-links';
 import { renderWakeRegistry } from './render-wake';
 import { renderWorkflow } from './render-workflow';
 
@@ -65,6 +66,7 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
   const navigation = renderNavigation({ source: input.readSource(DOCS_CONFIG), agents });
   const navigationWrites = navigation.violations.length === 0 ? [{ path: DOCS_CONFIG, content: navigation.content }] : [];
   const writes = [
+    ...renderReadmeLinks({ readSource: input.readSource, listSource: input.listSource }),
     ...generatedModules({ agents }),
     ...planInstallSections({ agents }),
     ...pages.writes,

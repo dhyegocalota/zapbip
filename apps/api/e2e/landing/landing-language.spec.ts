@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { OwnerLocale } from '@zapbip/types';
+import { FLAG_SPRITE_PATH } from '../../src/web-shell/flags';
 import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { expect, test } from './fixtures';
@@ -10,6 +11,7 @@ const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
 const REFERRAL_CODE = 'abcdefgh2345';
 const MOBILE_WIDTH = 375;
+const HTTP_OK = 200;
 
 function menuOf(input: { page: Page }) {
   return input.page.locator('.lang-menu');
@@ -34,6 +36,18 @@ test('the menu opens on a click, shows both languages and closes on Escape with 
   await page.keyboard.press('Escape');
   await expect(menuOf({ page })).not.toHaveAttribute('open', '');
   await expect(triggerOf({ page })).toBeFocused();
+});
+
+test('the flag of the menu is drawn from the flag sprite the site serves, and the policy blocks nothing', async ({ page }) => {
+  const blockedMessages: string[] = [];
+  page.on('console', (message) => {
+    if (message.text().includes('Content Security Policy')) blockedMessages.push(message.text());
+  });
+  const spriteResponse = page.waitForResponse((response) => response.url().includes(FLAG_SPRITE_PATH));
+  await page.goto('/');
+  expect((await spriteResponse).status()).toBe(HTTP_OK);
+  await expect(triggerOf({ page }).locator('.flag use')).toHaveCount(1);
+  expect(blockedMessages).toEqual([]);
 });
 
 test('a click outside closes it', async ({ page }) => {
