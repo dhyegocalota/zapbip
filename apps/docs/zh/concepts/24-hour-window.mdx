@@ -1,17 +1,37 @@
 ---
 title: '24 小时窗口'
-description: '消息为什么会排队，以及所有者会收到什么。'
+description: '消息为什么会等待，你的手机会收到什么，以及工具会返回什么。'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
 
 WhatsApp 只允许 zapbip 在所有者最后一条消息之后的 24 小时内发送自由格式消息。zapbip 会提前 10 分钟关闭自己这一侧的窗口。所有者的表情回应不会打开窗口。
 
-窗口开着时，消息会立即发出，`delivery: "sent"`。
+## 窗口开着
 
-窗口关闭时：
+消息会立即发出，工具返回 `delivery: "sent"`。
+
+<Chat
+  messages={[
+    { you: true, text: '夜间任务完成后告诉我。', time: '22:10' },
+    { name: 'Claude Code', text: '夜间任务已完成 ✅', time: '23:31' },
+  ]}
+/>
+
+## 窗口关闭
 
 - 工具返回 `delivery: "queued"`，消息在发送队列中等待；
-- 第一条排队的消息会给所有者发送一条已获批准的通知，每个关闭的窗口只发一次；
+- 第一条排队的消息会给所有者发送一条通知，写明 AI 的名称和简短预览，每个关闭的窗口只发一次；
 - 所有者的下一条消息会打开窗口，并按顺序清空队列；
 - 排队超过 7 天的消息会变为 `expired`。
+
+<Chat
+  messages={[
+    { you: true, text: '夜间任务完成后告诉我。', time: '昨天 22:10' },
+    { notice: true, text: '智能体 claude-code 有一条消息给你：夜间任务已完成 ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: '夜间任务已完成 ✅', time: '08:05' },
+  ]}
+/>
 
 被渠道拒绝的发送会以 `delivery: "failed"` 保存，工具会返回一个指明消息类型的错误。

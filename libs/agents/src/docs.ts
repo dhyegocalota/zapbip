@@ -166,19 +166,19 @@ export const LISTEN_STATEMENT_TOKENS: Record<DocsPageLanguage, { pending: string
   [DocsPageLanguage.Hindi]: { pending: 'पेंडिंग', recallsUntilAnswered: 'फिर से', noTimeLimit: 'कोई समय-सीमा नहीं' },
 };
 
-export const AGENTS_GROUP_INDEX = 1;
+export const AGENTS_GROUP_INDEX = 3;
 
 export const DOCS_GROUPS: Record<DocsPageLanguage, string[]> = {
-  [DocsPageLanguage.English]: ['Get started', 'Agents', 'Features', 'Help', 'For developers', 'Open source'],
-  [DocsPageLanguage.PortugueseBrazil]: ['Primeiros passos', 'IAs', 'Funcionalidades', 'Ajuda', 'Para desenvolvedores', 'Código aberto'],
-  [DocsPageLanguage.Spanish]: ['Primeros pasos', 'IAs', 'Funciones', 'Ayuda', 'Para desarrolladores', 'Código abierto'],
-  [DocsPageLanguage.German]: ['Erste Schritte', 'KIs', 'Funktionen', 'Hilfe', 'Für Entwickler', 'Open Source'],
-  [DocsPageLanguage.French]: ['Premiers pas', 'IA', 'Fonctionnalités', 'Aide', 'Pour les développeurs', 'Open source'],
-  [DocsPageLanguage.Japanese]: ['はじめに', 'AI', '機能', 'ヘルプ', '開発者向け', 'オープンソース'],
-  [DocsPageLanguage.Korean]: ['시작하기', 'AI', '기능', '도움말', '개발자용', '오픈 소스'],
-  [DocsPageLanguage.Chinese]: ['快速开始', 'AI', '功能', '帮助', '开发者', '开源'],
-  [DocsPageLanguage.Arabic]: ['البدء', 'الذكاء الاصطناعي', 'الميزات', 'المساعدة', 'للمطورين', 'المصدر المفتوح'],
-  [DocsPageLanguage.Hindi]: ['शुरुआत', 'AI', 'फ़ीचर', 'मदद', 'डेवलपर्स के लिए', 'ओपन सोर्स'],
+  [DocsPageLanguage.English]: ['Get started', 'Concepts', 'Guides', 'Agents', 'Developers', 'Open source', 'Help'],
+  [DocsPageLanguage.PortugueseBrazil]: ['Primeiros passos', 'Conceitos', 'Guias', 'IAs', 'Desenvolvedores', 'Código aberto', 'Ajuda'],
+  [DocsPageLanguage.Spanish]: ['Primeros pasos', 'Conceptos', 'Guías', 'IAs', 'Desarrolladores', 'Código abierto', 'Ayuda'],
+  [DocsPageLanguage.German]: ['Erste Schritte', 'Konzepte', 'Anleitungen', 'KIs', 'Entwickler', 'Open Source', 'Hilfe'],
+  [DocsPageLanguage.French]: ['Premiers pas', 'Concepts', 'Guides', 'IA', 'Développeurs', 'Open source', 'Aide'],
+  [DocsPageLanguage.Japanese]: ['はじめに', 'コンセプト', 'ガイド', 'AI', '開発者向け', 'オープンソース', 'ヘルプ'],
+  [DocsPageLanguage.Korean]: ['시작하기', '개념', '가이드', 'AI', '개발자용', '오픈 소스', '도움말'],
+  [DocsPageLanguage.Chinese]: ['快速开始', '概念', '指南', 'AI', '开发者', '开源', '帮助'],
+  [DocsPageLanguage.Arabic]: ['البدء', 'المفاهيم', 'الأدلة', 'الذكاء الاصطناعي', 'للمطورين', 'المصدر المفتوح', 'المساعدة'],
+  [DocsPageLanguage.Hindi]: ['शुरुआत', 'कॉन्सेप्ट', 'गाइड', 'AI', 'डेवलपर्स के लिए', 'ओपन सोर्स', 'मदद'],
 };
 
 export function perLanguage<Value>(input: { valueOf: (language: DocsPageLanguage) => Value }): Record<DocsPageLanguage, Value> {

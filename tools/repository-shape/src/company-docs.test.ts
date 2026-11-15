@@ -7,9 +7,11 @@ const DOCS_CONFIG = 'apps/docs/docs.json';
 const COMPANY_SNIPPETS = Object.values(DocsPageLanguage).map(
   (language) => `${DOCS_ROOT}/${snippetPathOf({ name: 'company.mdx', language })}`,
 );
-const ABOUT_PAGES = Object.values(DocsPageLanguage).map((language) => `${DOCS_ROOT}/${twinPathOf({ path: 'help/about.mdx', language })}`);
+const LICENSE_PAGES = Object.values(DocsPageLanguage).map(
+  (language) => `${DOCS_ROOT}/${twinPathOf({ path: 'open-source/license.mdx', language })}`,
+);
 const FOOTER_LABEL = 'zapbip · Logic Bit';
-const FOOTER_HREF = '/help/about';
+const FOOTER_HREF = '/open-source/license';
 const README_PRODUCT_LINE = 'zapbip is a product of Logic Bit';
 const README_FILE = 'README.md';
 const COMPANY_FACT_COUNT = 5;
@@ -63,11 +65,11 @@ describe('company docs', () => {
     expect(offenders).toEqual([]);
   });
 
-  test.each(ABOUT_PAGES)('%s renders the company snippet', (page) => {
+  test.each(LICENSE_PAGES)('%s renders the company snippet', (page) => {
     expect(readRepositoryFile(page)).toContain('company.mdx');
   });
 
-  test('the footer carries one neutral line linking the about page', () => {
+  test('the footer carries one neutral line linking the license page', () => {
     const items = JSON.parse(readRepositoryFile(DOCS_CONFIG)).footer.links.flatMap(
       (column: { items: { label: string; href: string }[] }) => column.items,
     );
