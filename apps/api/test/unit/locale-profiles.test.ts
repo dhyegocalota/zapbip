@@ -1,6 +1,6 @@
 import { DOCS_LANGUAGE_FOLDERS, DocsPageLanguage, WebLanguageTag, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { Flag } from '../../src/web-shell/flags';
+import { FLAG_SPRITE, FLAG_SPRITE_HREF, Flag } from '../../src/web-shell/flags';
 import { LOCALE_PROFILES, MENU_LOCALES, TextDirection, formattingLocaleOf, languageOf } from '../../src/web-shell/locale-profiles';
 import { docsUrlOf } from '../../src/web-shell/shell-links';
 
@@ -59,12 +59,17 @@ describe('the locale profiles', () => {
 });
 
 describe('the flags', () => {
-  it.each(LOCALES)('draw an inline svg for %s with its own name and no outside image', (locale) => {
+  it.each(LOCALES)('draw %s from the flag sprite under its own name, with no image', (locale) => {
     const html = String(Flag({ locale }));
-    expect(html).toMatch(FLAG_PATTERN);
+    const name = FLAG_PATTERN.exec(html)![1];
+    expect(html).toContain(`${FLAG_SPRITE_HREF}#flag-${name}`);
     expect(html).toContain('aria-hidden="true"');
-    expect(html).not.toMatch(/<img|https?:|href=/);
-    expect(html.match(FLAG_COLOUR_PATTERN)!.length).toBeGreaterThanOrEqual(2);
+    expect(html).not.toMatch(/<img|https?:/);
+    expect(FLAG_SPRITE).toContain(`<symbol id="flag-${name}"`);
+  });
+
+  it('keep the colours of every flag in the sprite', () => {
+    expect(FLAG_SPRITE.match(FLAG_COLOUR_PATTERN)!.length).toBeGreaterThanOrEqual(LOCALES.length * 2);
   });
 
   it('draw ten different flags', () => {

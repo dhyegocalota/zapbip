@@ -1,4 +1,4 @@
-import { contentHashOf } from '../backoffice/assets/stylesheet';
+import { contentHashOf } from '../web-shell/content-hash';
 import {
   JOIN_FRAGMENT,
   THEME_SWITCH_ID,

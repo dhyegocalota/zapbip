@@ -2,6 +2,7 @@ import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { Hono } from 'hono';
 import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../backoffice/assets/favicon';
+import { FLAG_SPRITE, FLAG_SPRITE_CONTENT_TYPE, FLAG_SPRITE_PATH } from '../web-shell/flags';
 import { SEE_OTHER_STATUS, STYLESHEET_CACHE_CONTROL } from '../backoffice/backoffice-constants';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import type { Bindings } from '../contract/env';
@@ -90,6 +91,9 @@ export function createSiteApp(input: SiteAppInput): Hono<SiteEnv> {
   );
   app.get(SitePath.Script, (context) =>
     context.body(SITE_SCRIPT, HttpStatus.Ok, { 'Content-Type': SCRIPT_CONTENT_TYPE, 'Cache-Control': STYLESHEET_CACHE_CONTROL }),
+  );
+  app.get(FLAG_SPRITE_PATH, (context) =>
+    context.body(FLAG_SPRITE, HttpStatus.Ok, { 'Content-Type': FLAG_SPRITE_CONTENT_TYPE, 'Cache-Control': STYLESHEET_CACHE_CONTROL }),
   );
   app.get(SitePath.Robots, (context) =>
     context.body(renderRobots({ origin: context.env.SITE_ORIGIN }), HttpStatus.Ok, { 'Content-Type': TEXT_CONTENT_TYPE }),

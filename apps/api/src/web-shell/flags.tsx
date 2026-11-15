@@ -1,5 +1,22 @@
 import { OwnerLocale } from '@zapbip/types';
 import type { Child, FC } from 'hono/jsx';
+import { contentHashOf } from './content-hash';
+
+export const FLAG_SPRITE_PATH = '/site/flags.svg';
+export const FLAG_SPRITE_CONTENT_TYPE = 'image/svg+xml';
+
+export enum FlagName {
+  UnitedStates = 'us',
+  Brazil = 'br',
+  Spain = 'es',
+  Germany = 'de',
+  France = 'fr',
+  Japan = 'jp',
+  Korea = 'kr',
+  China = 'cn',
+  Arabic = 'arab',
+  India = 'in',
+}
 
 const FLAG_VIEWBOX = '0 0 20 14';
 const FLAG_WIDTH = 20;
@@ -36,19 +53,19 @@ const INDIA_STRIPE_HEIGHT = FLAG_HEIGHT / 3;
 const INDIA_WHEEL_RADIUS = 1.8;
 const INDIA_WHEEL_STROKE = 0.45;
 
-type FlagFrameProps = { name: string; children: Child };
+type FlagFrameProps = { name: FlagName; children: Child };
 
 function FlagFrame(props: FlagFrameProps) {
   return (
-    <svg class="flag" data-flag={props.name} viewBox={FLAG_VIEWBOX} width={FLAG_WIDTH} height={FLAG_HEIGHT} aria-hidden="true">
+    <symbol id={`flag-${props.name}`} viewBox={FLAG_VIEWBOX}>
       {props.children}
-    </svg>
+    </symbol>
   );
 }
 
 function UnitedStatesFlag() {
   return (
-    <FlagFrame name="us">
+    <FlagFrame name={FlagName.UnitedStates}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#ffffff" />
       {UNITED_STATES_STRIPE_OFFSETS.map((offset) => (
         <rect y={offset} width={FLAG_WIDTH} height={STRIPE_HEIGHT} fill="#b22234" />
@@ -60,7 +77,7 @@ function UnitedStatesFlag() {
 
 function BrazilFlag() {
   return (
-    <FlagFrame name="br">
+    <FlagFrame name={FlagName.Brazil}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#009b3a" />
       <polygon points={BRAZIL_DIAMOND} fill="#fedf00" />
       <circle cx="10" cy="7" r={BRAZIL_DISC_RADIUS} fill="#002776" />
@@ -70,7 +87,7 @@ function BrazilFlag() {
 
 function SpainFlag() {
   return (
-    <FlagFrame name="es">
+    <FlagFrame name={FlagName.Spain}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#aa151b" />
       <rect y={SPAIN_BAND_OFFSET} width={FLAG_WIDTH} height={SPAIN_BAND_HEIGHT} fill="#f1bf00" />
     </FlagFrame>
@@ -79,7 +96,7 @@ function SpainFlag() {
 
 function GermanyFlag() {
   return (
-    <FlagFrame name="de">
+    <FlagFrame name={FlagName.Germany}>
       <rect width={FLAG_WIDTH} height={GERMANY_STRIPE_HEIGHT} fill="#000000" />
       <rect y={GERMANY_STRIPE_HEIGHT} width={FLAG_WIDTH} height={GERMANY_STRIPE_HEIGHT} fill="#dd0000" />
       <rect y={GERMANY_STRIPE_HEIGHT * 2} width={FLAG_WIDTH} height={GERMANY_STRIPE_HEIGHT} fill="#ffce00" />
@@ -89,7 +106,7 @@ function GermanyFlag() {
 
 function FranceFlag() {
   return (
-    <FlagFrame name="fr">
+    <FlagFrame name={FlagName.France}>
       <rect width={FRANCE_STRIPE_WIDTH} height={FLAG_HEIGHT} fill="#0055a4" />
       <rect x={FRANCE_STRIPE_WIDTH} width={FRANCE_STRIPE_WIDTH} height={FLAG_HEIGHT} fill="#ffffff" />
       <rect x={FRANCE_STRIPE_WIDTH * 2} width={FRANCE_STRIPE_WIDTH} height={FLAG_HEIGHT} fill="#ef4135" />
@@ -99,7 +116,7 @@ function FranceFlag() {
 
 function JapanFlag() {
   return (
-    <FlagFrame name="jp">
+    <FlagFrame name={FlagName.Japan}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#ffffff" />
       <circle cx="10" cy="7" r={JAPAN_DISC_RADIUS} fill="#bc002d" />
     </FlagFrame>
@@ -108,7 +125,7 @@ function JapanFlag() {
 
 function KoreaFlag() {
   return (
-    <FlagFrame name="kr">
+    <FlagFrame name={FlagName.Korea}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#ffffff" />
       <circle cx="10" cy="7" r={KOREA_DISC_RADIUS} fill="#0047a0" />
       <path d={KOREA_UPPER_HALF} fill="#cd2e3a" />
@@ -122,7 +139,7 @@ function KoreaFlag() {
 
 function ChinaFlag() {
   return (
-    <FlagFrame name="cn">
+    <FlagFrame name={FlagName.China}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#de2910" />
       <polygon points={CHINA_STAR} fill="#ffde00" />
     </FlagFrame>
@@ -131,7 +148,7 @@ function ChinaFlag() {
 
 function ArabicFlag() {
   return (
-    <FlagFrame name="arab">
+    <FlagFrame name={FlagName.Arabic}>
       <rect width={FLAG_WIDTH} height={FLAG_HEIGHT} fill="#007a3d" />
       <circle cx={ARABIC_MOON_CENTER.x} cy={ARABIC_MOON_CENTER.y} r={ARABIC_MOON_RADIUS} fill="#ffffff" />
       <circle cx={ARABIC_BITE_CENTER.x} cy={ARABIC_MOON_CENTER.y} r={ARABIC_BITE_RADIUS} fill="#007a3d" />
@@ -141,7 +158,7 @@ function ArabicFlag() {
 
 function IndiaFlag() {
   return (
-    <FlagFrame name="in">
+    <FlagFrame name={FlagName.India}>
       <rect width={FLAG_WIDTH} height={INDIA_STRIPE_HEIGHT} fill="#ff9933" />
       <rect y={INDIA_STRIPE_HEIGHT} width={FLAG_WIDTH} height={INDIA_STRIPE_HEIGHT} fill="#ffffff" />
       <rect y={INDIA_STRIPE_HEIGHT * 2} width={FLAG_WIDTH} height={INDIA_STRIPE_HEIGHT} fill="#138808" />
@@ -150,20 +167,43 @@ function IndiaFlag() {
   );
 }
 
-const FLAGS: Record<OwnerLocale, FC> = {
-  [OwnerLocale.EnglishUs]: UnitedStatesFlag,
-  [OwnerLocale.PortugueseBrazil]: BrazilFlag,
-  [OwnerLocale.Spanish]: SpainFlag,
-  [OwnerLocale.German]: GermanyFlag,
-  [OwnerLocale.French]: FranceFlag,
-  [OwnerLocale.Japanese]: JapanFlag,
-  [OwnerLocale.Korean]: KoreaFlag,
-  [OwnerLocale.ChineseSimplified]: ChinaFlag,
-  [OwnerLocale.Arabic]: ArabicFlag,
-  [OwnerLocale.Hindi]: IndiaFlag,
+const FLAG_SYMBOLS: Record<FlagName, FC> = {
+  [FlagName.UnitedStates]: UnitedStatesFlag,
+  [FlagName.Brazil]: BrazilFlag,
+  [FlagName.Spain]: SpainFlag,
+  [FlagName.Germany]: GermanyFlag,
+  [FlagName.France]: FranceFlag,
+  [FlagName.Japan]: JapanFlag,
+  [FlagName.Korea]: KoreaFlag,
+  [FlagName.China]: ChinaFlag,
+  [FlagName.Arabic]: ArabicFlag,
+  [FlagName.India]: IndiaFlag,
 };
 
+const FLAG_NAMES: Record<OwnerLocale, FlagName> = {
+  [OwnerLocale.EnglishUs]: FlagName.UnitedStates,
+  [OwnerLocale.PortugueseBrazil]: FlagName.Brazil,
+  [OwnerLocale.Spanish]: FlagName.Spain,
+  [OwnerLocale.German]: FlagName.Germany,
+  [OwnerLocale.French]: FlagName.France,
+  [OwnerLocale.Japanese]: FlagName.Japan,
+  [OwnerLocale.Korean]: FlagName.Korea,
+  [OwnerLocale.ChineseSimplified]: FlagName.China,
+  [OwnerLocale.Arabic]: FlagName.Arabic,
+  [OwnerLocale.Hindi]: FlagName.India,
+};
+
+export const FLAG_SPRITE = `<svg xmlns="http://www.w3.org/2000/svg">${Object.values(FlagName)
+  .map((name) => String(FLAG_SYMBOLS[name]({})))
+  .join('')}</svg>`;
+
+export const FLAG_SPRITE_HREF = `${FLAG_SPRITE_PATH}?v=${contentHashOf({ text: FLAG_SPRITE })}`;
+
 export function Flag(props: { locale: OwnerLocale }) {
-  const FlagOfLocale = FLAGS[props.locale];
-  return <FlagOfLocale />;
+  const name = FLAG_NAMES[props.locale];
+  return (
+    <svg class="flag" data-flag={name} viewBox={FLAG_VIEWBOX} width={FLAG_WIDTH} height={FLAG_HEIGHT} aria-hidden="true">
+      <use href={`${FLAG_SPRITE_HREF}#flag-${name}`} />
+    </svg>
+  );
 }

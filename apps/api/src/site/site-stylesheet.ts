@@ -1,4 +1,4 @@
-import { contentHashOf } from '../backoffice/assets/stylesheet';
+import { contentHashOf } from '../web-shell/content-hash';
 import { withShellStylesheet } from '../web-shell/shell-stylesheet';
 import stylesheetText from './assets/site.css';
 import { SitePath } from './site-paths';

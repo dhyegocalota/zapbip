@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { CLIENT_APP_STYLESHEET } from '../../src/client-app/client-app-stylesheet';
 import { SITE_SCRIPT } from '../../src/site/site-scripts';
 import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
+import { FLAG_SPRITE_PATH } from '../../src/web-shell/flags';
 import { siteFetch } from '../support/site';
 
-const HOME_HTML_LIMIT_BYTES = 61_000;
+const HOME_HTML_LIMIT_BYTES = 60_000;
 const SITE_STYLESHEET_LIMIT_BYTES = 62_000;
 const SITE_SCRIPT_LIMIT_BYTES = 40_000;
 const CLIENT_APP_STYLESHEET_LIMIT_BYTES = 25_000;
@@ -28,7 +29,7 @@ describe('the weight of the landing page and the app', () => {
     expect(byteLengthOf({ text: CLIENT_APP_STYLESHEET })).toBeLessThan(CLIENT_APP_STYLESHEET_LIMIT_BYTES);
   });
 
-  it.each(['/site/site.css', '/site/site.js'])('serves %s hashed and immutable', async (path) => {
+  it.each(['/site/site.css', '/site/site.js', FLAG_SPRITE_PATH])('serves %s hashed and immutable', async (path) => {
     const response = await siteFetch({ path });
     expect(response.headers.get('Cache-Control')).toBe(IMMUTABLE);
   });
