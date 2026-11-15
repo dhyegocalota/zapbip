@@ -199,7 +199,7 @@ describe.each(CONNECTOR_CLIENTS)('launchOf the %s client', (client) => {
 
 describe('launchOf across clients', () => {
   it('leaves every other client on its defaults', () => {
-    const otherClients = CONNECTOR_CLIENTS.filter((client) => client !== SUBJECT_CLIENT);
+    const otherClients = CONNECTOR_CLIENTS.filter((client): boolean => client !== SUBJECT_CLIENT);
 
     otherClients.forEach((client) => {
       expect(launchOf({ config: CONFIG_FOR_SUBJECT, client }).command).toBe(CONNECTOR_RUNTIMES[client].binaryName);
