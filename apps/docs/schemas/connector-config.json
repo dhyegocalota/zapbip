@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The program the connector starts instead of the default one, such as ccs."
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Arguments placed before the ones the connector adds to start or resume the session."
+          },
+          "environment": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Extra environment variables for the program."
+          },
+          "timeoutMilliseconds": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "description": "How long one wake may run before the connector stops it."
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Overrides per connector client. Each key is a client id, and the fields of the entry replace the defaults."
+    }
+  },
+  "additionalProperties": false
+}

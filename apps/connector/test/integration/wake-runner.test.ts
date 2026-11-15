@@ -11,6 +11,7 @@ import {
   WakeRefusalKind,
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { launchOf } from '../../src/connector-config';
 import { runWake } from '../../src/wake-runner';
 import { ACTIVE_WRITER_TEXT, createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
 import { ownerTextMessage } from '../support/fake-event-server';
@@ -43,6 +44,7 @@ describe.each(CONNECTOR_CLIENTS)('runWake with the %s runtime', (client) => {
     const { sessionId = SESSION_ID, text = 'Oi', connectionLink = CONNECTION_LINK } = input;
     return runWake({
       client,
+      launch: launchOf({ config: {}, client }),
       connectionLink,
       sessionSource: ConnectorSessionSource.Pinned,
       sessionId,

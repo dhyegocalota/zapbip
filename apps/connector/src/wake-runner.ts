@@ -4,11 +4,11 @@ import { CONNECTOR_RUNTIMES, type ConnectorClient, WakeIsolationRefusedError, ty
 import {
   CONNECTION_URL_VARIABLE,
   CONNECTOR_KILL_GRACE_MS,
-  CONNECTOR_WAKE_TIMEOUT_MS,
   type ConnectorSessionSource,
   ConnectorWakeOutcome,
   type WakeRefusalKind,
 } from '@zapbip/types';
+import type { ConnectorLaunch } from './connector-config';
 import { buildOwnerPrompt } from './owner-prompt';
 import { homeDirectoryOf } from './runtime-home';
 
@@ -19,22 +19,23 @@ export type WakeResult =
 
 const CLEAN_EXIT_CODE = 0;
 
-function childEnvironment(): NodeJS.ProcessEnv {
-  return Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== CONNECTION_URL_VARIABLE));
+function childEnvironment(input: { environment: Record<string, string> }): NodeJS.ProcessEnv {
+  const combined = { ...process.env, ...input.environment };
+  return Object.fromEntries(Object.entries(combined).filter(([name]) => name !== CONNECTION_URL_VARIABLE));
 }
 
 function runChild(input: {
-  client: ConnectorClient;
+  launch: ConnectorLaunch;
   clientArguments: string[];
   prompt: string;
   workingDirectory: string;
   signal?: AbortSignal;
 }): Promise<ChildResult> {
-  const { client, clientArguments, prompt, workingDirectory, signal } = input;
+  const { launch, clientArguments, prompt, workingDirectory, signal } = input;
   return new Promise((resolve) => {
-    const child = spawn(CONNECTOR_RUNTIMES[client].binaryName, clientArguments, {
+    const child = spawn(launch.command, [...launch.args, ...clientArguments], {
       cwd: workingDirectory,
-      env: childEnvironment(),
+      env: childEnvironment({ environment: launch.environment }),
       stdio: ['pipe', 'pipe', 'pipe'],
       signal,
     });
@@ -49,7 +50,7 @@ function runChild(input: {
     const timeout = setTimeout(() => {
       child.kill('SIGTERM');
       killTimeout = setTimeout(() => child.kill('SIGKILL'), CONNECTOR_KILL_GRACE_MS);
-    }, CONNECTOR_WAKE_TIMEOUT_MS);
+    }, launch.timeoutMilliseconds);
     function clearTimeouts(): void {
       clearTimeout(timeout);
       if (killTimeout !== null) clearTimeout(killTimeout);
@@ -92,6 +93,7 @@ async function prepareIsolation(input: {
 
 export async function runWake(input: {
   client: ConnectorClient;
+  launch: ConnectorLaunch;
   connectionLink: string;
   sessionSource: ConnectorSessionSource;
   sessionId: string | null;
@@ -99,7 +101,7 @@ export async function runWake(input: {
   workingDirectory: string;
   signal?: AbortSignal;
 }): Promise<WakeResult> {
-  const { client, connectionLink, sessionId, message, workingDirectory, signal } = input;
+  const { client, launch, connectionLink, sessionId, message, workingDirectory, signal } = input;
   if (sessionId === null) return { outcome: ConnectorWakeOutcome.NoSession, exitCode: null };
   const prompt = buildOwnerPrompt({ message });
   const prepared = await prepareIsolation({ client, connectionLink, workingDirectory });
@@ -108,7 +110,7 @@ export async function runWake(input: {
   }
   const { isolationArguments, cleanup } = prepared.isolation;
   try {
-    return await wakeWithin({ client, sessionId, prompt, isolationArguments, workingDirectory, signal });
+    return await wakeWithin({ client, launch, sessionId, prompt, isolationArguments, workingDirectory, signal });
   } finally {
     await cleanup();
   }
@@ -116,16 +118,17 @@ export async function runWake(input: {
 
 async function wakeWithin(input: {
   client: ConnectorClient;
+  launch: ConnectorLaunch;
   sessionId: string;
   prompt: string;
   isolationArguments: string[];
   workingDirectory: string;
   signal?: AbortSignal;
 }): Promise<WakeResult> {
-  const { client, sessionId, prompt, isolationArguments, workingDirectory, signal } = input;
+  const { client, launch, sessionId, prompt, isolationArguments, workingDirectory, signal } = input;
   const runtime = CONNECTOR_RUNTIMES[client];
   const resumed = await runChild({
-    client,
+    launch,
     clientArguments: runtime.resumeArguments({ sessionId, isolationArguments }),
     prompt,
     workingDirectory,
@@ -135,7 +138,7 @@ async function wakeWithin(input: {
   const isFallback = newSessionArguments !== null && runtime.isNewSessionFallback({ stderrText: resumed.stderrText });
   if (!isFallback) return outcomeOf({ result: resumed, successOutcome: ConnectorWakeOutcome.Answered });
   const fallback = await runChild({
-    client,
+    launch,
     clientArguments: newSessionArguments({ isolationArguments }),
     prompt,
     workingDirectory,

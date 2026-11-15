@@ -11,11 +11,11 @@ It works with Claude Code and Codex. Your computer must be on and awake, and the
 
 ## Commands
 
-| Command   | What it does                                                                      |
-| --------- | --------------------------------------------------------------------------------- |
-| `connect` | Wakes a closed session when you write. Takes `--client`, `--cwd` and `--session`. |
-| `listen`  | Prints one JSON line per message, for an agent that watches a background command. |
-| `channel` | Runs a local MCP channel that puts each message into an open Claude Code session. |
+| Command   | What it does                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------- |
+| `connect` | Wakes a closed session when you write. Takes `--client`, `--cwd`, `--session` and `--config`. |
+| `listen`  | Prints one JSON line per message, for an agent that watches a background command.             |
+| `channel` | Runs a local MCP channel that puts each message into an open Claude Code session.             |
 
 `ZAPBIP_CONNECTION_URL` holds the connection link. `connect` and `listen` ask for it when it is not set.
 
@@ -66,6 +66,44 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | `--client`  | `claude-code` or `codex`. Required.                                      |
 | `--cwd`     | The folder to work in. The default is the folder you ran the command in. |
 | `--session` | A session id (UUID) to always resume, instead of the newest one.         |
+| `--config`  | A `zapbip.json` file to use instead of the one in the folder.            |
+
+## Change the program it starts
+
+By default `connect` starts `claude` for Claude Code and `codex` for Codex. If you start your AI through another program, such as a wrapper, or you need other arguments, put a `zapbip.json` file in the folder where the AI wakes up, the one `--cwd` names:
+
+```json
+{
+  "$schema": "https://docs.zapbip.com/schemas/connector-config.json",
+  "agents": {
+    "claude-code": {
+      "command": "ccs",
+      "args": ["--some-flag"]
+    }
+  }
+}
+```
+
+Each entry is keyed by the client, `claude-code` or `codex`. Every field is optional:
+
+| Field                 | What it does                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| `command`             | The program to start. The default is `claude` or `codex`.                                   |
+| `args`                | Arguments put before the ones the connector adds for the session. The connector's own stay. |
+| `environment`         | Extra environment variables for the program.                                                |
+| `timeoutMilliseconds` | How long one wake may run before the connector stops it. The default is 15 minutes.         |
+
+An unknown field, an unknown client or a wrong value stops `connect` with the reason, before it asks for the link. Editors that understand `$schema` complete the file for you.
+
+The connector uses the first of these it finds:
+
+1. The `--config <file>` option of `connect`.
+2. The `ZAPBIP_CONNECTOR_CONFIG` variable.
+3. `zapbip.json` in the folder `connect` works in.
+
+With none of them, the built-in program and arguments apply. The connector reads the file when it starts, so restart it after you change the file.
+
+Only put a `zapbip.json` in a folder you trust. The program in it runs with your permissions when a message arrives, as a `.mcp.json` file in that folder would.
 
 ## What the AI can do when woken
 

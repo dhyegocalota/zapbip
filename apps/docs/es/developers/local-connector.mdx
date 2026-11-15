@@ -11,11 +11,11 @@ Funciona con Claude Code y Codex. Tu computadora debe estar encendido y despiert
 
 ## Comandos
 
-| Comando   | Qué hace                                                                                   |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `connect` | Despierta una sesión cerrada cuando escribes. Admite `--client`, `--cwd` y `--session`.    |
-| `listen`  | Imprime una línea JSON por mensaje, para un agente que vigila un comando en segundo plano. |
-| `channel` | Ejecuta un canal MCP local que pone cada mensaje en una sesión abierta de Claude Code.     |
+| Comando   | Qué hace                                                                                            |
+| --------- | --------------------------------------------------------------------------------------------------- |
+| `connect` | Despierta una sesión cerrada cuando escribes. Admite `--client`, `--cwd`, `--session` y `--config`. |
+| `listen`  | Imprime una línea JSON por mensaje, para un agente que vigila un comando en segundo plano.          |
+| `channel` | Ejecuta un canal MCP local que pone cada mensaje en una sesión abierta de Claude Code.              |
 
 `ZAPBIP_CONNECTION_URL` contiene el enlace de conexión. `connect` y `listen` lo piden cuando no está definido.
 
@@ -66,6 +66,44 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | `--client`  | `claude-code` o `codex`. Obligatoria.                                                      |
 | `--cwd`     | La carpeta en la que trabajar. Por defecto, la carpeta desde la que ejecutaste el comando. |
 | `--session` | Un id de sesión (UUID) que reanudar siempre, en lugar de la más reciente.                  |
+| `--config`  | Un archivo `zapbip.json` que usar en lugar del de la carpeta.                              |
+
+## Cambia el programa que inicia
+
+Por defecto `connect` inicia `claude` para Claude Code y `codex` para Codex. Si inicias tu IA mediante otro programa, como un wrapper, o necesitas otros argumentos, pon un archivo `zapbip.json` en la carpeta donde se despierta la IA, la que indica `--cwd`:
+
+```json
+{
+  "$schema": "https://docs.zapbip.com/schemas/connector-config.json",
+  "agents": {
+    "claude-code": {
+      "command": "ccs",
+      "args": ["--some-flag"]
+    }
+  }
+}
+```
+
+Cada entrada tiene como clave el cliente, `claude-code` o `codex`. Todos los campos son opcionales:
+
+| Campo                 | Qué hace                                                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `command`             | El programa que iniciar. Por defecto es `claude` o `codex`.                                                  |
+| `args`                | Argumentos que van antes de los que el conector añade para la sesión. Los propios del conector se mantienen. |
+| `environment`         | Variables de entorno adicionales para el programa.                                                           |
+| `timeoutMilliseconds` | Cuánto puede durar una activación antes de que el conector la detenga. Por defecto son 15 minutos.           |
+
+Un campo desconocido, un cliente desconocido o un valor incorrecto detiene `connect` con el motivo, antes de que pida el enlace. Los editores que entienden `$schema` completan el archivo por ti.
+
+El conector usa el primero de estos que encuentre:
+
+1. La opción `--config <file>` de `connect`.
+2. La variable `ZAPBIP_CONNECTOR_CONFIG`.
+3. `zapbip.json` en la carpeta en la que trabaja `connect`.
+
+Si no hay ninguno, se aplican el programa y los argumentos integrados. El conector lee el archivo al iniciarse, así que reinícialo después de cambiarlo.
+
+Pon un `zapbip.json` solo en una carpeta de confianza. El programa que contiene se ejecuta con tus permisos cuando llega un mensaje, igual que lo haría un archivo `.mcp.json` en esa carpeta.
 
 ## Qué puede hacer la IA cuando la despiertan
 

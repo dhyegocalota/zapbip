@@ -18,6 +18,7 @@ import {
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runConnection } from '../../src/connect';
+import { launchOf } from '../../src/connector-config';
 import type { ConnectorTimers } from '../../src/timers';
 import { createManualTimers } from '../support/manual-timers';
 import { ACTIVE_WRITER_TEXT, createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
@@ -104,6 +105,7 @@ describe.each(CONNECTOR_CLIENTS)('runConnection with the %s runtime', (client) =
       connectionLink: CONNECTION_LINK,
       socketLink,
       client,
+      launch: launchOf({ config: {}, client }),
       workingDirectory: fakeClients.workingDirectory,
       pinnedSessionId,
       signal: abortController.signal,

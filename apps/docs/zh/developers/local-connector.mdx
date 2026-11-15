@@ -11,11 +11,11 @@ zapbip 连接器解决了这个问题。它是一个在你电脑上保持运行�
 
 ## 命令
 
-| 命令      | 作用                                                                  |
-| --------- | --------------------------------------------------------------------- |
-| `connect` | 你发消息时唤醒已关闭的会话。接受 `--client`、`--cwd` 和 `--session`。 |
-| `listen`  | 每条消息输出一行 JSON，供监视后台命令的智能体使用。                   |
-| `channel` | 运行一个本地 MCP 渠道，把每条消息放进已打开的 Claude Code 会话。      |
+| 命令      | 作用                                                                              |
+| --------- | --------------------------------------------------------------------------------- |
+| `connect` | 你发消息时唤醒已关闭的会话。接受 `--client`、`--cwd`、`--session` 和 `--config`。 |
+| `listen`  | 每条消息输出一行 JSON，供监视后台命令的智能体使用。                               |
+| `channel` | 运行一个本地 MCP 渠道，把每条消息放进已打开的 Claude Code 会话。                  |
 
 `ZAPBIP_CONNECTION_URL` 保存连接链接。未设置时，`connect` 和 `listen` 会向你询问。
 
@@ -66,6 +66,44 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | `--client`  | `claude-code` 或 `codex`。必填。                 |
 | `--cwd`     | 工作的文件夹。默认是你运行该命令时所在的文件夹。 |
 | `--session` | 始终恢复的会话 id（UUID），而不是最新的会话。    |
+| `--config`  | 用来代替文件夹中那个文件的 `zapbip.json` 文件。  |
+
+## 更改它启动的程序
+
+默认情况下，`connect` 为 Claude Code 启动 `claude`，为 Codex 启动 `codex`。如果你通过其他程序（例如包装器）启动 AI，或者需要其他参数，请在 AI 被唤醒的文件夹中放一个 `zapbip.json` 文件，也就是 `--cwd` 指定的那个文件夹：
+
+```json
+{
+  "$schema": "https://docs.zapbip.com/schemas/connector-config.json",
+  "agents": {
+    "claude-code": {
+      "command": "ccs",
+      "args": ["--some-flag"]
+    }
+  }
+}
+```
+
+每个条目以客户端为键，即 `claude-code` 或 `codex`。所有字段都是可选的：
+
+| 字段                  | 作用                                                               |
+| --------------------- | ------------------------------------------------------------------ |
+| `command`             | 要启动的程序。默认是 `claude` 或 `codex`。                         |
+| `args`                | 放在连接器为会话添加的参数之前的参数。连接器自己的参数会保留。     |
+| `environment`         | 给该程序的额外环境变量。                                           |
+| `timeoutMilliseconds` | 一次唤醒最多可以运行多久，超过后连接器会将其停止。默认是 15 分钟。 |
+
+出现未知字段、未知客户端或错误的值时，`connect` 会在询问链接之前停止并说明原因。支持 `$schema` 的编辑器会为你补全该文件。
+
+连接器使用下面找到的第一个：
+
+1. `connect` 的 `--config <file>` 选项。
+2. `ZAPBIP_CONNECTOR_CONFIG` 变量。
+3. `connect` 工作所在文件夹中的 `zapbip.json`。
+
+如果一个都没有，就使用内置的程序和参数。连接器在启动时读取该文件，所以修改文件后请重新启动它。
+
+只把 `zapbip.json` 放在你信任的文件夹里。其中的程序会在消息到达时以你的权限运行，就像该文件夹中的 `.mcp.json` 文件一样。
 
 ## 唤醒后 AI 能做什么
 
