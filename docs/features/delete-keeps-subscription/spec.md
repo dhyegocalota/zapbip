@@ -1,6 +1,6 @@
 # Deleting the account does not cancel the subscription
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟢 light
 **Owner approval:** approved 2026-11-14 (owner asked in pt-BR: say that deleting the account does not cancel the zapbip Cloud subscription, that cancelling is done by hand through a message, and say so in the docs)
 **ADRs:** none; no billing exists in the code yet, so there is no cancellation to automate
