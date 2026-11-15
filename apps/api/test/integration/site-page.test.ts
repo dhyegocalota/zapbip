@@ -183,9 +183,9 @@ describe('GET /', () => {
     expect(html).toContain('rel="icon"');
   });
 
-  it('puts the contact link only in the two places whose copy asks for it and in the footer', async () => {
+  it('puts the contact link only in the three places whose copy asks for it and in the footer', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    expect(html.match(/mailto:/g)).toHaveLength(3);
+    expect(html.match(/mailto:/g)).toHaveLength(4);
   });
 
   it('keeps the page inside its policy: no inline script, no inline style', async () => {
