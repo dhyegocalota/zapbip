@@ -78,6 +78,25 @@ function copiedFiles(input: {
   });
 }
 
+const APPS_README = 'apps/README.md';
+const PLUGIN_LICENSE = 'MIT';
+const HEADING_PATTERN = /^#/;
+
+function purposeOf(input: { readme: string }): string {
+  const [purpose] = input.readme.split('\n').filter((line) => line.trim() !== '' && !HEADING_PATTERN.test(line));
+  if (purpose === undefined) throw new Error('the plugin package README has no purpose line');
+  return purpose;
+}
+
+function appsReadmeWithPluginRow(input: { id: string; source: string; purpose: string }): string {
+  const folder = `${input.id}-plugin`;
+  const row = `| [${folder}](${folder}/) | ${input.purpose} | ${PLUGIN_LICENSE} |`;
+  const lines = input.source.split('\n');
+  const lastRowIndex = lines.reduce((last, line, index) => (line.startsWith('|') ? index : last), -1);
+  lines.splice(lastRowIndex + 1, 0, row);
+  return lines.join('\n');
+}
+
 const NAME_DERIVATIONS = [pascalCaseOf, constantNameOf];
 
 function collisionOf(input: { id: string; existingIds: string[] }): string | null {
@@ -116,5 +135,15 @@ export function scaffoldFilesOf(input: {
     destination: `apps/${input.id}-plugin`,
     agentTemplate: template,
   });
-  return [...agentFiles, ...packageFiles];
+  const packageReadme = packageFiles.find((file) => file.path === `apps/${input.id}-plugin/README.md`);
+  if (packageReadme === undefined) throw new Error(`the plugin package of ${input.id} has no README`);
+  const appsReadme = {
+    path: APPS_README,
+    content: appsReadmeWithPluginRow({
+      id: input.id,
+      source: input.readSource(APPS_README),
+      purpose: purposeOf({ readme: packageReadme.content }),
+    }),
+  };
+  return [...agentFiles, ...packageFiles, appsReadme];
 }
