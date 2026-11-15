@@ -136,7 +136,7 @@ export function QuickStartSection(props: {
                 </button>
               </div>
               <pre class="code-block">
-                <code class="code-lines-1 start-prompt" data-code={tab.prompt}>
+                <code class="code-lines-1 start-prompt">
                   <span class="code-line">{tab.prompt}</span>
                 </code>
               </pre>
@@ -155,7 +155,7 @@ export function QuickStartSection(props: {
                   </ol>
                 )}
                 <pre class="code-block">
-                  <code class={`code-lines-${tab.code.split(LINE_BREAK).length}`} data-code={tab.code}>
+                  <code class={`code-lines-${tab.code.split(LINE_BREAK).length}`}>
                     <CodeText code={tab.code} />
                   </code>
                 </pre>

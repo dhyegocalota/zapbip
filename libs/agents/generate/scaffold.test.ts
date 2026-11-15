@@ -65,12 +65,20 @@ describe('scaffoldFilesOf for a plugin agent', () => {
   const files = scaffold({ id: NEW_ID, kind: ScaffoldKind.Plugin });
   const packageFiles = files.filter((file) => file.path.startsWith(`apps/${NEW_ID}-plugin/`));
 
-  test('creates the plugin package next to the agent folder, two folders in all', () => {
+  test('creates the plugin package next to the agent folder, two folders in all and the apps README', () => {
     expect(packageFiles.map((file) => file.path)).toEqual(
       expect.arrayContaining([`apps/${NEW_ID}-plugin/package.json`, `apps/${NEW_ID}-plugin/release/${NEW_ID}-requirements.txt`]),
     );
     const folders = [`libs/agents/supported/${NEW_ID}/`, `apps/${NEW_ID}-plugin/`];
-    files.forEach((file) => expect(folders.some((folder) => file.path.startsWith(folder))).toBe(true));
+    files.forEach((file) => expect(file.path === 'apps/README.md' || folders.some((folder) => file.path.startsWith(folder))).toBe(true));
+  });
+
+  test('lists the plugin in the apps README with its purpose line and the MIT license', () => {
+    const readme = files.find((file) => file.path === 'apps/README.md');
+    expect(readme?.content).toMatch(
+      new RegExp(`\\| \\[${NEW_ID}-plugin\\]\\(${NEW_ID}-plugin/\\) \\| The plugin package of .* for zapbip\\. \\| MIT \\|`),
+    );
+    expect(readme?.content).toContain('| [docs](docs/) |');
   });
 
   test('keeps no word of the template outside the release bytes', () => {

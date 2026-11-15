@@ -87,7 +87,7 @@ test.describe('without a clipboard', () => {
     const panel = page.locator(`#start-panel-${FIRST_AGENT.id}`);
     await panel.scrollIntoViewIfNeeded();
     await panel.locator('.start-copy').click();
-    const expected = (await panel.locator('code').first().getAttribute('data-code'))!;
+    const expected = (await panel.locator('code').first().textContent())!;
     const selection = (await page.evaluate('window.getSelection().toString()')) as string;
     expect(selection.replaceAll(/\s+/g, ' ').trim()).toBe(expected.replaceAll(/\s+/g, ' ').trim());
     await expect(page.locator('#start-announcement')).toHaveText(siteCopy({ key: SiteCopyKey.StartCopyFallback }));
@@ -274,7 +274,7 @@ test.describe('typing in', () => {
     expect(typing).toBe(true);
     const expected = promptOf({ page });
     const promptCode = page.locator(`#start-panel-${SECOND_AGENT.id} code`).first();
-    expect(await promptCode.evaluate((element) => element.getAttribute('data-code'))).toBe(expected);
+    expect(await promptCode.textContent()).toBe(expected);
     expect(await promptCode.textContent()).toContain(expected);
     await expect
       .poll(() =>
