@@ -11,11 +11,11 @@ Funciona com o Claude Code e o Codex. Seu computador precisa estar ligado e acor
 
 ## Comandos
 
-| Comando   | O que faz                                                                                      |
-| --------- | ---------------------------------------------------------------------------------------------- |
-| `connect` | Acorda uma sessão fechada quando você escreve. Aceita `--client`, `--cwd` e `--session`.       |
-| `listen`  | Imprime uma linha JSON por mensagem, para um agente que acompanha um comando em segundo plano. |
-| `channel` | Roda um canal MCP local que coloca cada mensagem numa sessão aberta do Claude Code.            |
+| Comando   | O que faz                                                                                            |
+| --------- | ---------------------------------------------------------------------------------------------------- |
+| `connect` | Acorda uma sessão fechada quando você escreve. Aceita `--client`, `--cwd`, `--session` e `--config`. |
+| `listen`  | Imprime uma linha JSON por mensagem, para um agente que acompanha um comando em segundo plano.       |
+| `channel` | Roda um canal MCP local que coloca cada mensagem numa sessão aberta do Claude Code.                  |
 
 `ZAPBIP_CONNECTION_URL` guarda o link de conexão. `connect` e `listen` pedem o link quando a variável não está definida.
 
@@ -66,6 +66,44 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | `--client`  | `claude-code` ou `codex`. Obrigatória.                               |
 | `--cwd`     | A pasta de trabalho. O padrão é a pasta em que você rodou o comando. |
 | `--session` | Um id de sessão (UUID) para sempre retomar, em vez da mais recente.  |
+| `--config`  | Um arquivo `zapbip.json` para usar no lugar do que está na pasta.    |
+
+## Mude o programa que ele inicia
+
+Por padrão o `connect` inicia `claude` para o Claude Code e `codex` para o Codex. Se você inicia sua IA por outro programa, como um wrapper, ou precisa de outros argumentos, coloque um arquivo `zapbip.json` na pasta em que a IA é acordada, a que o `--cwd` indica:
+
+```json
+{
+  "$schema": "https://docs.zapbip.com/schemas/connector-config.json",
+  "agents": {
+    "claude-code": {
+      "command": "ccs",
+      "args": ["--some-flag"]
+    }
+  }
+}
+```
+
+Cada entrada tem como chave o cliente, `claude-code` ou `codex`. Todos os campos são opcionais:
+
+| Campo                 | O que faz                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `command`             | O programa a iniciar. O padrão é `claude` ou `codex`.                                                      |
+| `args`                | Argumentos colocados antes dos que o conector acrescenta para a sessão. Os do próprio conector permanecem. |
+| `environment`         | Variáveis de ambiente extras para o programa.                                                              |
+| `timeoutMilliseconds` | Quanto tempo um despertar pode durar antes de o conector interrompê-lo. O padrão é 15 minutos.             |
+
+Um campo desconhecido, um cliente desconhecido ou um valor errado faz o `connect` parar com o motivo, antes de pedir o link. Editores que entendem `$schema` completam o arquivo para você.
+
+O conector usa o primeiro destes que encontrar:
+
+1. A opção `--config <file>` do `connect`.
+2. A variável `ZAPBIP_CONNECTOR_CONFIG`.
+3. O `zapbip.json` da pasta em que o `connect` trabalha.
+
+Se não houver nenhum, valem o programa e os argumentos embutidos. O conector lê o arquivo ao iniciar, então reinicie-o depois de alterar o arquivo.
+
+Coloque um `zapbip.json` só em uma pasta em que você confia. O programa nele roda com as suas permissões quando uma mensagem chega, como faria um arquivo `.mcp.json` nessa pasta.
 
 ## O que a IA pode fazer quando é acordada
 

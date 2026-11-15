@@ -11,11 +11,11 @@ Er funktioniert mit Claude Code und Codex. Dein Computer muss an und wach sein, 
 
 ## Befehle
 
-| Befehl    | Was er tut                                                                                       |
-| --------- | ------------------------------------------------------------------------------------------------ |
-| `connect` | Weckt eine geschlossene Sitzung, wenn du schreibst. Nimmt `--client`, `--cwd` und `--session`.   |
-| `listen`  | Gibt pro Nachricht eine JSON-Zeile aus, für einen Agent, der einen Hintergrundbefehl beobachtet. |
-| `channel` | Startet einen lokalen MCP-Kanal, der jede Nachricht in eine offene Claude-Code-Sitzung legt.     |
+| Befehl    | Was er tut                                                                                                 |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| `connect` | Weckt eine geschlossene Sitzung, wenn du schreibst. Nimmt `--client`, `--cwd`, `--session` und `--config`. |
+| `listen`  | Gibt pro Nachricht eine JSON-Zeile aus, für einen Agent, der einen Hintergrundbefehl beobachtet.           |
+| `channel` | Startet einen lokalen MCP-Kanal, der jede Nachricht in eine offene Claude-Code-Sitzung legt.               |
 
 `ZAPBIP_CONNECTION_URL` enthält den Verbindungslink. `connect` und `listen` fragen danach, wenn er nicht gesetzt ist.
 
@@ -66,6 +66,44 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | `--client`  | `claude-code` oder `codex`. Erforderlich.                                                          |
 | `--cwd`     | Der Ordner, in dem gearbeitet wird. Standard ist der Ordner, in dem du den Befehl ausgeführt hast. |
 | `--session` | Eine Sitzungs-ID (UUID), die immer fortgesetzt wird, statt der neuesten.                           |
+| `--config`  | Eine `zapbip.json`-Datei, die statt der im Ordner genutzt wird.                                    |
+
+## Das gestartete Programm ändern
+
+Standardmäßig startet `connect` `claude` für Claude Code und `codex` für Codex. Startest du deine KI über ein anderes Programm, etwa einen Wrapper, oder brauchst du andere Argumente, lege eine `zapbip.json`-Datei in den Ordner, in dem die KI geweckt wird, also den, den `--cwd` nennt:
+
+```json
+{
+  "$schema": "https://docs.zapbip.com/schemas/connector-config.json",
+  "agents": {
+    "claude-code": {
+      "command": "ccs",
+      "args": ["--some-flag"]
+    }
+  }
+}
+```
+
+Jeder Eintrag hat den Client als Schlüssel, `claude-code` oder `codex`. Jedes Feld ist optional:
+
+| Feld                  | Was es tut                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `command`             | Das Programm, das gestartet wird. Standard ist `claude` oder `codex`.                                     |
+| `args`                | Argumente, die vor denen stehen, die der Connector für die Sitzung hinzufügt. Die des Connectors bleiben. |
+| `environment`         | Zusätzliche Umgebungsvariablen für das Programm.                                                          |
+| `timeoutMilliseconds` | Wie lange ein Wecken laufen darf, bevor der Connector es stoppt. Standard sind 15 Minuten.                |
+
+Ein unbekanntes Feld, ein unbekannter Client oder ein falscher Wert stoppt `connect` mit der Begründung, bevor er nach dem Link fragt. Editoren, die `$schema` verstehen, vervollständigen die Datei für dich.
+
+Der Connector nutzt das Erste davon, das er findet:
+
+1. Die Option `--config <file>` von `connect`.
+2. Die Variable `ZAPBIP_CONNECTOR_CONFIG`.
+3. `zapbip.json` in dem Ordner, in dem `connect` arbeitet.
+
+Ist keines davon vorhanden, gelten das eingebaute Programm und die eingebauten Argumente. Der Connector liest die Datei beim Start, starte ihn also nach einer Änderung der Datei neu.
+
+Lege eine `zapbip.json` nur in einen Ordner, dem du vertraust. Das darin genannte Programm läuft mit deinen Rechten, wenn eine Nachricht eintrifft, so wie es eine `.mcp.json`-Datei in diesem Ordner täte.
 
 ## Was die KI tun kann, wenn sie geweckt wird
 

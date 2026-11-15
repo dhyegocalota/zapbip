@@ -108,7 +108,14 @@ export function runFakeClient(input) {
   function main() {
     const configPath = mcpConfigPath();
     const mcpConfig = configPath ? { text: readFileSync(configPath, 'utf8'), mode: statSync(configPath).mode & 0o777 } : null;
-    record({ event: 'started', stdin: standardInput, hadConnectionUrl: 'ZAPBIP_CONNECTION_URL' in process.env, mcpConfig });
+    const probe = process.env.FAKE_CLIENT_PROBE;
+    record({
+      event: 'started',
+      stdin: standardInput,
+      hadConnectionUrl: 'ZAPBIP_CONNECTION_URL' in process.env,
+      mcpConfig,
+      probe: probe === undefined ? null : probe,
+    });
     process.on('SIGTERM', () => {
       if (process.env.FAKE_CLIENT_IGNORE_SIGTERM === '1') return record({ event: 'sigterm_ignored' });
       record({ event: 'ended', exitCode: null, signal: 'SIGTERM' });

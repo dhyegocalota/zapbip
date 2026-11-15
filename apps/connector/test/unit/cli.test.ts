@@ -11,7 +11,8 @@ const CLIENT_FLAG = '--client';
 const SESSION_FLAG = '--session';
 const WORKING_DIRECTORY_FLAG = '--cwd';
 const UNDECLARED_CLIENT = 'nope';
-const USAGE_LINE = `usage: zapbip connect --client ${CONNECTOR_CLIENTS.join('|')} [--cwd <directory>] [--session <uuid>]`;
+const CONFIG_FLAG = '--config';
+const USAGE_LINE = `usage: zapbip connect --client ${CONNECTOR_CLIENTS.join('|')} [--cwd <directory>] [--session <uuid>] [--config <file>]`;
 
 function thrownMessage(input: { argv: string[] }): string {
   try {
@@ -38,6 +39,7 @@ describe('parseConnectArguments', () => {
       client: SUBJECT_CLIENT,
       workingDirectory: process.cwd(),
       pinnedSessionId: null,
+      configPath: null,
     });
   });
 
@@ -83,6 +85,15 @@ describe('parseConnectArguments', () => {
     const regularFile = join(scratchDirectory, 'file.txt');
     await writeFile(regularFile, 'x');
     expect(() => parseConnectArguments({ argv: [CLIENT_FLAG, SUBJECT_CLIENT, WORKING_DIRECTORY_FLAG, regularFile] })).toThrow();
+  });
+
+  it('has no config path when the flag is not given', () => {
+    expect(parseConnectArguments({ argv: [CLIENT_FLAG, SUBJECT_CLIENT] }).configPath).toBeNull();
+  });
+
+  it('takes the config path from the flag, resolved from the current directory', () => {
+    const parsed = parseConnectArguments({ argv: [CLIENT_FLAG, SUBJECT_CLIENT, CONFIG_FLAG, 'custom.json'] });
+    expect(parsed.configPath).toBe(join(process.cwd(), 'custom.json'));
   });
 
   it('refuses a flag without a value', () => {
