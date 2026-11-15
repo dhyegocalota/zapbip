@@ -203,6 +203,8 @@ export enum SiteCopyKey {
   FaqFreeAnswer = 'faq_free_answer',
   FaqPriceQuestion = 'faq_price_question',
   FaqPriceAnswer = 'faq_price_answer',
+  FaqDeleteQuestion = 'faq_delete_question',
+  FaqDeleteAnswer = 'faq_delete_answer',
   FaqDeveloperQuestion = 'faq_developer_question',
   FaqDeveloperAnswer = 'faq_developer_answer',
   FaqOthersQuestion = 'faq_others_question',

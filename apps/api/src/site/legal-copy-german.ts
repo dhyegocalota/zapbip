@@ -77,6 +77,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: 'Beendigung deines Kontos',
         paragraphs: [
           'Du kannst dein Konto jederzeit löschen, indem du „konto löschen“ auf WhatsApp an zapbip sendest. Wir können ein Konto schließen, das gegen diese Bedingungen verstößt, oder den Dienst mit Vorankündigung einstellen. Die Datenschutzerklärung erklärt, was mit deinen Daten geschieht.',
+          'Das Löschen deines Kontos kündigt dein zapbip-Cloud-Abo nicht. Zum Kündigen schreibe an {contactEmail}.',
         ],
         items: [],
       },
@@ -176,6 +177,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: 'Deine Rechte',
         paragraphs: [
           'Um dein Konto und alles darin zu löschen, sende „konto löschen“ auf WhatsApp an zapbip. Für alles andere schreib an {contactEmail}; wir antworten innerhalb von 15 Tagen.',
+          'Das Löschen deines Kontos kündigt dein zapbip-Cloud-Abo nicht. Zum Kündigen schreibe an {contactEmail}.',
         ],
         items: [
           'Bestätigung verlangen, ob wir deine Daten verarbeiten, und Zugang zu ihnen erhalten.',

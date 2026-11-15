@@ -3,11 +3,13 @@ import { CommandKind, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { legalTextOf } from '../../src/site/legal-copy';
 import { LegalDocument } from '../../src/site/legal-links';
+import { CONTACT_PLACEHOLDER } from '../../src/site/plain-contact-text';
 import { cjkSpacingOffenders, frenchSpacingOffenders } from './copy-rules';
 
 const LOCALES = Object.values(OwnerLocale);
 const DOCUMENTS = Object.values(LegalDocument);
 const UNFILLED_PLACEHOLDER = /\{(?!contactEmail\})\w+\}/;
+const SUBSCRIPTION_NAME_PATTERN = /zapbip.Cloud/;
 function deleteCommandOf(input: { locale: OwnerLocale }): string {
   return COMMAND_WORDS.find((entry) => entry.kind === CommandKind.RequestDeletion && entry.locale === input.locale)!.words;
 }
@@ -54,6 +56,13 @@ describe('the legal copy', () => {
     expect(terms).toContain(deleteCommandOf({ locale }));
     expect(privacy).toContain(deleteCommandOf({ locale }));
     PROVIDER_NAMES.forEach((name) => expect(privacy).toContain(name));
+  });
+
+  it.each(LOCALES)('[row 439] says in %s that deleting does not cancel the subscription, in the terms and the policy', (locale) => {
+    const noticeOf = (document: LegalDocument): string | undefined =>
+      stringsOf({ document, locale }).find((value) => value.includes(CONTACT_PLACEHOLDER) && SUBSCRIPTION_NAME_PATTERN.test(value));
+    expect(noticeOf(LegalDocument.Terms)).toBeDefined();
+    expect(noticeOf(LegalDocument.Privacy)).toBeDefined();
   });
 
   it.each(LOCALES.filter((locale) => locale !== OwnerLocale.PortugueseBrazil))(

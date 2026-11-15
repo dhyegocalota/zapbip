@@ -63,6 +63,7 @@ export const ARABIC_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.PlanLine]: 'مجاني · رسائل تجريبية: {free}',
   [ClientAppCopyKey.AccountTitle]: 'الحساب',
   [ClientAppCopyKey.DeleteAccount]: 'حذف الحساب',
-  [ClientAppCopyKey.DeleteAccountHint]: 'يُحذف الحساب من WhatsApp. شرح الخطوات في الدليل.',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    'يُحذف الحساب من WhatsApp. شرح الخطوات في الدليل. حذف الحساب لا يلغي اشتراكك في zapbip Cloud؛ ولإلغائه، راسل {contactEmail}.',
   [ClientAppCopyKey.FooterMaker]: 'zapbip، قناة WhatsApp شخصية لوكلاء الذكاء الاصطناعي',
 };

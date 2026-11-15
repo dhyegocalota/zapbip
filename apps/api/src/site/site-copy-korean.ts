@@ -220,6 +220,9 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqPriceQuestion]: '가격은 얼마인가요?',
   [SiteCopyKey.FaqPriceAnswer]:
     'Pro는 월 {price}이며 메시지 {included}건이 포함되고, 초과분은 {block}건당 {overage}이에요. 결제는 이용할 수 있게 될 때부터 시작돼요.',
+  [SiteCopyKey.FaqDeleteQuestion]: '계정을 삭제하면 구독도 해지되나요?',
+  [SiteCopyKey.FaqDeleteAnswer]:
+    '아니요. 계정을 삭제해도 zapbip Cloud 구독은 해지되지 않아요. 해지하려면 {contactEmail}으로 문의해 주세요.',
   [SiteCopyKey.FaqDeveloperQuestion]: '개발자여야 하나요?',
   [SiteCopyKey.FaqDeveloperAnswer]: '아니요. AI 어시스턴트를 쓰고 있다면 한 줄을 붙여넣어 연결할 수 있어요.',
   [SiteCopyKey.FaqOthersQuestion]: '다른 사람에게도 메시지를 보내나요?',

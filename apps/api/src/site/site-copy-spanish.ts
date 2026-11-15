@@ -225,6 +225,9 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqPriceQuestion]: '¿Cuánto costará?',
   [SiteCopyKey.FaqPriceAnswer]:
     'Pro cuesta {price} al mes con {included} mensajes, y después {overage} por cada {block} adicionales. La facturación solo empieza cuando se abra el acceso.',
+  [SiteCopyKey.FaqDeleteQuestion]: '¿Borrar mi cuenta cancela mi suscripción?',
+  [SiteCopyKey.FaqDeleteAnswer]:
+    'No. Eliminar tu cuenta no cancela tu suscripción a zapbip Cloud. Para cancelarla, escribe a {contactEmail}.',
   [SiteCopyKey.FaqDeveloperQuestion]: '¿Necesito ser desarrollador?',
   [SiteCopyKey.FaqDeveloperAnswer]: 'No. Si usas un asistente de IA, lo conectas pegando una línea.',
   [SiteCopyKey.FaqOthersQuestion]: '¿Escribe a otras personas?',

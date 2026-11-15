@@ -63,6 +63,7 @@ export const KOREAN_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.PlanLine]: '무료 · 체험용 메시지 {free}건',
   [ClientAppCopyKey.AccountTitle]: '계정',
   [ClientAppCopyKey.DeleteAccount]: '계정 삭제',
-  [ClientAppCopyKey.DeleteAccountHint]: '계정 삭제는 WhatsApp에서 진행해요. 방법은 가이드에 나와 있어요.',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    '계정 삭제는 WhatsApp에서 진행해요. 방법은 가이드에 나와 있어요. 삭제해도 zapbip Cloud 구독은 해지되지 않아요. 해지하려면 {contactEmail}으로 문의하세요.',
   [ClientAppCopyKey.FooterMaker]: 'zapbip, AI 에이전트를 위한 개인용 WhatsApp 채널',
 };

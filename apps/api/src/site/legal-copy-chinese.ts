@@ -74,6 +74,7 @@ export const CHINESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: '终止你的账户',
         paragraphs: [
           '你可以随时在 WhatsApp 上向 zapbip 发送 “删除账户” 来删除账户。对于违反本条款的账户，我们可能会关闭，也可能在提前通知后终止服务。隐私政策说明了你的数据会如何处理。',
+          '删除账户不会取消你的 zapbip Cloud 订阅。要取消订阅，请写信至 {contactEmail}。',
         ],
         items: [],
       },
@@ -169,6 +170,7 @@ export const CHINESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: '你的权利',
         paragraphs: [
           '要删除你的账户及其中的一切内容，请在 WhatsApp 上向 zapbip 发送 “删除账户”。其他事项请写信至 {contactEmail}；我们会在 15 天内回复。',
+          '删除账户不会取消你的 zapbip Cloud 订阅。要取消订阅，请写信至 {contactEmail}。',
         ],
         items: [
           '确认我们是否处理你的数据，并查阅这些数据。',

@@ -227,23 +227,16 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Hindi]: 'बताइए, क्या करना है?',
   },
   [AccountReplyIntent.DeletionRequest]: {
-    [OwnerLocale.PortugueseBrazil]:
-      'Isso apaga sua conta, todos os agentes, mensagens e arquivos, e não tem volta. Para confirmar em até 10 minutos, envie: {phrase}',
-    [OwnerLocale.EnglishUs]:
-      'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: {phrase}',
-    [OwnerLocale.Spanish]:
-      'Esto elimina tu cuenta, todos los agentes, mensajes y archivos, y no se puede deshacer. Para confirmar en un plazo de 10 minutos, envía: {phrase}',
-    [OwnerLocale.German]:
-      'Das löscht dein Konto, alle Agenten, Nachrichten und Dateien und kann nicht rückgängig gemacht werden. Zum Bestätigen innerhalb von 10 Minuten sende: {phrase}',
-    [OwnerLocale.French]:
-      'Cela supprime votre compte, tous vos agents, messages et fichiers, et c’est irréversible. Pour confirmer dans les 10 minutes, envoyez\u00a0: {phrase}',
-    [OwnerLocale.Japanese]:
-      'アカウント、すべてのエージェント、メッセージ、ファイルが削除され、元に戻せません。10分以内に確認するには、次を送信してください: {phrase}',
-    [OwnerLocale.Korean]: '계정, 모든 에이전트, 메시지, 파일이 삭제되며 되돌릴 수 없어요. 10분 안에 확인하려면 다음을 보내세요: {phrase}',
-    [OwnerLocale.ChineseSimplified]: '这会删除你的账户、所有智能体、消息和文件，且无法恢复。要在 10 分钟内确认，请发送：{phrase}',
-    [OwnerLocale.Arabic]: 'سيؤدي هذا إلى حذف حسابك وكل وكيل ورسالة وملف فيه، ولا يمكن التراجع عنه. للتأكيد خلال 10 دقائق، أرسل: {phrase}',
-    [OwnerLocale.Hindi]:
-      'इससे आपका अकाउंट डिलीट हो जाएगा, और उसके साथ हर एजेंट, संदेश और फ़ाइल भी। इसे वापस नहीं लाया जा सकता। 10 मिनट के अंदर पुष्टि करने के लिए यह भेजें: {phrase}',
+    [OwnerLocale.PortugueseBrazil]: `Isso apaga sua conta, todos os agentes, mensagens e arquivos, e não tem volta. Apagar a conta não cancela sua assinatura do zapbip Cloud; para cancelar, escreva para ${COMPANY.contactEmail}. Para confirmar em até 10 minutos, envie: {phrase}`,
+    [OwnerLocale.EnglishUs]: `This deletes your account, every agent, message and file, and cannot be undone. Deleting it does not cancel your zapbip Cloud subscription; to cancel, write to ${COMPANY.contactEmail}. To confirm within 10 minutes, send: {phrase}`,
+    [OwnerLocale.Spanish]: `Esto elimina tu cuenta, todos los agentes, mensajes y archivos, y no se puede deshacer. Eliminarla no cancela tu suscripción a zapbip Cloud; para cancelarla, escribe a ${COMPANY.contactEmail}. Para confirmar en un plazo de 10 minutos, envía: {phrase}`,
+    [OwnerLocale.German]: `Das löscht dein Konto, alle Agenten, Nachrichten und Dateien und kann nicht rückgängig gemacht werden. Das Löschen kündigt dein zapbip-Cloud-Abo nicht; zum Kündigen schreibe an ${COMPANY.contactEmail}. Zum Bestätigen innerhalb von 10 Minuten sende: {phrase}`,
+    [OwnerLocale.French]: `Cela supprime votre compte, tous vos agents, messages et fichiers, et c’est irréversible. La suppression n’annule pas votre abonnement zapbip Cloud\u00a0; pour l’annuler, écrivez à ${COMPANY.contactEmail}. Pour confirmer dans les 10 minutes, envoyez\u00a0: {phrase}`,
+    [OwnerLocale.Japanese]: `アカウント、すべてのエージェント、メッセージ、ファイルが削除され、元に戻せません。アカウントを削除しても zapbip Cloud のサブスクリプションは解約されません。解約するには ${COMPANY.contactEmail} までご連絡ください。10分以内に確認するには、次を送信してください: {phrase}`,
+    [OwnerLocale.Korean]: `계정, 모든 에이전트, 메시지, 파일이 삭제되며 되돌릴 수 없어요. 계정을 삭제해도 zapbip Cloud 구독은 해지되지 않아요. 해지하려면 ${COMPANY.contactEmail}으로 문의해 주세요. 10분 안에 확인하려면 다음을 보내세요: {phrase}`,
+    [OwnerLocale.ChineseSimplified]: `这会删除你的账户、所有智能体、消息和文件，且无法恢复。删除账户不会取消你的 zapbip Cloud 订阅；要取消，请写信至 ${COMPANY.contactEmail}。要在 10 分钟内确认，请发送：{phrase}`,
+    [OwnerLocale.Arabic]: `سيؤدي هذا إلى حذف حسابك وكل وكيل ورسالة وملف فيه، ولا يمكن التراجع عنه. حذف الحساب لا يلغي اشتراكك في zapbip Cloud؛ ولإلغائه، راسل ${COMPANY.contactEmail}. للتأكيد خلال 10 دقائق، أرسل: {phrase}`,
+    [OwnerLocale.Hindi]: `इससे आपका अकाउंट डिलीट हो जाएगा, और उसके साथ हर एजेंट, संदेश और फ़ाइल भी। इसे वापस नहीं लाया जा सकता। अकाउंट डिलीट करने से zapbip Cloud की सदस्यता रद्द नहीं होती; उसे रद्द करने के लिए ${COMPANY.contactEmail} पर लिखें। 10 मिनट के अंदर पुष्टि करने के लिए यह भेजें: {phrase}`,
   },
   [AccountReplyIntent.DeletionExpired]: {
     [OwnerLocale.PortugueseBrazil]: 'Não há pedido de exclusão válido. Envie "apagar conta" para começar de novo.',
@@ -258,16 +251,16 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Hindi]: 'डिलीट करने का कोई मान्य अनुरोध नहीं है। फिर से शुरू करने के लिए "अकाउंट डिलीट करें" भेजें।',
   },
   [AccountReplyIntent.DeletionDone]: {
-    [OwnerLocale.PortugueseBrazil]: 'Sua conta foi apagada. A próxima mensagem começa uma nova conta.',
-    [OwnerLocale.EnglishUs]: 'Your account is deleted. Your next message starts a new account.',
-    [OwnerLocale.Spanish]: 'Tu cuenta se eliminó. Tu próximo mensaje inicia una cuenta nueva.',
-    [OwnerLocale.German]: 'Dein Konto wurde gelöscht. Deine nächste Nachricht startet ein neues Konto.',
-    [OwnerLocale.French]: 'Votre compte est supprimé. Votre prochain message ouvre un nouveau compte.',
-    [OwnerLocale.Japanese]: 'アカウントを削除しました。次のメッセージから新しいアカウントが始まります。',
-    [OwnerLocale.Korean]: '계정을 삭제했어요. 다음 메시지부터 새 계정이 시작돼요.',
-    [OwnerLocale.ChineseSimplified]: '你的账户已删除。你的下一条消息会开启一个新账户。',
-    [OwnerLocale.Arabic]: 'تم حذف حسابك. ستبدأ رسالتك التالية حسابًا جديدًا.',
-    [OwnerLocale.Hindi]: 'आपका अकाउंट डिलीट हो गया। आपके अगले संदेश से नया अकाउंट शुरू होगा।',
+    [OwnerLocale.PortugueseBrazil]: `Sua conta foi apagada. A próxima mensagem começa uma nova conta. Sua assinatura do zapbip Cloud não foi cancelada; para cancelar, escreva para ${COMPANY.contactEmail}.`,
+    [OwnerLocale.EnglishUs]: `Your account is deleted. Your next message starts a new account. Your zapbip Cloud subscription is not cancelled; to cancel it, write to ${COMPANY.contactEmail}.`,
+    [OwnerLocale.Spanish]: `Tu cuenta se eliminó. Tu próximo mensaje inicia una cuenta nueva. Tu suscripción a zapbip Cloud no se canceló; para cancelarla, escribe a ${COMPANY.contactEmail}.`,
+    [OwnerLocale.German]: `Dein Konto wurde gelöscht. Deine nächste Nachricht startet ein neues Konto. Dein zapbip-Cloud-Abo wurde nicht gekündigt; zum Kündigen schreibe an ${COMPANY.contactEmail}.`,
+    [OwnerLocale.French]: `Votre compte est supprimé. Votre prochain message ouvre un nouveau compte. Votre abonnement zapbip Cloud n’est pas annulé\u00a0; pour l’annuler, écrivez à ${COMPANY.contactEmail}.`,
+    [OwnerLocale.Japanese]: `アカウントを削除しました。次のメッセージから新しいアカウントが始まります。zapbip Cloud のサブスクリプションは解約されていません。解約するには ${COMPANY.contactEmail} までご連絡ください。`,
+    [OwnerLocale.Korean]: `계정을 삭제했어요. 다음 메시지부터 새 계정이 시작돼요. zapbip Cloud 구독은 해지되지 않았어요. 해지하려면 ${COMPANY.contactEmail}으로 문의해 주세요.`,
+    [OwnerLocale.ChineseSimplified]: `你的账户已删除。你的下一条消息会开启一个新账户。你的 zapbip Cloud 订阅并未取消；要取消，请写信至 ${COMPANY.contactEmail}。`,
+    [OwnerLocale.Arabic]: `تم حذف حسابك. ستبدأ رسالتك التالية حسابًا جديدًا. اشتراكك في zapbip Cloud لم يُلغَ؛ ولإلغائه، راسل ${COMPANY.contactEmail}.`,
+    [OwnerLocale.Hindi]: `आपका अकाउंट डिलीट हो गया। आपके अगले संदेश से नया अकाउंट शुरू होगा। आपकी zapbip Cloud सदस्यता रद्द नहीं हुई है; उसे रद्द करने के लिए ${COMPANY.contactEmail} पर लिखें।`,
   },
   [AccountReplyIntent.SignInLink]: {
     [OwnerLocale.PortugueseBrazil]:

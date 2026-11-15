@@ -65,6 +65,7 @@ export const JAPANESE_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.PlanLine]: '無料 · お試し用{free}通',
   [ClientAppCopyKey.AccountTitle]: 'アカウント',
   [ClientAppCopyKey.DeleteAccount]: 'アカウントを削除',
-  [ClientAppCopyKey.DeleteAccountHint]: 'アカウントの削除はWhatsAppで行います。手順はガイドをご覧ください。',
+  [ClientAppCopyKey.DeleteAccountHint]:
+    'アカウントの削除はWhatsAppで行います。手順はガイドをご覧ください。削除しても zapbip Cloud のサブスクリプションは解約されません。解約するには {contactEmail} までご連絡ください。',
   [ClientAppCopyKey.FooterMaker]: 'zapbip、AIエージェントのためのパーソナルWhatsAppチャンネル',
 };

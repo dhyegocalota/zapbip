@@ -3,9 +3,11 @@ import { join } from 'node:path';
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { renderSiteCopy, SITE_COPY, SiteCopyKey } from '../../src/site/site-copy';
+import { CONTACT_PLACEHOLDER } from '../../src/site/plain-contact-text';
 import { cjkSpacingOffenders, emptyEntries, frenchSpacingOffenders, placeholderMismatches, untranslatedEntries } from './copy-rules';
 
 const SITE_ROOT = join(import.meta.dirname, '../../src/site');
+const SUBSCRIPTION_NAME_PATTERN = /zapbip.Cloud/;
 const LOCALES = Object.values(OwnerLocale);
 const SHARED_WITH_ENGLISH = [
   `${OwnerLocale.Spanish}:${SiteCopyKey.NoticeLabelError}`,
@@ -55,6 +57,12 @@ describe('site copy', () => {
 
   it('gives every language a copy of its own for every key, none blank', () => {
     expect(emptyEntries({ copies: SITE_COPY, keys: KEYS })).toEqual([]);
+  });
+
+  it.each(LOCALES)('[row 439] says in %s that deleting does not cancel the subscription and names the contact', (locale) => {
+    const answer = SITE_COPY[locale][SiteCopyKey.FaqDeleteAnswer];
+    expect(answer).toContain(CONTACT_PLACEHOLDER);
+    expect(answer).toMatch(SUBSCRIPTION_NAME_PATTERN);
   });
 
   it('keeps the French punctuation spaces non-breaking', () => {

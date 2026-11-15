@@ -77,6 +77,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: 'Fin de votre compte',
         paragraphs: [
           'Vous pouvez supprimer votre compte à tout moment en envoyant «\u202fsupprimer le compte\u202f» à zapbip sur WhatsApp. Nous pouvons fermer un compte qui enfreint ces conditions, ou mettre fin au service moyennant préavis. La politique de confidentialité explique ce qu’il advient de vos données.',
+          'Supprimer votre compte n’annule pas votre abonnement zapbip Cloud. Pour l’annuler, écrivez à {contactEmail}.',
         ],
         items: [],
       },
@@ -177,6 +178,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         heading: 'Vos droits',
         paragraphs: [
           'Pour supprimer votre compte et tout ce qu’il contient, envoyez «\u202fsupprimer le compte\u202f» à zapbip sur WhatsApp. Pour toute autre demande, écrivez à {contactEmail}\u202f; nous répondons sous 15 jours.',
+          'Supprimer votre compte n’annule pas votre abonnement zapbip Cloud. Pour l’annuler, écrivez à {contactEmail}.',
         ],
         items: [
           'Savoir si nous traitons vos données et y accéder.',

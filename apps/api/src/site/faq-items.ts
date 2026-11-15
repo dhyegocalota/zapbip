@@ -7,6 +7,7 @@ const FAQ_ITEMS: FaqItem[] = [
   { question: SiteCopyKey.FaqWhenQuestion, answer: SiteCopyKey.FaqWhenAnswer },
   { question: SiteCopyKey.FaqFreeQuestion, answer: SiteCopyKey.FaqFreeAnswer },
   { question: SiteCopyKey.FaqPriceQuestion, answer: SiteCopyKey.FaqPriceAnswer },
+  { question: SiteCopyKey.FaqDeleteQuestion, answer: SiteCopyKey.FaqDeleteAnswer },
   { question: SiteCopyKey.FaqOwnNumberQuestion, answer: SiteCopyKey.FaqOwnNumberAnswer },
   { question: SiteCopyKey.FaqDeveloperQuestion, answer: SiteCopyKey.FaqDeveloperAnswer },
   { question: SiteCopyKey.FaqOthersQuestion, answer: SiteCopyKey.FaqOthersAnswer },

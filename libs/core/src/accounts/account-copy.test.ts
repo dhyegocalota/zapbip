@@ -1,4 +1,4 @@
-import { AccountReplyIntent, AccountReplyParameter, CommandKind, OwnerLocale, ReplyKind } from '@zapbip/types';
+import { AccountReplyIntent, AccountReplyParameter, COMPANY, CommandKind, OwnerLocale, ReplyKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { LIST_ROW_TITLE_MAX_CHARS, WHATSAPP_TEXT_MAX_CHARS } from '../inbox/constants';
 import type { AccountReply } from './account-types';
@@ -64,6 +64,16 @@ describe('sign-in link reply', () => {
   test.each(LOCALES)('%s carries the link and says it works once', (locale) => {
     const text = renderAccountReply({ reply: buildReply({ intent: AccountReplyIntent.SignInLink, locale }) });
     expect(text).toContain(PARAMETER_VALUES[AccountReplyParameter.SignInLink]);
+  });
+});
+
+describe('deletion replies', () => {
+  test.each(
+    LOCALES.flatMap((locale) =>
+      [AccountReplyIntent.DeletionRequest, AccountReplyIntent.DeletionDone].map((intent) => [locale, intent] as const),
+    ),
+  )('[row 439] %s %s says deleting does not cancel the subscription and names the support address', (locale, intent) => {
+    expect(renderAccountReply({ reply: buildReply({ intent, locale }) })).toContain(COMPANY.contactEmail);
   });
 });
 
