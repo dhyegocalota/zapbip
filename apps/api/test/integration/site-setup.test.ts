@@ -17,7 +17,6 @@ const LOCALES = Object.values(OwnerLocale);
 const SETUP_FILE = '/setup.md';
 const PANEL_MARKER = '<div class="start-panel" role="tabpanel"';
 const MANUAL_OPENING = '<details class="start-manual">';
-const DATA_CODE_PATTERN = /data-code="([^"]*)"/;
 
 function prefixOf(input: { locale: OwnerLocale }): string {
   const home = localePathOf({ locale: input.locale });
@@ -106,7 +105,7 @@ describe('the quick start prompt', () => {
     panels.forEach((panel) => {
       const manualStart = panel.indexOf(MANUAL_OPENING);
       expect(manualStart).toBeGreaterThan(-1);
-      expect(DATA_CODE_PATTERN.exec(panel.slice(0, manualStart))![1]).toBe(escapedHtml({ text: promptOf({ locale }) }));
+      expect(panel.slice(0, manualStart)).toContain(escapedHtml({ text: promptOf({ locale }) }));
       expect(panel.slice(manualStart)).toContain(`<summary>${copyHtml({ key: SiteCopyKey.StartManualSummary, locale })}</summary>`);
       expect(panel).not.toContain('<details class="start-manual" open');
     });

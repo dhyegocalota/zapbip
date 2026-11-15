@@ -217,7 +217,7 @@ const SCRIPT_SOURCE = `(function () {
       var originalLabel = button.textContent;
       button.hidden = false;
       var code = button.closest('.start-panel').querySelector('code');
-      var text = code.getAttribute('data-code');
+      var text = code.textContent;
       function copied() {
         button.setAttribute('data-copied', 'true');
         button.textContent = button.getAttribute('data-copied-label');

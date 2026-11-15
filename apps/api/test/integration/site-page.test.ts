@@ -321,7 +321,6 @@ describe('the quick start', () => {
       const panel = panels.find((candidate) => candidate.id === agent.id)!.html;
       expect(panel.includes('class="code-path"')).toBe(quickStart.path.length > 0);
       quickStart.path.forEach((step) => expect(text).toContain(escapedHtml({ text: step })));
-      expect(panel).toContain(`data-code="${escapedHtml({ text: quickStart.code })}"`);
       expect(panel.slice(panel.indexOf('<details class="start-manual">')).match(/class="code-line"/g)).toHaveLength(
         quickStart.code.split('\n').length,
       );

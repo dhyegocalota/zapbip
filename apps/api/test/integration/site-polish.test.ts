@@ -20,6 +20,7 @@ const FOOTER_PATTERN = /<footer class="site-footer">([\s\S]*?)<\/footer>/;
 const HEADER_PATTERN = /<header class="site-header">([\s\S]*?)<\/header>/;
 const REFERRAL_UI_MARKERS = ['id="invite-link"', 'copy-link', 'invite-meter', 'invite-count', 'https://wa.me/'];
 const EXAMPLE_LINK_PATTERN = new RegExp(`${PRODUCTION_PUBLIC_ORIGIN}/c/(zb_conn_[A-Za-z0-9_-]{43})/mcp`);
+const TAG_PATTERN = /<[^>]+>/g;
 const MARIA = 'maria@example.com';
 
 async function htmlOf(input: { path: string }): Promise<string> {
@@ -115,15 +116,15 @@ describe('the quick start example link', () => {
     expect(CONNECTION_SECRET_PATTERN.test(secret)).toBe(true);
     expect(html).not.toMatch(/&lt;(your|seu)-link&gt;/);
     expect(html).toContain(copyHtml({ key: SiteCopyKey.StartExampleCaption, locale }));
-    expect(html).toContain(`data-code="`);
+    expect(html).toContain('class="code-line"');
   });
 
-  it('copies the example exactly as shown', async () => {
+  it('shows the example exactly as its code block holds it', async () => {
     const html = await htmlOf({ path: '/' });
     const manualSections = html.split('<details class="start-manual">').slice(1);
-    const dataCodes = manualSections.map((section) => /data-code="([^"]*)"/.exec(section)![1]!);
-    expect(dataCodes.length).toBeGreaterThan(0);
-    dataCodes.forEach((code) => expect(code).toMatch(EXAMPLE_LINK_PATTERN));
+    const examples = manualSections.map((section) => /<code[^>]*>([\s\S]*?)<\/code>/.exec(section)![1]!);
+    expect(examples.length).toBeGreaterThan(0);
+    examples.forEach((example) => expect(example.replace(TAG_PATTERN, '')).toMatch(EXAMPLE_LINK_PATTERN));
   });
 });
 
