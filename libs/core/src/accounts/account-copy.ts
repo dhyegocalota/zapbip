@@ -527,6 +527,19 @@ export function renderAccountReply(input: { reply: AccountReply }): string {
   return COMPANY_LINE_INTENTS.has(intent) ? `${body}${PARAGRAPH_BREAK}${COMPANY_LINE[locale]}` : body;
 }
 
+export const NAME_PLACEHOLDER: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: '<nome>',
+  [OwnerLocale.EnglishUs]: '<name>',
+  [OwnerLocale.Spanish]: '<nombre>',
+  [OwnerLocale.German]: '<name>',
+  [OwnerLocale.French]: '<nom>',
+  [OwnerLocale.Japanese]: '<名前>',
+  [OwnerLocale.Korean]: '<이름>',
+  [OwnerLocale.ChineseSimplified]: '<名称>',
+  [OwnerLocale.Arabic]: '<الاسم>',
+  [OwnerLocale.Hindi]: '<नाम>',
+};
+
 export const UNKNOWN_CLIENT_LABEL: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'app desconhecido',
   [OwnerLocale.EnglishUs]: 'unknown client',

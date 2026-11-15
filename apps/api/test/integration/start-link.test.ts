@@ -73,7 +73,7 @@ describe('start link redirect', () => {
     await seedActiveNumber();
     const response = await getStart({});
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.PortugueseBrazil }));
+    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.EnglishUs }));
   });
 
   it.each([
@@ -90,7 +90,7 @@ describe('start link redirect', () => {
     await seedActiveNumber();
     const response = await getStart({ method: 'HEAD' });
     expect(response.status).toBe(302);
-    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.PortugueseBrazil }));
+    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.EnglishUs }));
   });
 
   it('SL-W4 carries the private headers on the redirect', async () => {
@@ -127,22 +127,22 @@ describe('start link selection', () => {
     });
     await seedActiveNumber();
     const response = await getStart({});
-    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.PortugueseBrazil }));
+    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.EnglishUs }));
   });
 
   it('SL-W6 breaks a tie of the creation time by the number id', async () => {
     await seedStartNumber({ numberId: 'num_b', displayNumber: OTHER_DISPLAY_NUMBER, state: WhatsAppNumberState.Active, createdAt: OLDEST });
     await seedActiveNumber();
     const response = await getStart({});
-    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.PortugueseBrazil }));
+    expect(response.headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.EnglishUs }));
   });
 
   it('SL-W7 follows the registry on the next request when the operator closes the number', async () => {
     await seedActiveNumber();
     await seedStartNumber({ numberId: 'num_b', displayNumber: OTHER_DISPLAY_NUMBER, state: WhatsAppNumberState.Active, createdAt: NEWER });
-    expect((await getStart({})).headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.PortugueseBrazil }));
+    expect((await getStart({})).headers.get('location')).toBe(targetOf({ digits: ACTIVE_DIGITS, locale: OwnerLocale.EnglishUs }));
     await changeStartNumberState({ numberId: 'num_a', state: WhatsAppNumberState.Closed });
-    expect((await getStart({})).headers.get('location')).toBe(targetOf({ digits: OTHER_DIGITS, locale: OwnerLocale.PortugueseBrazil }));
+    expect((await getStart({})).headers.get('location')).toBe(targetOf({ digits: OTHER_DIGITS, locale: OwnerLocale.EnglishUs }));
   });
 });
 
@@ -173,7 +173,7 @@ describe('start link without a usable number', () => {
   }
 
   it('SL-W8 answers the 503 page when the registry is empty', async () => {
-    await expectUnavailablePage({ response: await getStart({}), first: OwnerLocale.PortugueseBrazil });
+    await expectUnavailablePage({ response: await getStart({}), first: OwnerLocale.EnglishUs });
   });
 
   it('SL-W9 answers the 503 page when no number is active', async () => {
@@ -183,7 +183,7 @@ describe('start link without a usable number', () => {
       state: WhatsAppNumberState.Closed,
       createdAt: OLDEST,
     });
-    await expectUnavailablePage({ response: await getStart({}), first: OwnerLocale.PortugueseBrazil });
+    await expectUnavailablePage({ response: await getStart({}), first: OwnerLocale.EnglishUs });
   });
 
   it('SL-W10 puts the English copy first for lang=en', async () => {
@@ -192,7 +192,7 @@ describe('start link without a usable number', () => {
 
   it('SL-W11 answers the 503 page when the stored number fails the pattern', async () => {
     await seedStartNumber({ numberId: 'num_bad', displayNumber: 'not a number', state: WhatsAppNumberState.Active, createdAt: OLDEST });
-    await expectUnavailablePage({ response: await getStart({}), first: OwnerLocale.PortugueseBrazil });
+    await expectUnavailablePage({ response: await getStart({}), first: OwnerLocale.EnglishUs });
   });
 
   it('SL-W12 answers 500 without a redirect when the registry read fails', async () => {
