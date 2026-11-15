@@ -1,9 +1,11 @@
 import { type ChildProcess, spawn } from 'node:child_process';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
-import { CONNECTION_URL_VARIABLE, ConnectorLogEvent } from '@zapbip/types';
+import { CONNECTION_URL_VARIABLE, CONNECTOR_CONFIG_FILE_NAME, ConnectorLogEvent } from '@zapbip/types';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createFakeClients, runAt, type FakeClientBehavior, type FakeClients } from '../support/fake-client-binary';
@@ -16,6 +18,9 @@ const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const CONNECT_AGENT = 'ana';
 const LISTEN_AGENT = 'bia';
 const CHANNEL_AGENT = 'caio';
+const CONFIG_AGENT = 'eva';
+const CONFIGURED_COMMAND = 'ccs';
+const CONFIG_TEXT = 'Oi config';
 const SIGNAL_AGENT = 'duda';
 const PROMPT_EXIT_MS = 2_000;
 const OWNER_TEXT = 'Oi';
@@ -95,6 +100,7 @@ describe('the bundled connector against the local stack', () => {
         LISTEN_AGENT,
         CHANNEL_AGENT,
         SIGNAL_AGENT,
+        CONFIG_AGENT,
         ...RUNTIME_AGENTS.map((runtimeAgent) => runtimeAgent.agent),
         DOWN_AGENT,
         ORDER_AGENT,
@@ -155,6 +161,29 @@ describe('the bundled connector against the local stack', () => {
       expect(runAt({ runs, index: 0 }).clientName).toBe(CONNECTOR_RUNTIMES[client].binaryName);
       expect(runAt({ runs, index: 0 }).argv).toContain(SESSION_ID);
       expect(runAt({ runs, index: 0 }).stdin).toContain(text);
+    },
+    SUITE_TIMEOUT_MS,
+  );
+
+  it(
+    'a zapbip.json in the working directory makes connect launch the command it names for the subject client',
+    async () => {
+      await fakeClients.writeCommand({ client: SUBJECT_CLIENT, name: CONFIGURED_COMMAND });
+      await writeFile(
+        join(fakeClients.workingDirectory, CONNECTOR_CONFIG_FILE_NAME),
+        JSON.stringify({ agents: { [SUBJECT_CLIENT]: { command: CONFIGURED_COMMAND } } }),
+      );
+      const connector = startCli({
+        agent: CONFIG_AGENT,
+        arguments: ['connect', '--client', SUBJECT_CLIENT, '--cwd', fakeClients.workingDirectory],
+      });
+      await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
+      const text = `${CONFIG_TEXT} ${CONFIGURED_COMMAND}`;
+      await stack.postOwnerText({ text: `@${CONFIG_AGENT} ${text}` });
+
+      await vi.waitFor(async () => expect(await screenTexts()).toContain(`FAKE-REPLY ${text}`), { timeout: SUITE_TIMEOUT_MS });
+      const runs = await fakeClients.readRuns();
+      expect(runAt({ runs, index: 0 }).clientName).toBe(CONFIGURED_COMMAND);
     },
     SUITE_TIMEOUT_MS,
   );
