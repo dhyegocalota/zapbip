@@ -14,6 +14,7 @@ import waitlistSourceMigrationSql from '../../migrations/0013_waitlist_source.sq
 import operatorAgentKeysMigrationSql from '../../migrations/0014_operator_agent_keys.sql?raw';
 import otherNumberNoticesMigrationSql from '../../migrations/0015_other_number_notices.sql?raw';
 import welcomeEmailsMigrationSql from '../../migrations/0016_welcome_emails.sql?raw';
+import twoStepPinMigrationSql from '../../migrations/0017_number_two_step_pin.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -79,6 +80,10 @@ export async function applyOtherNumberNoticesMigration(): Promise<void> {
   await applyMigration({ sql: otherNumberNoticesMigrationSql });
 }
 
+export async function applyTwoStepPinMigration(): Promise<void> {
+  await applyMigration({ sql: twoStepPinMigrationSql });
+}
+
 export async function applyClientAppMigration(): Promise<void> {
   await applyMigration({ sql: clientAppMigrationSql });
 }
@@ -97,6 +102,7 @@ export async function applyDirectoryMigration(): Promise<void> {
   await applyAccessReleaseMigration();
   await applyOperatorAgentKeysMigration();
   await applyOtherNumberNoticesMigration();
+  await applyTwoStepPinMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {

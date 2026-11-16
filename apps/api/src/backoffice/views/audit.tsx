@@ -28,6 +28,7 @@ const ACTION_LABELS: Record<BackofficeAuditAction, BackofficeCopyKey> = {
   [BackofficeAuditAction.NumberAccessTokenRotated]: BackofficeCopyKey.AuditActionNumberAccessTokenRotated,
   [BackofficeAuditAction.MetaAppSecretRotated]: BackofficeCopyKey.AuditActionMetaAppSecretRotated,
   [BackofficeAuditAction.NumberStateChanged]: BackofficeCopyKey.AuditActionNumberStateChanged,
+  [BackofficeAuditAction.NumberPinRevealed]: BackofficeCopyKey.AuditActionNumberPinRevealed,
   [BackofficeAuditAction.WaitlistExported]: BackofficeCopyKey.AuditActionWaitlistExported,
   [BackofficeAuditAction.ReferralCapChanged]: BackofficeCopyKey.AuditActionReferralCapChanged,
   [BackofficeAuditAction.AccessReleased]: BackofficeCopyKey.AuditActionAccessReleased,

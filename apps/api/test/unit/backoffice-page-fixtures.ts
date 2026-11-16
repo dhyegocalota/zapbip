@@ -42,6 +42,7 @@ export function numberEntry(input: Partial<NumberListEntry>): NumberListEntry {
     updatedAt: NOW,
     credentialsChangedAt: NOW,
     accountCount: 2,
+    hasTwoStepPin: true,
     ...input,
   };
 }

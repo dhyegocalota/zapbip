@@ -87,3 +87,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0064](0064-a-wake-provider-and-a-channel-protocol-belong-to-the-agent-folder.md) | A wake provider and a channel protocol belong to the agent folder | Accepted | 2026-11-14 |
 | [0065](0065-a-new-owner-speaks-the-language-they-write-then-the-calling-code-then-english.md) | A new owner's language is the language they write in, then the calling code, then English | Accepted | 2026-11-14 |
 | [0066](0066-the-connector-runtime-is-set-by-one-zapbip-json-file.md) | The connector runtime is set by one zapbip.json file | Accepted | 2026-11-14 |
+| [0067](0067-the-two-step-pin-is-optional-and-sealed-per-number.md) | The two-step PIN is optional and sealed per number | Accepted | 2026-11-16 |

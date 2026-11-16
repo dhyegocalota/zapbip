@@ -48,6 +48,7 @@ export const PAGE_POLICY_HEADERS: Record<PagePolicy, Record<string, string>> = {
   },
 };
 export const NO_STORE = 'no-store';
+export const CACHE_CONTROL_HEADER = 'Cache-Control';
 export { RETRY_AFTER_HEADER } from '../routes/private-response';
 export const NON_ERROR_CODE = 'NonError';
 export const SESSION_COOKIE_NAME = '__Host-zb_bo_session';

@@ -43,6 +43,7 @@ describe('the credentials timestamp of a number', () => {
       displayNumber: '+5511900000010',
       label: 'one',
       accessToken: 'token',
+      pin: '482915',
     });
     return numberId;
   }

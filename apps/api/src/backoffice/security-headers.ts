@@ -5,9 +5,15 @@ import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { errorResponse } from './error-response';
 import type { BackofficeEnv } from './backoffice-env';
-import { HSTS_MAX_AGE_SECONDS, NO_STORE, NON_ERROR_CODE, PAGE_POLICY_HEADERS, PagePolicy } from './backoffice-constants';
+import {
+  CACHE_CONTROL_HEADER,
+  HSTS_MAX_AGE_SECONDS,
+  NO_STORE,
+  NON_ERROR_CODE,
+  PAGE_POLICY_HEADERS,
+  PagePolicy,
+} from './backoffice-constants';
 
-const CACHE_CONTROL_HEADER = 'Cache-Control';
 const STRICT_TRANSPORT_SECURITY_HEADER = 'Strict-Transport-Security';
 const STRICT_TRANSPORT_SECURITY_VALUE = `max-age=${HSTS_MAX_AGE_SECONDS}; includeSubDomains`;
 

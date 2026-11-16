@@ -4,6 +4,7 @@ import { GRAPH_NO_RESPONSE_STATUS, GraphRequestError, createGraphClient } from '
 import { GRAPH_API_VERSION, GRAPH_REQUEST_TIMEOUT_MS } from '../adapters/whatsapp/whatsapp-constants';
 import { WhatsAppErrorCode } from '../adapters/whatsapp/whatsapp-enums';
 import { GraphErrorKind, graphErrorKindOf } from './graph-error-kind';
+import { generateTwoStepPin } from './two-step-pin';
 import { digitsOf } from './number-verification';
 
 const EXCHANGE_PATH = '/oauth/access_token';
@@ -35,7 +36,7 @@ export class OnboardingError extends Error {
   }
 }
 
-export type OnboardedNumber = { accessToken: string; displayNumber: string; verifiedName: string | null };
+export type OnboardedNumber = { accessToken: string; pin: string; displayNumber: string; verifiedName: string | null };
 
 export type OnboardNumberInput = {
   graphBaseUrl: string;
@@ -45,7 +46,7 @@ export type OnboardNumberInput = {
   code: string;
   phoneNumberId: string;
   wabaId: string;
-  pin: string;
+  pin: string | null;
   fetcher: typeof fetch;
 };
 
@@ -149,7 +150,8 @@ async function assertWebhookUnclaimed(input: { graph: Graph; phoneNumberId: stri
 }
 
 export async function onboardNumber(input: OnboardNumberInput): Promise<OnboardedNumber> {
-  const { graphBaseUrl, webhookUrl, verifyToken, phoneNumberId, wabaId, pin, fetcher } = input;
+  const { graphBaseUrl, webhookUrl, verifyToken, phoneNumberId, wabaId, fetcher } = input;
+  const pin = input.pin === null ? generateTwoStepPin() : input.pin;
   const accessToken = await inStep({ step: OnboardingStep.Exchange, run: () => exchangeCode(input) });
   const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken, developmentMediaOrigin: null, fetcher });
   const phoneNumber = await inStep({ step: OnboardingStep.Read, run: () => readPhoneNumber({ graph, wabaId, phoneNumberId }) });
@@ -168,5 +170,5 @@ export async function onboardNumber(input: OnboardNumberInput): Promise<Onboarde
         body: { webhook_configuration: { override_callback_uri: webhookUrl, verify_token: verifyToken } },
       }),
   });
-  return { accessToken, ...phoneNumber };
+  return { accessToken, pin, ...phoneNumber };
 }

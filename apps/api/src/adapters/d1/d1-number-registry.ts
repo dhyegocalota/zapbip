@@ -11,7 +11,7 @@ import type {
 } from '../../numbers/number-registry';
 import { conflictOf } from '../../numbers/registration-conflict';
 import { assertNumberTransition } from '../../numbers/number-state';
-import { accessTokenAssociatedData } from '../../numbers/number-sealing';
+import { accessTokenAssociatedData, twoStepPinAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
 import { createAesGcmSecretBox, type SecretBox } from '../platform/aes-gcm-secret-box';
 import { createPlatformClock } from '../platform/clock';
@@ -28,8 +28,8 @@ const FIND_FOR_ACCOUNT_STATEMENT =
   'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers WHERE id = (SELECT number_id FROM accounts WHERE id = ?)';
 const FIND_FOR_INBOUND_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers WHERE id = ?';
 const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
-  (id, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, credentials_changed_at, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  (id, phone_number_id, waba_id, display_number, label, sealed_access_token, sealed_two_step_pin, seal_key_version, state, credentials_changed_at, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 const SEAL_KEY_VERSION = 1;
 const BACKFILL_ACCOUNTS_STATEMENT =
   'UPDATE accounts SET number_id = ? WHERE number_id IS NULL AND (SELECT COUNT(*) FROM whatsapp_numbers) = 1';
@@ -79,6 +79,10 @@ export class D1NumberRegistry implements NumberRegistry {
       plain: number.accessToken,
       associatedData: accessTokenAssociatedData({ numberId }),
     });
+    const sealedTwoStepPin = await this.secretBox.seal({
+      plain: number.pin,
+      associatedData: twoStepPinAssociatedData({ numberId }),
+    });
     const now = this.clock.now();
     return [
       this.database
@@ -90,6 +94,7 @@ export class D1NumberRegistry implements NumberRegistry {
           number.displayNumber,
           number.label,
           sealedAccessToken,
+          sealedTwoStepPin,
           SEAL_KEY_VERSION,
           WhatsAppNumberState.Pending,
           now,

@@ -2,16 +2,23 @@ import { WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { numberRegistryOf } from '../../src/adapters/d1/d1-number-registry';
-import { accessTokenAssociatedData } from '../../src/numbers/number-sealing';
+import { accessTokenAssociatedData, twoStepPinAssociatedData } from '../../src/numbers/number-sealing';
 import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { testSecretBox } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 
 const ACCESS_TOKEN = 'registered-access-token';
 const OTHER_ACCESS_TOKEN = 'other-access-token';
+const TWO_STEP_PIN = '482915';
 const registry = numberRegistryOf({ bindings: testEnv });
 
-type NumberRow = { sealed_access_token: string; state: string; verified_at: number | null; display_number: string };
+type NumberRow = {
+  sealed_access_token: string;
+  sealed_two_step_pin: string;
+  state: string;
+  verified_at: number | null;
+  display_number: string;
+};
 
 async function numberRowOf(input: { numberId: string }): Promise<NumberRow> {
   const row = await testEnv.CONNECTIONS.prepare('SELECT * FROM whatsapp_numbers WHERE id = ?').bind(input.numberId).first<NumberRow>();
@@ -27,6 +34,7 @@ function numberInput(input: { phoneNumberId: string; accessToken?: string }) {
     displayNumber: `55${input.phoneNumberId}`,
     label: `label ${input.phoneNumberId}`,
     accessToken,
+    pin: TWO_STEP_PIN,
   };
 }
 
@@ -44,6 +52,17 @@ describe('registering a number', () => {
     });
     expect(openedAccessToken).toBe(ACCESS_TOKEN);
     expect((await registry.openForInbound({ numberId })).accessToken).toBe(ACCESS_TOKEN);
+  });
+
+  it('seals the two-step PIN, and it opens to the plaintext', async () => {
+    const { numberId } = await registry.registerNumber(numberInput({ phoneNumberId: '1000000000000010' }));
+    const numberRow = await numberRowOf({ numberId });
+    expect(numberRow.sealed_two_step_pin).not.toContain(TWO_STEP_PIN);
+    const openedPin = await testSecretBox().open({
+      sealed: numberRow.sealed_two_step_pin,
+      associatedData: twoStepPinAssociatedData({ numberId }),
+    });
+    expect(openedPin).toBe(TWO_STEP_PIN);
   });
 
   it('registers the number as pending and not verified', async () => {

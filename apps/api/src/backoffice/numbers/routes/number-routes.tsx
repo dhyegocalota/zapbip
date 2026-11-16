@@ -8,7 +8,7 @@ import { allowedTargetsOf } from '../../../numbers/number-state';
 import { parseVerificationSnapshot, VerificationOutcome, verifyNumber } from '../../../numbers/number-verification';
 import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../../audit/backoffice-audit-action';
 import { StepUpOutcome } from '../../auth/step-up';
-import { SEE_OTHER_STATUS } from '../../backoffice-constants';
+import { CACHE_CONTROL_HEADER, NO_STORE, SEE_OTHER_STATUS } from '../../backoffice-constants';
 import { BackofficeCopyKey } from '../../backoffice-copy';
 import type { BackofficeEnv } from '../../backoffice-env';
 import { BackofficeNotice } from '../../backoffice-notice';
@@ -21,6 +21,7 @@ import { auditNumberAction } from '../number-audit';
 import { CHECKED_VALUE, NumberFormField } from '../number-form-fields';
 import { numberPath, NumberSegment, withNotice } from '../number-paths';
 import { rateLimitedResponse, stepUpOf } from '../step-up-gate';
+import { NumberPinPage } from '../views/number-pin';
 import { NumberVerificationPage } from '../views/number-verification';
 
 const TARGET_KIND = BackofficeAuditTargetKind.Number;
@@ -112,6 +113,28 @@ numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.State}`, async (context) => {
     targetId: numberId,
   });
   return context.redirect(withNotice({ path: numberPath({ numberId }), notice: BackofficeNotice.StateChanged }), SEE_OTHER_STATUS);
+});
+
+numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.Pin}`, async (context) => {
+  const numberId = context.req.param(NUMBER_PARAMETER);
+  const entry = await findNumberEntry({ context, numberId });
+  if (entry === null || !entry.hasTwoStepPin) return errorResponse({ context, status: HttpStatus.NotFound });
+  const outcome = await stepUpOf({ context, form: await context.req.parseBody(), targetKind: TARGET_KIND, targetId: numberId });
+  if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
+  const isRejected = outcome === StepUpOutcome.Rejected;
+  await auditNumberAction({
+    context,
+    action: BackofficeAuditAction.NumberPinRevealed,
+    outcome: isRejected ? BackofficeAuditOutcome.Failed : BackofficeAuditOutcome.Succeeded,
+    targetKind: TARGET_KIND,
+    targetId: numberId,
+  });
+  if (isRejected) return rejectDetail({ context, numberId, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
+  const pin = await numberAdminOf({ bindings: context.env }).openTwoStepPin({ numberId });
+  if (pin === null) return errorResponse({ context, status: HttpStatus.NotFound });
+  const page = await signedInPageContext({ context });
+  context.header(CACHE_CONTROL_HEADER, NO_STORE);
+  return context.html(<NumberPinPage page={page} numberId={numberId} label={entry.label} pin={pin} />);
 });
 
 numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.AccessToken}`, async (context) => {

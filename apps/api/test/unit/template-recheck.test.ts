@@ -57,6 +57,7 @@ function fakeAdmin(input: { entries: NumberListEntry[] }) {
     listNumbers: async () => input.entries,
     recordVerification,
     replaceAccessToken: () => Promise.reject(new Error('unexpected replaceAccessToken')),
+    openTwoStepPin: () => Promise.reject(new Error('unexpected openTwoStepPin')),
   };
   return { admin, recordVerification };
 }

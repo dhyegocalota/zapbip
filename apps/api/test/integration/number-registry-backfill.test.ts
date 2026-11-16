@@ -13,6 +13,7 @@ async function registerNumber(input: { phoneNumberId: string }): Promise<string>
     displayNumber: `55${input.phoneNumberId}`,
     label: input.phoneNumberId,
     accessToken: 'token',
+    pin: '482915',
   });
   return numberId;
 }
