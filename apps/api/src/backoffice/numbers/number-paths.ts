@@ -8,6 +8,7 @@ export enum NumberSegment {
   Verification = 'verification',
   AccessToken = 'access-token',
   State = 'state',
+  Pin = 'pin',
 }
 
 const NOTICE_QUERY = 'notice';

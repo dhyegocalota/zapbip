@@ -1,5 +1,6 @@
-import { META_APP_ID, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { META_APP_ID, ONBOARDING_PIN_PATTERN, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { numberAdminOf } from '../../src/adapters/d1/d1-number-admin';
 import { numberRegistryOf } from '../../src/adapters/d1/d1-number-registry';
 import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import { GRAPH_API_VERSION } from '../../src/adapters/whatsapp/whatsapp-constants';
@@ -135,6 +136,23 @@ describe('connecting a number', () => {
       .bind('number.registered')
       .all();
     expect(audit.results).toEqual([{ targetId: numberId }]);
+  });
+
+  test('seals the typed pin on the stored row, never as plaintext', async () => {
+    const numberId = numberIdOf({ response: await grantedConnect() });
+    const row = await testEnv.CONNECTIONS.prepare('SELECT sealed_two_step_pin AS sealed FROM whatsapp_numbers WHERE id = ?')
+      .bind(numberId)
+      .first<{ sealed: string }>();
+    expect(row?.sealed).not.toContain(PIN);
+    expect(await numberAdminOf({ bindings: testEnv }).openTwoStepPin({ numberId })).toBe(PIN);
+  });
+
+  test('registers with a generated six digit pin when the field is empty and seals the same pin', async () => {
+    const numberId = numberIdOf({ response: await grantedConnect({ [NumberFormField.Pin]: '' }) });
+    const registerBody = (await fakeGraph.requests())[4]?.body as { pin: string };
+    expect(registerBody.pin).toMatch(ONBOARDING_PIN_PATTERN);
+    expect(registerBody.pin).not.toBe(PIN);
+    expect(await numberAdminOf({ bindings: testEnv }).openTwoStepPin({ numberId })).toBe(registerBody.pin);
   });
 
   test('sends the Graph requests with the fixed app, no WABA override, the pin and the override of the number only', async () => {

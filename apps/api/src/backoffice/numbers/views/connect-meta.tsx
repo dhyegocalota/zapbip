@@ -56,7 +56,6 @@ export function ConnectMetaPage(props: { page: PageContext }) {
             error={null}
             inputmode="numeric"
             isSecret
-            isRequired
             pattern={ONBOARDING_PIN_PATTERN.source}
             maxLength={ONBOARDING_PIN_LENGTH}
           />

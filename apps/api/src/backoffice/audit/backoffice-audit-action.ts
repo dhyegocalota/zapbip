@@ -10,6 +10,7 @@ export enum BackofficeAuditAction {
   NumberAccessTokenRotated = 'number.access_token_rotated',
   MetaAppSecretRotated = 'meta_app.app_secret_rotated',
   NumberStateChanged = 'number.state_changed',
+  NumberPinRevealed = 'number.pin_revealed',
   WaitlistExported = 'waitlist.exported',
   ReferralCapChanged = 'waitlist.referral_cap_changed',
   AccessReleased = 'access.released',

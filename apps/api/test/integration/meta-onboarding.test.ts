@@ -1,4 +1,4 @@
-import { META_APP_ID } from '@zapbip/types';
+import { META_APP_ID, ONBOARDING_PIN_PATTERN } from '@zapbip/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import { GRAPH_API_VERSION, GRAPH_REQUEST_TIMEOUT_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
@@ -139,7 +139,7 @@ describe('onboarding a number through Meta', () => {
   it('reads the list, checks the number and the webhook, subscribes, registers and sets the number override, in order', async () => {
     const result = await run({ scenario: HAPPY });
     const requests = await graphOf({ scenario: HAPPY }).requests();
-    expect(result).toEqual({ accessToken: BUSINESS_TOKEN, displayNumber: DISPLAY_NUMBER, verifiedName: VERIFIED_NAME });
+    expect(result).toEqual({ accessToken: BUSINESS_TOKEN, pin: PIN, displayNumber: DISPLAY_NUMBER, verifiedName: VERIFIED_NAME });
     expect(requests.map((request) => `${request.method} ${request.path}`)).toEqual([
       `POST /${GRAPH_API_VERSION}/oauth/access_token`,
       `GET /${GRAPH_API_VERSION}/${HAPPY.wabaId}/phone_numbers`,
@@ -170,6 +170,37 @@ describe('onboarding a number through Meta', () => {
     expect(register?.body).toEqual({ messaging_product: 'whatsapp', pin: PIN });
     expect(override?.body).toEqual({ webhook_configuration: { override_callback_uri: WEBHOOK_URL, verify_token: VERIFY_TOKEN } });
     requests.slice(1).forEach((request) => expect(request.headers.authorization).toBe(`Bearer ${BUSINESS_TOKEN}`));
+  });
+
+  it('registers with a generated six digit pin when none is given, and returns it', async () => {
+    const scenario = scenarioOf({ name: 'generated-pin' });
+    const graph = graphOf({ scenario });
+    await graph.reset();
+    const onboarded = await onboardNumber({
+      graphBaseUrl,
+      appSecret: APP_SECRET,
+      webhookUrl: WEBHOOK_URL,
+      verifyToken: VERIFY_TOKEN,
+      pin: null,
+      fetcher: fetch,
+      ...scenario,
+    });
+    const register = (await graph.requests()).find((request) => request.path.endsWith('/register'));
+    expect(onboarded.pin).toMatch(ONBOARDING_PIN_PATTERN);
+    expect(register?.body).toEqual({ messaging_product: 'whatsapp', pin: onboarded.pin });
+  });
+
+  it('returns the given pin it registered with', async () => {
+    const onboarded = await onboardNumber({
+      graphBaseUrl,
+      appSecret: APP_SECRET,
+      webhookUrl: WEBHOOK_URL,
+      verifyToken: VERIFY_TOKEN,
+      pin: PIN,
+      fetcher: fetch,
+      ...HAPPY,
+    });
+    expect(onboarded.pin).toBe(PIN);
   });
 
   it.each(Object.values(OnboardingStep).flatMap((step) => KINDS.map(([status, kind]) => ({ step, status, kind }))))(

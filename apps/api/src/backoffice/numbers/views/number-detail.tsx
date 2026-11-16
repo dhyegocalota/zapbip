@@ -94,6 +94,20 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
               </button>
             </form>
           </section>
+          <section class="card" aria-labelledby="pin-title">
+            <h2 id="pin-title">{translate(BackofficeCopyKey.NumberPinTitle)}</h2>
+            {entry.hasTwoStepPin ? (
+              <form method="post" action={numberPath({ numberId: entry.numberId, segment: NumberSegment.Pin })}>
+                {csrf}
+                <CodeField locale={locale} id="pin-code" />
+                <button type="submit" class="button button-primary">
+                  {translate(BackofficeCopyKey.NumberPinSubmit)}
+                </button>
+              </form>
+            ) : (
+              <p>{translate(BackofficeCopyKey.NumberPinNotStored)}</p>
+            )}
+          </section>
           <section class="card" aria-labelledby="state-title">
             <h2 id="state-title">{translate(BackofficeCopyKey.NumberStateTitle)}</h2>
             {allowedTargets.length === 0 ? (

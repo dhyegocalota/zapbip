@@ -29,7 +29,7 @@ A webhook override on `subscribed_apps` routes one WABA's deliveries to its own 
    4. reads `GET /{waba_id}/phone_numbers`. The posted phone number ID must appear there, which proves the number belongs to the WABA; the display number and the verified name come from the same read.
 
    The number is stored as `pending` with the sealed business token. Verify and activate stay as they are.
-5. **The PIN is typed by the operator.** It is never stored, logged or put in a flash. A new number takes it as its two-step PIN. A number that already has one needs that PIN.
+5. **The PIN is typed by the operator.** It is never stored, logged or put in a flash. A new number takes it as its two-step PIN. A number that already has one needs that PIN. (Amended 2026-11-16 by [ADR 0067](0067-the-two-step-pin-is-optional-and-sealed-per-number.md): the PIN is optional, generated when empty, and always sealed on the number row. The text above is kept for history.)
 6. **Step-up before the popup.** The 30-second code cannot wait for a TOTP code typed after the flow. A fresh code is verified first, and it grants the session one onboarding submission for 10 minutes (`backoffice_sessions.onboarding_grant_until`). The final post consumes the grant atomically before anything else happens.
 7. **Graph API version.** The calls use `GRAPH_API_VERSION` (`v24.0`), the version the repository already pins. `FB.init` takes the same constant.
 
@@ -40,7 +40,7 @@ A webhook override on `subscribed_apps` routes one WABA's deliveries to its own 
 | Keep `meta_apps` rows and add Embedded Signup | supports a second app later | a form and a table for one fixed app; the secret stays sealed in D1 | the owner fixed the app |
 | App secret sealed in D1 under the fixed app | no Worker secret | needs a row and a form only to type it once; a D1 export plus the registry key exposes it | a Worker secret is write-only and encrypted at rest |
 | A second Meta app for staging | a leaked staging secret never reaches production | the app ID is no longer one constant; a second Embedded Signup configuration | the owner fixed one app; per-WABA overrides keep staging deliveries on staging |
-| Generated PIN, sealed per number | the operator types less | fails on a number that already has two-step verification; one more sealed column | the operator already keeps the PIN in a password manager |
+| Generated PIN, sealed per number | the operator types less | fails on a number that already has two-step verification; one more sealed column | the operator already keeps the PIN in a password manager. (Amended 2026-11-16 by [ADR 0067](0067-the-two-step-pin-is-optional-and-sealed-per-number.md): chosen, with a typed PIN still accepted.) |
 | TOTP on the final post | no grant column | the code dies 30 seconds after the popup; the TOTP step is 30 seconds | the order cannot work |
 | Code exchange by `GET` with the secret in the query, as Meta's example does | Meta's own example | the secret sits in a subrequest URL that error messages and traces can carry | a form `POST` is the OAuth token endpoint's standard form |
 | Keep the manual form beside the flow | a fallback without the SDK | two ways to create a number, and the old way bypasses Meta's ownership checks | the owner ordered the Meta onboarding |

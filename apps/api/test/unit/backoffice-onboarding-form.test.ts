@@ -25,6 +25,20 @@ describe('the onboarding form', () => {
     });
   });
 
+  it('accepts an empty PIN as no PIN', () => {
+    expect(parseOnboarding({ form: { ...VALID_FORM, [NumberFormField.Pin]: '' } })).toMatchObject({
+      isValid: true,
+      request: { pin: null },
+    });
+  });
+
+  it('accepts a PIN of six digits', () => {
+    expect(parseOnboarding({ form: { ...VALID_FORM, [NumberFormField.Pin]: '000123' } })).toMatchObject({
+      isValid: true,
+      request: { pin: '000123' },
+    });
+  });
+
   it.each([
     [NumberFormField.SignupCode, '', BackofficeCopyKey.FieldErrorRequired],
     [NumberFormField.PhoneNumberId, '10a', BackofficeCopyKey.FieldErrorDigits],

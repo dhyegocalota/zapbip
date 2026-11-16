@@ -24,6 +24,7 @@ export type RegisterNumberInput = {
   displayNumber: string;
   label: string;
   accessToken: string;
+  pin: string;
 };
 
 export type RegisteredNumberResult = { numberId: string; backfilledAccounts: number };

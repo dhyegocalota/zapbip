@@ -2,20 +2,23 @@ import type { Clock } from '@zapbip/core';
 import { WhatsAppNumberState } from '@zapbip/types';
 import type { Bindings } from '../../contract/env';
 import type { NumberAdmin, NumberListEntry } from '../../numbers/number-admin';
-import { accessTokenAssociatedData } from '../../numbers/number-sealing';
+import { accessTokenAssociatedData, twoStepPinAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
 import { createAesGcmSecretBox, type SecretBox } from '../platform/aes-gcm-secret-box';
 import { createPlatformClock } from '../platform/clock';
 
 const SINGLE_ROW_CHANGE = 1;
+const HAS_VALUE = 1;
 const LIST_NUMBERS_STATEMENT = `SELECT n.id AS numberId, n.phone_number_id AS phoneNumberId, n.waba_id AS wabaId, n.state AS state,
   n.display_number AS displayNumber, n.label AS label, n.verified_at AS verifiedAt,
   n.verification_snapshot AS verificationSnapshot, n.credentials_changed_at AS credentialsChangedAt, n.created_at AS createdAt, n.updated_at AS updatedAt,
-  (SELECT COUNT(*) FROM accounts WHERE accounts.number_id = n.id) AS accountCount
+  (SELECT COUNT(*) FROM accounts WHERE accounts.number_id = n.id) AS accountCount,
+  n.sealed_two_step_pin IS NOT NULL AS hasTwoStepPin
   FROM whatsapp_numbers n
   ORDER BY CASE n.state WHEN ? THEN 0 WHEN ? THEN 1 WHEN ? THEN 2 ELSE 3 END, n.label`;
 const RECORD_VERIFICATION_STATEMENT =
   'UPDATE whatsapp_numbers SET verification_snapshot = ?, verified_at = COALESCE(?, verified_at), updated_at = ? WHERE id = ?';
+const FIND_SEALED_TWO_STEP_PIN_STATEMENT = 'SELECT sealed_two_step_pin AS sealedTwoStepPin FROM whatsapp_numbers WHERE id = ?';
 const REPLACE_ACCESS_TOKEN_STATEMENT =
   'UPDATE whatsapp_numbers SET sealed_access_token = ?1, credentials_changed_at = ?2, updated_at = ?2 WHERE id = ?3';
 
@@ -34,8 +37,23 @@ export class D1NumberAdmin implements NumberAdmin {
     const { results } = await this.database
       .prepare(LIST_NUMBERS_STATEMENT)
       .bind(WhatsAppNumberState.Active, WhatsAppNumberState.Closed, WhatsAppNumberState.Pending)
-      .all<NumberListEntry>();
-    return results;
+      .all<Omit<NumberListEntry, 'hasTwoStepPin'> & { hasTwoStepPin: number }>();
+    return results.map((row) => ({ ...row, hasTwoStepPin: row.hasTwoStepPin === HAS_VALUE }));
+  }
+
+  async openTwoStepPin(input: { numberId: string }): Promise<string | null> {
+    const row = await this.database
+      .prepare(FIND_SEALED_TWO_STEP_PIN_STATEMENT)
+      .bind(input.numberId)
+      .first<{ sealedTwoStepPin: string | null }>();
+    if (row === null) throw new Error(`number ${input.numberId} is not registered`);
+    if (row.sealedTwoStepPin === null) return null;
+    const pin = await this.secretBox.open({
+      sealed: row.sealedTwoStepPin,
+      associatedData: twoStepPinAssociatedData({ numberId: input.numberId }),
+    });
+    if (pin === null) throw new Error(`the two-step PIN of number ${input.numberId} does not open`);
+    return pin;
   }
 
   async recordVerification(input: { numberId: string; snapshot: string; verifiedAt: number | null }): Promise<void> {

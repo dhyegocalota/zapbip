@@ -122,6 +122,7 @@ connectRoutes.post(META_PATH, async (context) => {
       displayNumber: onboarded.displayNumber,
       label: request.label,
       accessToken: onboarded.accessToken,
+      pin: onboarded.pin,
     })
     .catch((error: unknown) => {
       if (!(error instanceof RegistrationConflictError)) throw error;
