@@ -12,14 +12,17 @@ import { NumberFormField } from '../number-form-fields';
 import { NumberSegment } from '../number-paths';
 import { type ConnectNumberPageProps, type Translate, failureMessagesOf } from './connect-number';
 
+export type OwnBusinessDiagnostic = { accountCount: number; foundCount: number; connectedCount: number; ownerLookupFailure: string | null };
+
 export type ConnectOwnBusinessPageProps = {
   page: PageContext;
   numbers: OwnBusinessNumber[];
   flash: ConnectNumberPageProps['flash'];
+  diagnostic: OwnBusinessDiagnostic | null;
 };
 
 export function ConnectOwnBusinessPage(props: ConnectOwnBusinessPageProps) {
-  const { page, numbers, flash } = props;
+  const { page, numbers, flash, diagnostic } = props;
   const { locale } = page;
   const translate: Translate = (key, values) => renderBackofficeCopy({ key, locale, values });
   const failureMessages = failureMessagesOf({ flash, translate });
@@ -44,6 +47,20 @@ export function ConnectOwnBusinessPage(props: ConnectOwnBusinessPageProps) {
         {numbers.length === 0 ? (
           <>
             <p>{translate(BackofficeCopyKey.ConnectOwnNoNumbers)}</p>
+            {diagnostic === null ? null : (
+              <>
+                <p>
+                  {translate(BackofficeCopyKey.ConnectOwnDiagnosticCounts, {
+                    accounts: String(diagnostic.accountCount),
+                    found: String(diagnostic.foundCount),
+                    connected: String(diagnostic.connectedCount),
+                  })}
+                </p>
+                {diagnostic.ownerLookupFailure === null ? null : (
+                  <p>{translate(BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed, { reason: diagnostic.ownerLookupFailure })}</p>
+                )}
+              </>
+            )}
             <div class="form-actions">
               <a href={BackofficePath.Numbers} class="button button-secondary">
                 {translate(BackofficeCopyKey.ConnectCancel)}

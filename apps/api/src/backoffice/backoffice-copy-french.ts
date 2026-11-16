@@ -98,6 +98,9 @@ export const FRENCH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Numéro',
   [BackofficeCopyKey.ConnectOwnNoNumbers]:
     "Aucun numéro non enregistré n'a été trouvé dans l'entreprise. Tous sont déjà enregistrés ou le jeton n'y a pas accès.",
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    'Le jeton atteint {accounts} comptes WhatsApp Business. {found} numéros ont été trouvés et {connected} sont déjà connectés.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: "La recherche de l'entreprise propriétaire de l'application a échoué : {reason}",
   [BackofficeCopyKey.ConnectOwnNotConfigured]:
     "Le jeton de l'utilisateur système n'est pas configuré. Définissez META_SYSTEM_USER_TOKEN dans le Worker pour utiliser cette option.",
   [BackofficeCopyKey.ConnectOwnSubmit]: 'Connecter le numéro',

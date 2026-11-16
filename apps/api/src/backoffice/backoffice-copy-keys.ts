@@ -88,6 +88,8 @@ export enum BackofficeCopyKey {
   ConnectOwnSelectIntro = 'connect_own_select_intro',
   ConnectOwnNumbersLegend = 'connect_own_numbers_legend',
   ConnectOwnNoNumbers = 'connect_own_no_numbers',
+  ConnectOwnDiagnosticCounts = 'connect_own_diagnostic_counts',
+  ConnectOwnDiagnosticLookupFailed = 'connect_own_diagnostic_lookup_failed',
   ConnectOwnNotConfigured = 'connect_own_not_configured',
   ConnectOwnSubmit = 'connect_own_submit',
   ConnectStatusWorking = 'connect_status_working',

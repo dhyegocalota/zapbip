@@ -91,6 +91,9 @@ export const CHINESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectOwnSelectIntro]: '选择号码,添加标签,如有需要可设置两步验证 PIN。zapbip 会注册该号码并订阅 Webhook。',
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: '号码',
   [BackofficeCopyKey.ConnectOwnNoNumbers]: '业务中没有找到未注册的号码。要么都已注册,要么令牌无法访问。',
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    '令牌可访问 {accounts} 个 WhatsApp Business 账号。共找到 {found} 个号码,其中 {connected} 个已连接。',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: '查找应用所属业务失败:{reason}',
   [BackofficeCopyKey.ConnectOwnNotConfigured]: '系统用户令牌未配置。请在 Worker 中设置 META_SYSTEM_USER_TOKEN 以使用此选项。',
   [BackofficeCopyKey.ConnectOwnSubmit]: '连接号码',
   [BackofficeCopyKey.ConnectStatusWorking]: '正在完成注册…',

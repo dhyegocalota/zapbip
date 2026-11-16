@@ -95,6 +95,9 @@ export const HINDI_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'नंबर',
   [BackofficeCopyKey.ConnectOwnNoNumbers]:
     'बिज़नेस में कोई अपंजीकृत नंबर नहीं मिला। सभी पहले से पंजीकृत हैं या टोकन उन तक नहीं पहुँच सकता।',
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    'टोकन {accounts} WhatsApp Business खातों तक पहुँचता है। {found} नंबर मिले और {connected} पहले से जुड़े हैं।',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: 'ऐप के मालिक बिज़नेस की खोज विफल रही: {reason}',
   [BackofficeCopyKey.ConnectOwnNotConfigured]:
     'सिस्टम यूज़र टोकन कॉन्फ़िगर नहीं है। इस विकल्प के लिए Worker में META_SYSTEM_USER_TOKEN सेट करें।',
   [BackofficeCopyKey.ConnectOwnSubmit]: 'नंबर कनेक्ट करें',

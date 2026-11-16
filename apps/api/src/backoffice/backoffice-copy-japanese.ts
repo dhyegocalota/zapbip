@@ -93,6 +93,9 @@ export const JAPANESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
     '番号を選び、ラベルを付け、必要なら2段階認証のPINを設定します。zapbipが番号を登録し、Webhookを購読します。',
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: '番号',
   [BackofficeCopyKey.ConnectOwnNoNumbers]: 'ビジネスに未登録の番号が見つかりませんでした。すべて登録済みか、トークンから見えません。',
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    'トークンは {accounts} 件の WhatsApp Business アカウントにアクセスできます。{found} 件の番号が見つかり、{connected} 件はすでに接続済みです。',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: 'アプリを所有するビジネスの検索に失敗しました: {reason}',
   [BackofficeCopyKey.ConnectOwnNotConfigured]:
     'システムユーザートークンが設定されていません。このオプションを使うには、WorkerにMETA_SYSTEM_USER_TOKENを設定してください。',
   [BackofficeCopyKey.ConnectOwnSubmit]: '番号を接続',

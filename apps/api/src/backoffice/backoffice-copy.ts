@@ -108,6 +108,9 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Número',
     [BackofficeCopyKey.ConnectOwnNoNumbers]:
       'Nenhum número livre foi encontrado no negócio. Todos já estão cadastrados ou o token não tem acesso a eles.',
+    [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+      'O token alcança {accounts} contas do WhatsApp Business. {found} números foram encontrados e {connected} já estão conectados.',
+    [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: 'A busca do negócio dono do app falhou: {reason}',
     [BackofficeCopyKey.ConnectOwnNotConfigured]:
       'O token do usuário de sistema não está configurado. Defina META_SYSTEM_USER_TOKEN no Worker para usar esta opção.',
     [BackofficeCopyKey.ConnectOwnSubmit]: 'Conectar número',
@@ -521,6 +524,9 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Number',
     [BackofficeCopyKey.ConnectOwnNoNumbers]:
       'No unregistered number was found in the business. Every one is already registered or the token cannot reach them.',
+    [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+      'The token reaches {accounts} WhatsApp Business accounts. {found} numbers were found and {connected} are already connected.',
+    [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: 'Looking up the business that owns the app failed: {reason}',
     [BackofficeCopyKey.ConnectOwnNotConfigured]:
       'The system user token is not configured. Set META_SYSTEM_USER_TOKEN on the Worker to use this option.',
     [BackofficeCopyKey.ConnectOwnSubmit]: 'Connect number',

@@ -9,7 +9,7 @@ import {
   OnboardingError,
   OnboardingStep,
   onboardOwnBusinessNumber,
-  type OwnBusinessNumber,
+  type OwnBusinessDiscovery,
 } from '../../../numbers/meta-onboarding';
 import { BackofficeAuditAction } from '../../audit/backoffice-audit-action';
 import { consumeGrant, hasLiveGrant } from '../../auth/onboarding-grant';
@@ -51,7 +51,7 @@ function systemUserTokenOf(input: { context: Context<BackofficeEnv> }): string {
   return token;
 }
 
-function discoverNumbers(input: { context: Context<BackofficeEnv> }): Promise<OwnBusinessNumber[] | OnboardingError> {
+function discoverNumbers(input: { context: Context<BackofficeEnv> }): Promise<OwnBusinessDiscovery | OnboardingError> {
   const { context } = input;
   return discoverOwnBusinessNumbers({
     graphBaseUrl: readWhatsAppEnvironment({ env: context.env }).graphBaseUrl,
@@ -70,14 +70,20 @@ ownBusinessRoutes.get(SELECT_PATH, async (context) => {
   const discovered = await discoverNumbers({ context });
   if (discovered instanceof OnboardingError) {
     const flash = { failure: null, errors: {}, onboarding: { step: discovered.step, kind: discovered.kind } };
-    return context.html(<ConnectOwnBusinessPage page={page} numbers={[]} flash={flash} />, HttpStatus.BadGateway);
+    return context.html(<ConnectOwnBusinessPage page={page} numbers={[]} flash={flash} diagnostic={null} />, HttpStatus.BadGateway);
   }
   const known = await numberRegistryOf({ bindings: context.env }).findByPhoneNumberIds({
-    phoneNumberIds: discovered.map((number) => number.phoneNumberId),
+    phoneNumberIds: discovered.numbers.map((number) => number.phoneNumberId),
   });
   const knownIds = known.map((number) => number.phoneNumberId);
-  const unregistered = discovered.filter((number) => !knownIds.includes(number.phoneNumberId));
-  return context.html(<ConnectOwnBusinessPage page={page} numbers={unregistered} flash={null} />);
+  const unregistered = discovered.numbers.filter((number) => !knownIds.includes(number.phoneNumberId));
+  const diagnostic = {
+    accountCount: discovered.accountCount,
+    foundCount: discovered.numbers.length,
+    connectedCount: discovered.numbers.length - unregistered.length,
+    ownerLookupFailure: discovered.ownerLookupFailure,
+  };
+  return context.html(<ConnectOwnBusinessPage page={page} numbers={unregistered} flash={null} diagnostic={diagnostic} />);
 });
 
 ownBusinessRoutes.post(SELECT_PATH, async (context) => {
@@ -93,7 +99,7 @@ ownBusinessRoutes.post(SELECT_PATH, async (context) => {
   if (discovered instanceof OnboardingError) {
     return reject({ status: HttpStatus.BadGateway, onboarding: { step: discovered.step, kind: discovered.kind } });
   }
-  const chosen = discovered.find((number) => number.phoneNumberId === request.phoneNumberId);
+  const chosen = discovered.numbers.find((number) => number.phoneNumberId === request.phoneNumberId);
   if (chosen === undefined) {
     return reject({ status: HttpStatus.BadGateway, onboarding: { step: OnboardingStep.Read, kind: GraphErrorKind.NotFound } });
   }

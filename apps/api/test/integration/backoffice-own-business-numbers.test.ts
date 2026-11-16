@@ -1,10 +1,10 @@
-import { ONBOARDING_PIN_PATTERN, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { META_APP_ID, ONBOARDING_PIN_PATTERN, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { numberAdminOf } from '../../src/adapters/d1/d1-number-admin';
 import { numberRegistryOf } from '../../src/adapters/d1/d1-number-registry';
 import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import { GRAPH_API_VERSION } from '../../src/adapters/whatsapp/whatsapp-constants';
-import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
+import { BACKOFFICE_COPY, BackofficeCopyKey, renderBackofficeCopy } from '../../src/backoffice/backoffice-copy';
 import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { FakeGraph, fakeReportedDisplayNumberOf } from '../support/fake-graph';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
@@ -27,9 +27,15 @@ const FREE_WABA_ID = '3000000000000601';
 const FREE_PHONE_NUMBER_ID = '1000000000000601';
 const REGISTERED_WABA_ID = '3000000000000602';
 const REGISTERED_PHONE_NUMBER_ID = '1000000000000602';
+const OWNER_BUSINESS_ID = '3000000000000700';
+const GRAPH_INVALID_REQUEST_CODE = 100;
+const OWNER_LOOKUP_REFUSAL = 'Unsupported get request';
+const MANAGEMENT_SCOPE = 'whatsapp_business_management';
 const PIN = '482915';
 const LABEL = 'Own line';
 const WRONG_CODE = '000000';
+const STATUS_OK = 200;
+const STATUS_BAD_REQUEST = 400;
 const STATUS_SEE_OTHER = 303;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_UNPROCESSABLE = 422;
@@ -47,6 +53,51 @@ let sessionToken: string;
 
 function submission(overrides: Record<string, string> = {}): Record<string, string> {
   return { [NumberFormField.OwnNumber]: FREE_PHONE_NUMBER_ID, [NumberFormField.Label]: LABEL, [NumberFormField.Pin]: PIN, ...overrides };
+}
+
+function respondToGet(input: { path: string; status: number; body: unknown }): Promise<void> {
+  return fakeGraph.respondWith({ method: 'GET', path: `/${GRAPH_API_VERSION}${input.path}`, status: input.status, body: input.body });
+}
+
+async function tokenTargets(input: { wabaIds: string[] }): Promise<void> {
+  await fakeGraph.respondWith({
+    method: 'GET',
+    path: `/${GRAPH_API_VERSION}/debug_token`,
+    status: STATUS_OK,
+    body: { data: { is_valid: true, granular_scopes: [{ scope: MANAGEMENT_SCOPE, target_ids: input.wabaIds }] } },
+    scopeId: SYSTEM_USER_TOKEN,
+  });
+}
+
+async function ownerBusinessHolds(input: { wabaIds: string[] }): Promise<void> {
+  await respondToGet({ path: `/${META_APP_ID}`, status: STATUS_OK, body: { owner_business: { id: OWNER_BUSINESS_ID } } });
+  await respondToGet({
+    path: `/${OWNER_BUSINESS_ID}/owned_whatsapp_business_accounts`,
+    status: STATUS_OK,
+    body: { data: input.wabaIds.map((id) => ({ id })) },
+  });
+  await respondToGet({ path: `/${OWNER_BUSINESS_ID}/client_whatsapp_business_accounts`, status: STATUS_OK, body: { data: [] } });
+}
+
+async function ownerBusinessRefuses(): Promise<void> {
+  await respondToGet({
+    path: `/${META_APP_ID}`,
+    status: STATUS_BAD_REQUEST,
+    body: { error: { code: GRAPH_INVALID_REQUEST_CODE, message: OWNER_LOOKUP_REFUSAL } },
+  });
+}
+
+function diagnosticCountsOf(input: { accounts: number; found: number; connected: number }): string {
+  return renderBackofficeCopy({
+    key: BackofficeCopyKey.ConnectOwnDiagnosticCounts,
+    locale: OwnerLocale.PortugueseBrazil,
+    values: { accounts: String(input.accounts), found: String(input.found), connected: String(input.connected) },
+  });
+}
+
+async function selectionPage(): Promise<string> {
+  await grant();
+  return (await getPage({ path: SELECT_PATH, sessionToken, env: configured })).text();
 }
 
 function grant(): Promise<Response> {
@@ -110,6 +161,53 @@ describe('the own business connect path', () => {
     const body = await (await getPage({ path: SELECT_PATH, sessionToken, env: configured })).text();
     expect(body).toContain(`value="${FREE_PHONE_NUMBER_ID}"`);
     expect(body).toContain(fakeReportedDisplayNumberOf({ phoneNumberId: FREE_PHONE_NUMBER_ID }));
+    expect(body).not.toContain(`value="${REGISTERED_PHONE_NUMBER_ID}"`);
+  });
+
+  test('lists a number of a business account that only the app owner business holds when the token names no target', async () => {
+    await tokenTargets({ wabaIds: [] });
+    await ownerBusinessHolds({ wabaIds: [FREE_WABA_ID] });
+    const body = await selectionPage();
+    expect(body).toContain(`value="${FREE_PHONE_NUMBER_ID}"`);
+    expect(body).not.toContain(copy[BackofficeCopyKey.ConnectOwnNoNumbers]);
+  });
+
+  test('keeps the numbers of the granted targets when the owner business lookup fails', async () => {
+    await tokenTargets({ wabaIds: [FREE_WABA_ID, REGISTERED_WABA_ID] });
+    await ownerBusinessRefuses();
+    const body = await selectionPage();
+    expect(body).toContain(`value="${FREE_PHONE_NUMBER_ID}"`);
+    expect(body).toContain(`value="${REGISTERED_PHONE_NUMBER_ID}"`);
+  });
+
+  test('explains an empty list with zero counts and the lookup failure when nothing is reachable', async () => {
+    await tokenTargets({ wabaIds: [] });
+    await ownerBusinessRefuses();
+    const body = await selectionPage();
+    expect(body).toContain(copy[BackofficeCopyKey.ConnectOwnNoNumbers]);
+    expect(body).toContain(diagnosticCountsOf({ accounts: 0, found: 0, connected: 0 }));
+    expect(body).toContain(
+      renderBackofficeCopy({
+        key: BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed,
+        locale: OwnerLocale.PortugueseBrazil,
+        values: { reason: `HTTP ${STATUS_BAD_REQUEST} · code ${GRAPH_INVALID_REQUEST_CODE} · ${OWNER_LOOKUP_REFUSAL}` },
+      }),
+    );
+  });
+
+  test('counts the numbers that are already connected and hides them', async () => {
+    await seedWhatsAppNumber({
+      numberId: 'num_free',
+      phoneNumberId: FREE_PHONE_NUMBER_ID,
+      wabaId: FREE_WABA_ID,
+      displayNumber: fakeReportedDisplayNumberOf({ phoneNumberId: FREE_PHONE_NUMBER_ID }),
+    });
+    await seedWhatsAppNumber({ numberId: 'num_registered', phoneNumberId: REGISTERED_PHONE_NUMBER_ID, wabaId: REGISTERED_WABA_ID });
+    await tokenTargets({ wabaIds: [REGISTERED_WABA_ID] });
+    await ownerBusinessHolds({ wabaIds: [FREE_WABA_ID] });
+    const body = await selectionPage();
+    expect(body).toContain(diagnosticCountsOf({ accounts: 2, found: 2, connected: 2 }));
+    expect(body).not.toContain(`value="${FREE_PHONE_NUMBER_ID}"`);
     expect(body).not.toContain(`value="${REGISTERED_PHONE_NUMBER_ID}"`);
   });
 
