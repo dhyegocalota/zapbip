@@ -43,7 +43,7 @@ OpenClawは、小さなzapbipチャネルを通して、あなたのWhatsAppを�
 プラグインは、このエージェント宛てのあなたのメッセージをzapbipから読み取り、エージェントの返信を送り返します。それ以外のことはしません。インストールのコマンドには `--accept-capabilities` が必要で、これによりOpenClawがもう一度あなたに尋ねずにインストールできます。
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 次に、`zapbip` チャネルにリンクを設定し、`openclaw.json` でプラグインを有効にします。
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 ゲートウェイを再起動します。
 
-エージェントごとにリスナーは 1 つだけ実行してください。プラグインか `npx zapbip@0.1.0 listen` のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。
+エージェントごとにリスナーは 1 つだけ実行してください。プラグインか `npx zapbip@0.2.0 listen` のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。
 
 ### OpenClawの答え方
 

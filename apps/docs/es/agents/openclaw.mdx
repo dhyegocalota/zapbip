@@ -43,7 +43,7 @@ OpenClaw puede consultar en su lugar. Añade el servidor MCP de la configuració
 El plugin lee de zapbip tus mensajes para este agente y publica de vuelta las respuestas del agente. No hace nada más. El comando de instalación necesita `--accept-capabilities` para que OpenClaw pueda instalarlo sin volver a preguntarte.
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 Luego define el enlace en el canal `zapbip` y activa el plugin en `openclaw.json`:
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 Reinicia el gateway.
 
-Ejecuta un solo listener por agente: el plugin o `npx zapbip@0.1.0 listen`, nunca los dos. Un segundo listener reemplaza al primero.
+Ejecuta un solo listener por agente: el plugin o `npx zapbip@0.2.0 listen`, nunca los dos. Un segundo listener reemplaza al primero.
 
 ### Cómo responde OpenClaw
 

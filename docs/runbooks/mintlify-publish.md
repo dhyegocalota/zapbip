@@ -40,7 +40,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site links the
 
    If it fails: if no free plan offers the custom domain, either pay for the plan that does or keep the default Mintlify address and skip step 9; record the choice in the go-live record.
 
-7. **Connect the repository.** Only after steps 1, 3 and 4 are done and step 5 passes: linking the repository makes Mintlify publish the docs on every push to `main`, and the docs print `npx zapbip@0.1.0`, the npm plugin install commands and the pinned wheel install commands, so a package nobody has published or a wheel nobody has uploaded would fail for every reader of the docs. In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
+7. **Connect the repository.** Only after steps 1, 3 and 4 are done and step 5 passes: linking the repository makes Mintlify publish the docs on every push to `main`, and the docs print `npx zapbip@0.2.0`, the npm plugin install commands and the pinned wheel install commands, so a package nobody has published or a wheel nobody has uploaded would fail for every reader of the docs. In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
 
    Expect: Mintlify builds the site from `apps/docs` and shows a preview address with the Get started group.
 

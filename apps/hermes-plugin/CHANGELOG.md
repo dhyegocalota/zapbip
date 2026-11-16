@@ -4,6 +4,12 @@ All notable changes to this package are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-16
+
+### Changed
+
+- Version follows the zapbip connector 0.2.0; no plugin behavior change.
+
 ## [0.1.0] - 2026-11-13
 
 ### Added

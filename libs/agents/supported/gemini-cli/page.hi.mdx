@@ -20,7 +20,7 @@ import InstallPrompt from '/snippets/hi/install-prompt.mdx';
 जगाने का तरीका: लोकल। Gemini CLI एक बैकग्राउंड टर्मिनल में zapbip लिसनर चलाता है और उसे चलाए रखता है। जब आप WhatsApp पर लिखते हैं, तो वहाँ एक नई लाइन आती है और सेशन जाग जाता है। वह टर्मिनल खुला रखें: Gemini CLI में शेड्यूल करने का कोई विकल्प नहीं है।
 
 ```bash
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
 जब तक कोई सवाल खुला है, Gemini CLI एक बार में 50 सेकंड तक इंतज़ार करता है। अगर आपने जवाब नहीं दिया है, तो इंतज़ार "पेंडिंग" पर खत्म होता है और Gemini CLI फिर से कॉल करता है, जितनी बार ज़रूरी हो, कोई समय-सीमा नहीं है।
@@ -46,7 +46,7 @@ npx zapbip@0.1.0 listen
 
 4. **zapbip को Gemini CLI में जोड़ें।** आपकी हाँ के बाद यह `gemini mcp add --transport http --scope user zapbip <connectionLink>` चलाता है।
 
-5. **सुनना शुरू करें।** यह एक बैकग्राउंड टर्मिनल में `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` चलाता है और उस टर्मिनल को चलाए रखता है, बिना किसी समय-सीमा के। जब भी वहाँ नई लाइन आती है, यह `check_inbox` कॉल करता है और जवाब देता है।
+5. **सुनना शुरू करें।** यह एक बैकग्राउंड टर्मिनल में `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` चलाता है और उस टर्मिनल को चलाए रखता है, बिना किसी समय-सीमा के। जब भी वहाँ नई लाइन आती है, यह `check_inbox` कॉल करता है और जवाब देता है।
 
 6. **टेस्ट करें।** एक नए प्रोसेस में यह `gemini -p "Call send_message with the text '✅ इंस्टॉल हो गया'"` चलाता है। ✅ इंस्टॉल हो गया वाला एक `send_message` आपके WhatsApp पर पहुँचता है। अगर कमांड फ़ेल हो जाए, तो यह रुक जाता है और आखिरी 20 लाइनें दिखाता है। फिर Gemini CLI को फिर से शुरू करें।
 

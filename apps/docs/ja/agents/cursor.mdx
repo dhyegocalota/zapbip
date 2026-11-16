@@ -25,7 +25,7 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
 ## 聞き取りの仕組み
 
-起動方式: **ローカル**。Cursorはバックグラウンドのターミナルで `npx zapbip@0.1.0 listen` を実行し続けます。WhatsAppで書き込むと、そのターミナルに新しい行が現れ、チャットを起こします。
+起動方式: **ローカル**。Cursorはバックグラウンドのターミナルで `npx zapbip@0.2.0 listen` を実行し続けます。WhatsAppで書き込むと、そのターミナルに新しい行が現れ、チャットを起こします。
 
 - Cursorにはスケジュールの選択肢がないので、そのターミナルを動かし続けてください。
 
@@ -60,7 +60,7 @@ AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最
 
 5. **zapbipをCursorに追加します。** まずあなたに尋ね、「はい」を待ちます。そのうえで、CursorのMCP設定に、`<connectionLink>` のHTTPで接続する `zapbip` という名前のMCPサーバーを追加します。
 
-6. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
+6. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
 
 7. **テストします。** チャットで、`send_message` を呼び、✅ インストール完了 を送ります。その後、Cursorのチャットを再起動して、zapbipのツールを使えるようにしてください。
 

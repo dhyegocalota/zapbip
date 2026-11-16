@@ -43,7 +43,7 @@ Hermes can poll instead. Add the MCP server from the setup and create a job ever
 Install the package into the Python environment Hermes runs in:
 
 ```bash
-d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.2.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" 5e3c28d1d8170431504b4fe3780e897ac80c5fd3d134ce8ad5f9abf214ecd3f4 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
 ```
 
 Then enable it in `~/.hermes/config.yaml`:
@@ -69,7 +69,7 @@ chmod 600 <file>
 
 Restart the gateway.
 
-Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.
+Run only one listener per agent: the plugin or `npx zapbip@0.2.0 listen`, never both. A second listener replaces the first.
 
 ### How Hermes answers
 

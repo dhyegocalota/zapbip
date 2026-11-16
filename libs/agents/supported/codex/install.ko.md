@@ -11,7 +11,7 @@ tool_timeout_sec = 900
 default_tools_approval_mode = "approve"
 ```
 Success: ~/.codex/config.toml holds exactly one [mcp_servers.zapbip] table with that content.
-4. In the background run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 connect --client codex`. It keeps listening and resumes the session with `codex exec resume`. Success: the connector is running in the background and prints no error.
+4. In the background run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.2.0 connect --client codex`. It keeps listening and resumes the session with `codex exec resume`. Success: the connector is running in the background and prints no error.
 5. Tell the owner: "zapbip을 쓰려면 Codex를 다시 시작하세요." Success: the message is in the chat for the owner.
 6. Tell the owner: "커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개해요. 시간 제한은 없어요." Success: the message is in the chat for the owner.
 7. In a fresh process run `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ 설치 완료'"`. On a non-zero exit stop and show the last 20 lines of its output. Success: the command exits with zero.

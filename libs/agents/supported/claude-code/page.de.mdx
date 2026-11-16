@@ -33,7 +33,7 @@ Weckart: **Lokal**. Ein Connector auf deinem Computer weckt Claude Code, sodass 
 
 Wenn deine KI dich etwas fragt, hält zapbip die Frage fest und antwortet höchstens alle 50 Sekunden mit "ausstehend". Deine KI ruft dann erneut auf und ruft immer wieder auf, bis du antwortest, ohne Zeitlimit.
 
-Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude Code `npx zapbip@0.1.0 listen` laufen und beobachtet ihn mit Monitor. Eine Beobachtung dauert höchstens 30 Minuten, daher startet Claude Code sie bei jedem Timeout-Hinweis neu.
+Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude Code `npx zapbip@0.2.0 listen` laufen und beobachtet ihn mit Monitor. Eine Beobachtung dauert höchstens 30 Minuten, daher startet Claude Code sie bei jedem Timeout-Hinweis neu.
 
 ## Von Grund auf einrichten
 
@@ -64,15 +64,15 @@ Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude C
 
 4. **Sag Ja.** Claude Code erledigt dann den Rest, in dieser Reihenfolge.
 
-5. **Füge zapbip zu Claude Code hinzu.** Gibt es einen älteren Eintrag `zapbip` oder `zapbip-channel`, entfernt Claude Code ihn mit `claude mcp remove --scope user zapbip` oder `claude mcp remove --scope user zapbip-channel`. Dann führt es `claude mcp add --transport http --scope user zapbip <connectionLink>` für die Werkzeuge aus und `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` für den Live-Kanal.
+5. **Füge zapbip zu Claude Code hinzu.** Gibt es einen älteren Eintrag `zapbip` oder `zapbip-channel`, entfernt Claude Code ihn mit `claude mcp remove --scope user zapbip` oder `claude mcp remove --scope user zapbip-channel`. Dann führt es `claude mcp add --transport http --scope user zapbip <connectionLink>` für die Werkzeuge aus und `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.2.0 channel` für den Live-Kanal.
 
    Die Befehle in diesen Schritten tragen deinen Verbindungslink, er landet also in deinem Shell-Verlauf. Um das zu vermeiden, lege `ZAPBIP_CONNECTION_URL` wie in [Den Connector als Dienst ausführen](/de/developers/background-running) in eine Env-Datei.
 
 6. **Speichere den zapbip-Skill.** Nach deinem Ja schreibt es `~/.claude/skills/zapbip/SKILL.md`, damit jede Sitzung weiß, wie sie WhatsApp nutzt, einschließlich wann sie `check_inbox` aufruft.
 
-7. **Wähle einen Listener.** Eine Verbindung hält einen Listener, und ein zweiter ersetzt den ersten, also nutzt es genau einen davon, nie zwei zusammen. Für eine gestoppte Sitzung führt es `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` im Hintergrund aus. Der Connector weckt deine Sitzung, wenn du schreibst, während Claude Code untätig ist, und setzt eine geschlossene mit `claude -p --resume` fort.
+7. **Wähle einen Listener.** Eine Verbindung hält einen Listener, und ein zweiter ersetzt den ersten, also nutzt es genau einen davon, nie zwei zusammen. Für eine gestoppte Sitzung führt es `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client claude-code` im Hintergrund aus. Der Connector weckt deine Sitzung, wenn du schreibst, während Claude Code untätig ist, und setzt eine geschlossene mit `claude -p --resume` fort.
 
-8. **Nur wenn Kanäle nicht verfügbar sind.** Es führt `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` im Hintergrund aus und beobachtet ihn mit Monitor, wobei es ihn bei jedem Timeout-Hinweis neu startet.
+8. **Nur wenn Kanäle nicht verfügbar sind.** Es führt `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` im Hintergrund aus und beobachtet ihn mit Monitor, wobei es ihn bei jedem Timeout-Hinweis neu startet.
 
 9. **Teste es.** In einem frischen Prozess führt es `claude -p "Call send_message with the text '✅ installiert'" --allowedTools=mcp__zapbip__send_message` aus. Ein `send_message` mit ✅ installiert erreicht dein WhatsApp. Schlägt der Befehl fehl, hält es an und zeigt die letzten 20 Zeilen. Starte danach Claude Code neu, um die zapbip-Werkzeuge zu nutzen.
 

@@ -33,7 +33,7 @@ import InstallPrompt from '/snippets/ar/install-prompt.mdx';
 
 عندما يسألك الذكاء الاصطناعي لديك، يحتفظ zapbip بالسؤال ويردّ «قيد الانتظار» مرة كل 50 ثانية على الأكثر. فيستدعي الذكاء الاصطناعي لديك مرة أخرى، ويواصل الاستدعاء حتى تجيب. دون حد زمني.
 
-استخدم مستمعًا واحدًا، ولا تستخدم اثنين معًا. إذا لم تكن القناة مفعّلة، يُبقي Claude Code الأمر `npx zapbip@0.1.0 listen` قيد التشغيل ويراقبه عبر Monitor. تدوم المراقبة 30 دقيقة على الأكثر، لذا يعيد Claude Code ضبطها عند كل إشعار انتهاء مهلة.
+استخدم مستمعًا واحدًا، ولا تستخدم اثنين معًا. إذا لم تكن القناة مفعّلة، يُبقي Claude Code الأمر `npx zapbip@0.2.0 listen` قيد التشغيل ويراقبه عبر Monitor. تدوم المراقبة 30 دقيقة على الأكثر، لذا يعيد Claude Code ضبطها عند كل إشعار انتهاء مهلة.
 
 ## الإعداد من الصفر
 
@@ -62,15 +62,15 @@ import InstallPrompt from '/snippets/ar/install-prompt.mdx';
 
 4. **وافق.** بعدها ينجز Claude Code الباقي بهذا الترتيب.
 
-5. **أضف zapbip إلى Claude Code.** إذا وُجد إدخال أقدم باسم `zapbip` أو `zapbip-channel`، يزيله Claude Code بالأمر `claude mcp remove --scope user zapbip` أو `claude mcp remove --scope user zapbip-channel`. ثم ينفّذ `claude mcp add --transport http --scope user zapbip <connectionLink>` للأدوات، و`claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` للقناة المباشرة.
+5. **أضف zapbip إلى Claude Code.** إذا وُجد إدخال أقدم باسم `zapbip` أو `zapbip-channel`، يزيله Claude Code بالأمر `claude mcp remove --scope user zapbip` أو `claude mcp remove --scope user zapbip-channel`. ثم ينفّذ `claude mcp add --transport http --scope user zapbip <connectionLink>` للأدوات، و`claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.2.0 channel` للقناة المباشرة.
 
    تحمل الأوامر في هذه الخطوات رابط اتصالك، فيبقى في سجل الطرفية لديك. ولإبعاده عنه، ضع `ZAPBIP_CONNECTION_URL` في ملف بيئة كما في [تشغيل الموصّل كخدمة](/ar/developers/background-running).
 
 6. **احفظ مهارة zapbip.** بعد موافقتك، يكتب الملف `~/.claude/skills/zapbip/SKILL.md`، فتعرف كل جلسة كيف تستخدم WhatsApp، ومنها متى تستدعي `check_inbox`.
 
-7. **اختر مستمعًا واحدًا.** يحمل الاتصال مستمعًا واحدًا، والثاني يحل محل الأول، لذا يستخدم واحدًا فقط مما يلي، ولا يستخدم اثنين معًا. وللجلسة المتوقفة ينفّذ في الخلفية `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code`. يوقظ الموصّل جلستك عندما تكتب بينما Claude Code خامل، ويستأنف الجلسة المغلقة بالأمر `claude -p --resume`.
+7. **اختر مستمعًا واحدًا.** يحمل الاتصال مستمعًا واحدًا، والثاني يحل محل الأول، لذا يستخدم واحدًا فقط مما يلي، ولا يستخدم اثنين معًا. وللجلسة المتوقفة ينفّذ في الخلفية `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client claude-code`. يوقظ الموصّل جلستك عندما تكتب بينما Claude Code خامل، ويستأنف الجلسة المغلقة بالأمر `claude -p --resume`.
 
-8. **فقط إذا كانت القنوات غير متاحة.** ينفّذ في الخلفية `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` ويراقبه عبر Monitor، ويعيد ضبطه عند كل إشعار انتهاء مهلة.
+8. **فقط إذا كانت القنوات غير متاحة.** ينفّذ في الخلفية `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` ويراقبه عبر Monitor، ويعيد ضبطه عند كل إشعار انتهاء مهلة.
 
 9. **اختبره.** في عملية جديدة ينفّذ `claude -p "Call send_message with the text '✅ تم التثبيت'" --allowedTools=mcp__zapbip__send_message`. تصل إلى WhatsApp رسالة `send_message` بالنص ✅ تم التثبيت. إذا فشل الأمر، يتوقف ويعرض آخر 20 سطرًا. ثم أعد تشغيل Claude Code لاستخدام أدوات zapbip.
 

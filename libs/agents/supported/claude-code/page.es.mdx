@@ -33,7 +33,7 @@ Tipo de activación: **Local**. Un conector en tu computadora despierta a Claude
 
 Cuando tu IA te pregunta algo, zapbip guarda la pregunta y responde "pendiente" como máximo cada 50 segundos. Tu IA vuelve entonces a llamar, y sigue llamando otra vez hasta que respondas, sin límite de tiempo.
 
-Usa un solo listener, nunca dos a la vez. Si el canal no está activo, Claude Code mantiene en marcha `npx zapbip@0.1.0 listen` y lo vigila con Monitor. Una vigilancia dura como máximo 30 minutos, así que Claude Code la rearma con cada aviso de tiempo agotado.
+Usa un solo listener, nunca dos a la vez. Si el canal no está activo, Claude Code mantiene en marcha `npx zapbip@0.2.0 listen` y lo vigila con Monitor. Una vigilancia dura como máximo 30 minutos, así que Claude Code la rearma con cada aviso de tiempo agotado.
 
 ## Configúralo desde cero
 
@@ -64,15 +64,15 @@ Usa un solo listener, nunca dos a la vez. Si el canal no está activo, Claude Co
 
 4. **Di que sí.** Claude Code hace entonces el resto, en este orden.
 
-5. **Añade zapbip a Claude Code.** Si existe una entrada antigua `zapbip` o `zapbip-channel`, Claude Code la elimina con `claude mcp remove --scope user zapbip` o `claude mcp remove --scope user zapbip-channel`. Luego ejecuta `claude mcp add --transport http --scope user zapbip <connectionLink>` para las herramientas, y `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` para el canal en vivo.
+5. **Añade zapbip a Claude Code.** Si existe una entrada antigua `zapbip` o `zapbip-channel`, Claude Code la elimina con `claude mcp remove --scope user zapbip` o `claude mcp remove --scope user zapbip-channel`. Luego ejecuta `claude mcp add --transport http --scope user zapbip <connectionLink>` para las herramientas, y `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.2.0 channel` para el canal en vivo.
 
    Los comandos de estos pasos llevan tu enlace de conexión, así que queda en el historial de tu shell. Para evitarlo, pon `ZAPBIP_CONNECTION_URL` en un archivo de entorno como en [Ejecuta el conector como servicio](/es/developers/background-running).
 
 6. **Guarda la skill de zapbip.** Tras tu sí, escribe `~/.claude/skills/zapbip/SKILL.md`, para que cada sesión sepa usar WhatsApp, incluido cuándo llamar a `check_inbox`.
 
-7. **Elige un solo listener.** Una conexión tiene un solo listener y un segundo reemplaza al primero, así que usa exactamente uno de estos, nunca dos a la vez. Para una sesión detenida ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` en segundo plano. El conector despierta tu sesión cuando escribes mientras Claude Code está inactivo, y reanuda una cerrada con `claude -p --resume`.
+7. **Elige un solo listener.** Una conexión tiene un solo listener y un segundo reemplaza al primero, así que usa exactamente uno de estos, nunca dos a la vez. Para una sesión detenida ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client claude-code` en segundo plano. El conector despierta tu sesión cuando escribes mientras Claude Code está inactivo, y reanuda una cerrada con `claude -p --resume`.
 
-8. **Solo si los canales no están disponibles.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` en segundo plano y lo vigila con Monitor, rearmándolo con cada aviso de tiempo agotado.
+8. **Solo si los canales no están disponibles.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` en segundo plano y lo vigila con Monitor, rearmándolo con cada aviso de tiempo agotado.
 
 9. **Pruébalo.** En un proceso nuevo ejecuta `claude -p "Call send_message with the text '✅ listo'" --allowedTools=mcp__zapbip__send_message`. Un `send_message` con ✅ listo llega a tu WhatsApp. Si el comando falla, se detiene y muestra las últimas 20 líneas. Después reinicia Claude Code para usar las herramientas de zapbip.
 

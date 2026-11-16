@@ -64,7 +64,7 @@ Codex 对单个答案最多等待 15 分钟，然后再次询问，所以整体�
 
 5. **把 zapbip 添加到 Codex。** 在你同意之后，它会把 `~/.codex/config.toml` 里的 `[mcp_servers.zapbip]` 表替换为 `url = "<connectionLink>"`、`tool_timeout_sec = 900` 和 `default_tools_approval_mode = "approve"`。审批模式让 zapbip 的工具无需每次询问你就能运行，Codex 会告知你这一点。
 
-6. **启动连接器。** 它在后台运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex`。它持续监听，并用 `codex exec resume` 恢复你的会话。
+6. **启动连接器。** 它在后台运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client codex`。它持续监听，并用 `codex exec resume` 恢复你的会话。
 
 7. **测试。** 在一个新进程中，它运行 `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ 安装完成'"`。一条内容为 ✅ 安装完成 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Codex。
 

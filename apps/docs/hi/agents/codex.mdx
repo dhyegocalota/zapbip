@@ -64,7 +64,7 @@ Codex एक जवाब के लिए 15 मिनट तक इंतज�
 
 5. **zapbip को Codex में जोड़ें।** आपकी हाँ के बाद यह `~/.codex/config.toml` में `[mcp_servers.zapbip]` टेबल को `url = "<connectionLink>"`, `tool_timeout_sec = 900` और `default_tools_approval_mode = "approve"` से बदल देता है। Approval mode की वजह से zapbip के टूल हर बार आपसे पूछे बिना चलते हैं, और Codex आपको यह बता देता है।
 
-6. **कनेक्टर शुरू करें।** यह बैकग्राउंड में `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` चलाता है। यह सुनता रहता है और `codex exec resume` से आपका सेशन फिर से शुरू करता है।
+6. **कनेक्टर शुरू करें।** यह बैकग्राउंड में `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client codex` चलाता है। यह सुनता रहता है और `codex exec resume` से आपका सेशन फिर से शुरू करता है।
 
 7. **टेस्ट करें।** एक नए प्रोसेस में यह `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ इंस्टॉल हो गया'"` चलाता है। ✅ इंस्टॉल हो गया वाला एक `send_message` आपके WhatsApp पर पहुँचता है। अगर कमांड फ़ेल हो जाए, तो यह रुक जाता है और आखिरी 20 लाइनें दिखाता है। फिर Codex को फिर से शुरू करें।
 

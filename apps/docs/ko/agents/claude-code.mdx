@@ -33,7 +33,7 @@ import InstallPrompt from '/snippets/ko/install-prompt.mdx';
 
 AI가 나에게 무언가를 물으면 zapbip은 그 질문을 붙잡고 최대 50초마다 "보류 중"으로 답해요. 그러면 AI가 다시 호출하고, 내가 답할 때까지 계속 호출해요. 시간 제한 없이 기다려요.
 
-리스너는 하나만 쓰고, 둘을 동시에 쓰지 마세요. 채널이 켜져 있지 않으면 Claude Code는 `npx zapbip@0.1.0 listen`을 계속 실행하고 Monitor로 지켜봐요. 감시는 최대 30분 동안 이어지므로, Claude Code는 시간 초과 알림이 올 때마다 감시를 다시 설정해요.
+리스너는 하나만 쓰고, 둘을 동시에 쓰지 마세요. 채널이 켜져 있지 않으면 Claude Code는 `npx zapbip@0.2.0 listen`을 계속 실행하고 Monitor로 지켜봐요. 감시는 최대 30분 동안 이어지므로, Claude Code는 시간 초과 알림이 올 때마다 감시를 다시 설정해요.
 
 ## 처음부터 설정하기
 
@@ -62,15 +62,15 @@ AI가 나에게 무언가를 물으면 zapbip은 그 질문을 붙잡고 최대 
 
 4. **"예"라고 답해요.** 그다음은 Claude Code가 이 순서대로 나머지를 해요.
 
-5. **Claude Code에 zapbip을 추가해요.** 이전의 `zapbip`이나 `zapbip-channel` 항목이 있으면 Claude Code가 `claude mcp remove --scope user zapbip` 또는 `claude mcp remove --scope user zapbip-channel`로 제거해요. 그다음 도구용으로 `claude mcp add --transport http --scope user zapbip <connectionLink>`를, 라이브 채널용으로 `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel`을 실행해요.
+5. **Claude Code에 zapbip을 추가해요.** 이전의 `zapbip`이나 `zapbip-channel` 항목이 있으면 Claude Code가 `claude mcp remove --scope user zapbip` 또는 `claude mcp remove --scope user zapbip-channel`로 제거해요. 그다음 도구용으로 `claude mcp add --transport http --scope user zapbip <connectionLink>`를, 라이브 채널용으로 `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.2.0 channel`을 실행해요.
 
    이 단계의 명령에는 내 연결 링크가 들어 있으므로 셸 기록에 남아요. 남기지 않으려면 [커넥터를 서비스로 실행하기](/ko/developers/background-running)처럼 `ZAPBIP_CONNECTION_URL`을 env 파일에 넣으세요.
 
 6. **zapbip 스킬을 저장해요.** 내 "예" 뒤에 `~/.claude/skills/zapbip/SKILL.md`를 써서, 모든 세션이 `check_inbox`를 언제 호출할지를 포함해 WhatsApp을 쓰는 법을 알게 해요.
 
-7. **리스너 하나를 골라요.** 연결 하나는 리스너 하나만 가지며 두 번째가 첫 번째를 대체하므로, 다음 중 정확히 하나만 사용하고 둘을 동시에 쓰지 않아요. 멈춘 세션에는 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code`를 백그라운드에서 실행해요. 커넥터는 Claude Code가 쉬는 동안 내가 쓰면 세션을 깨우고, 닫힌 세션은 `claude -p --resume`으로 다시 시작해요.
+7. **리스너 하나를 골라요.** 연결 하나는 리스너 하나만 가지며 두 번째가 첫 번째를 대체하므로, 다음 중 정확히 하나만 사용하고 둘을 동시에 쓰지 않아요. 멈춘 세션에는 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client claude-code`를 백그라운드에서 실행해요. 커넥터는 Claude Code가 쉬는 동안 내가 쓰면 세션을 깨우고, 닫힌 세션은 `claude -p --resume`으로 다시 시작해요.
 
-8. **채널을 쓸 수 없을 때만.** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`을 백그라운드에서 실행하고 Monitor로 지켜보며, 시간 초과 알림이 올 때마다 다시 설정해요.
+8. **채널을 쓸 수 없을 때만.** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen`을 백그라운드에서 실행하고 Monitor로 지켜보며, 시간 초과 알림이 올 때마다 다시 설정해요.
 
 9. **테스트해요.** 새 프로세스에서 `claude -p "Call send_message with the text '✅ 설치 완료'" --allowedTools=mcp__zapbip__send_message`를 실행해요. ✅ 설치 완료가 담긴 `send_message`가 내 WhatsApp에 도착해요. 명령이 실패하면 멈추고 마지막 20줄을 보여 줘요. 그다음 zapbip 도구를 쓰기 위해 Claude Code를 다시 시작하세요.
 

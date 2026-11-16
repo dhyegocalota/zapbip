@@ -43,7 +43,7 @@ OpenClaw 可以改为轮询。添加设置中的 MCP 服务器，并创建一个
 这个插件从 zapbip 读取发给该智能体的你的消息，并把智能体的回复发回去。它不做别的事。安装命令需要 `--accept-capabilities`，这样 OpenClaw 无需再次询问你就能安装它。
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 然后在 `zapbip` 渠道上设置链接，并在 `openclaw.json` 中启用插件：
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 重启网关。
 
-每个智能体只运行一个 listener：插件或 `npx zapbip@0.1.0 listen`，不要两者同时使用。第二个 listener 会替换第一个。
+每个智能体只运行一个 listener：插件或 `npx zapbip@0.2.0 listen`，不要两者同时使用。第二个 listener 会替换第一个。
 
 ### OpenClaw 如何回答
 

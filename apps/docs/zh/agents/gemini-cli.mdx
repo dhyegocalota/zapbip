@@ -20,7 +20,7 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 级别：本地。Gemini CLI 在后台终端中运行 zapbip 监听器并保持运行。你在 WhatsApp 上发消息时，那里会出现新的一行并唤醒会话。请保持那个终端开着：Gemini CLI 没有定时选项。
 
 ```bash
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
 有问题未决时，Gemini CLI 每次最多等待 50 秒。如果你还没有回答，这次等待会以待处理（pending）结束，Gemini CLI 会再次调用，需要多少次就调用多少次，没有时间限制。
@@ -46,7 +46,7 @@ npx zapbip@0.1.0 listen
 
 4. **把 zapbip 添加到 Gemini CLI。** 在你同意之后，它运行 `gemini mcp add --transport http --scope user zapbip <connectionLink>`。
 
-5. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
+5. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
 
 6. **测试。** 在一个新进程中，它运行 `gemini -p "Call send_message with the text '✅ 安装完成'"`。一条内容为 ✅ 安装完成 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Gemini CLI。
 

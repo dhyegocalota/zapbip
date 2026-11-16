@@ -25,7 +25,7 @@ import InstallPrompt from '/snippets/ko/install-prompt.mdx';
 
 ## 수신 방식
 
-깨우기 방식: **로컬**. Cursor는 백그라운드 터미널에서 `npx zapbip@0.1.0 listen`을 계속 실행해요. WhatsApp에서 쓰면 그 터미널에 새 줄이 나타나 채팅을 깨워요.
+깨우기 방식: **로컬**. Cursor는 백그라운드 터미널에서 `npx zapbip@0.2.0 listen`을 계속 실행해요. WhatsApp에서 쓰면 그 터미널에 새 줄이 나타나 채팅을 깨워요.
 
 - Cursor에는 예약 옵션이 없으므로, 그 터미널을 계속 실행해 두세요.
 
@@ -60,7 +60,7 @@ AI가 나에게 무언가를 물으면 zapbip은 그 질문을 붙잡고 최대 
 
 5. **Cursor에 zapbip을 추가해요.** 먼저 나에게 묻고 "예"를 기다려요. 그런 다음 Cursor의 MCP 설정에 `<connectionLink>`를 HTTP로 가리키는 `zapbip`이라는 MCP 서버를 추가해요.
 
-6. **듣기를 시작해요.** 백그라운드 터미널에서 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`을 실행하고, 그 터미널을 시간 제한 없이 계속 실행해요. 거기에 새 줄이 나타날 때마다 `check_inbox`를 호출하고 답해요.
+6. **듣기를 시작해요.** 백그라운드 터미널에서 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen`을 실행하고, 그 터미널을 시간 제한 없이 계속 실행해요. 거기에 새 줄이 나타날 때마다 `check_inbox`를 호출하고 답해요.
 
 7. **테스트해요.** 채팅에서 `send_message`를 호출해 ✅ 설치 완료를 보내요. 그다음 zapbip 도구를 쓰기 위해 Cursor 채팅을 다시 시작하세요.
 

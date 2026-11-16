@@ -32,12 +32,12 @@ AIを使っているフォルダでターミナルを開き、次のいずれか
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client claude-code
+npx zapbip@0.2.0 connect --client claude-code
 ```
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client codex
+npx zapbip@0.2.0 connect --client codex
 ```
 
 `ZAPBIP_CONNECTION_URL` を設定しない場合、コネクタがリンクを尋ねます。リンクを引数として受け取ることはありません。引数はシェルの履歴やプロセス一覧に残ってしまうためです。
@@ -58,7 +58,7 @@ npx zapbip@0.1.0 connect --client codex
 デフォルトでは、コネクタはフォルダ内で最も新しいセッションを使います。同じフォルダを別のウィンドウで開いていると、ウェイクがその会話に加わることがあります。それを避けるには、セッションを固定します。
 
 ```bash
-npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+npx zapbip@0.2.0 connect --client claude-code --session <session-id>
 ```
 
 | オプション  | 内容                                                           |
@@ -118,7 +118,7 @@ Codexアプリがすでにその会話を開いている場合、Codexは再開�
 チャネルが第一の選択肢です。Claude Code自身が、ほかのツールと同じ方法で起動する小さなプログラムです。WhatsAppで書いたメッセージを1つずつ、検証済みの印が付いたあなたからのメッセージとして、開いているセッションに直接入れます（転送されたメッセージは未検証の印が付きます）。Claude Codeが動く環境で `ZAPBIP_CONNECTION_URL` を設定すると、Claude Codeは次で起動します。
 
 ```bash
-npx zapbip@0.1.0 channel
+npx zapbip@0.2.0 channel
 ```
 
 チャネルはリンクをあなたに尋ねられないので、`ZAPBIP_CONNECTION_URL` からしか読みません。引数も取りません。
@@ -130,7 +130,7 @@ npx zapbip@0.1.0 channel
   "mcpServers": {
     "zapbip-channel": {
       "command": "npx",
-      "args": ["zapbip@0.1.0", "channel"],
+      "args": ["zapbip@0.2.0", "channel"],
       "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
     },
     "zapbip": {
@@ -153,10 +153,10 @@ claude --dangerously-load-development-channels server:zapbip-channel
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
-各行はJSONで、メッセージid、種類、`"sender":"owner"`、`"verified"`（自分のメッセージなら `true`、転送されたメッセージなら `false`）、`"forwarded"`、本文を含みます。Monitorの監視は最長30 分続くので、AIは終わるたびに監視を開始し直します。OpenClawやHermesのように、バックグラウンドのコマンドを動かし続けて出力に反応できるほかのエージェントも、`npx zapbip@0.1.0 listen` を同じように使えます。
+各行はJSONで、メッセージid、種類、`"sender":"owner"`、`"verified"`（自分のメッセージなら `true`、転送されたメッセージなら `false`）、`"forwarded"`、本文を含みます。Monitorの監視は最長30 分続くので、AIは終わるたびに監視を開始し直します。OpenClawやHermesのように、バックグラウンドのコマンドを動かし続けて出力に反応できるほかのエージェントも、`npx zapbip@0.2.0 listen` を同じように使えます。
 
 どちらのプログラムも開いたままで、`connect` と同じように自分で再接続します。どちらも、メッセージを渡した後でのみ処理済みとして記録するので、メッセージは失われず、2回表示されることもありません。ログはエラー出力に出され、あなたのメッセージやリンクが含まれることはありません。
 

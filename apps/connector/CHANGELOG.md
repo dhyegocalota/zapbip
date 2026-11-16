@@ -4,9 +4,11 @@ All notable changes to this package are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-16
+
 ### Added
 
-- `zapbip.json` sets the program and arguments `connect` starts for each client, found in the working folder or named by `--config` or `ZAPBIP_CONNECTOR_CONFIG`.
+- `zapbip.json` connector runtime config: the command, arguments, environment and `timeoutMilliseconds` `connect` uses for each client, found in the working folder or named by `--config` or `ZAPBIP_CONNECTOR_CONFIG`.
 
 ## [0.1.0] - 2026-11-13
 

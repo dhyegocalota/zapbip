@@ -1,8 +1,8 @@
 import { PACKAGE_PATH_PREFIX } from '@zapbip/types';
 
-export const PLUGIN_VERSION = '0.1.0';
-export const WHEEL_SHA256 = '25e9eade35908bffc09ed502cde3f41bc4eb59ac6f7befefe4a8c0aba0b30ee1';
-export const REQUIREMENTS_SHA256 = 'fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31';
+export const PLUGIN_VERSION = '0.2.0';
+export const WHEEL_SHA256 = '8e6fabc2ab416e939864b7ee176d0037ddfdc0ef161641c4cc0d61413ccb6ee7';
+export const REQUIREMENTS_SHA256 = '5e3c28d1d8170431504b4fe3780e897ac80c5fd3d134ce8ad5f9abf214ecd3f4';
 export const HERMES_WHEEL_FILENAME_PATTERN = /^zapbip_platform-\d+\.\d+\.\d+-py3-none-any\.whl$/;
 
 export function hermesWheelFilename(input: { version: string }): string {

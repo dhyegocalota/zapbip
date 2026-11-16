@@ -64,7 +64,7 @@ Codex는 하나의 답을 최대 15분 기다린 뒤 다시 묻기 때문에, �
 
 5. **Codex에 zapbip을 추가해요.** 내 "예" 뒤에 `~/.codex/config.toml`의 `[mcp_servers.zapbip]` 테이블을 `url = "<connectionLink>"`, `tool_timeout_sec = 900`, `default_tools_approval_mode = "approve"`로 바꿔요. 승인 모드는 zapbip 도구가 매번 묻지 않고 실행되게 하며, Codex가 그 사실을 알려 줘요.
 
-6. **커넥터를 시작해요.** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex`를 백그라운드에서 실행해요. 계속 듣고 있다가 `codex exec resume`으로 세션을 다시 시작해요.
+6. **커넥터를 시작해요.** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client codex`를 백그라운드에서 실행해요. 계속 듣고 있다가 `codex exec resume`으로 세션을 다시 시작해요.
 
 7. **테스트해요.** 새 프로세스에서 `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ 설치 완료'"`를 실행해요. ✅ 설치 완료가 담긴 `send_message`가 내 WhatsApp에 도착해요. 명령이 실패하면 멈추고 마지막 20줄을 보여 줘요. 그다음 Codex를 다시 시작하세요.
 
