@@ -38,7 +38,7 @@ Type de réveil : **Local**. Un connecteur sur votre ordinateur réveille Claud
 
 Quand votre IA vous demande quelque chose, zapbip garde la question et répond « en attente » au plus toutes les 50 secondes. Votre IA rappelle alors, et continue de rappeler à nouveau jusqu'à ce que vous répondiez, sans limite de temps.
 
-Utilisez un seul listener, jamais deux ensemble. Si le canal n'est pas activé, Claude Code garde `npx zapbip@0.1.0 listen` en marche et le surveille avec Monitor. Une surveillance dure au plus 30 minutes, donc Claude Code la réarme à chaque notification de délai dépassé.
+Utilisez un seul listener, jamais deux ensemble. Si le canal n'est pas activé, Claude Code garde `npx zapbip@0.2.0 listen` en marche et le surveille avec Monitor. Une surveillance dure au plus 30 minutes, donc Claude Code la réarme à chaque notification de délai dépassé.
 
 ## Configurer de zéro
 
@@ -69,15 +69,15 @@ Utilisez un seul listener, jamais deux ensemble. Si le canal n'est pas activé, 
 
 4. **Dites oui.** Claude Code fait alors le reste, dans cet ordre.
 
-5. **Ajoutez zapbip à Claude Code.** Si une ancienne entrée `zapbip` ou `zapbip-channel` existe, Claude Code la supprime avec `claude mcp remove --scope user zapbip` ou `claude mcp remove --scope user zapbip-channel`. Puis il exécute `claude mcp add --transport http --scope user zapbip <connectionLink>` pour les outils, et `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` pour le canal en direct.
+5. **Ajoutez zapbip à Claude Code.** Si une ancienne entrée `zapbip` ou `zapbip-channel` existe, Claude Code la supprime avec `claude mcp remove --scope user zapbip` ou `claude mcp remove --scope user zapbip-channel`. Puis il exécute `claude mcp add --transport http --scope user zapbip <connectionLink>` pour les outils, et `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.2.0 channel` pour le canal en direct.
 
    Les commandes de ces étapes portent votre lien de connexion, qui se retrouve donc dans l'historique de votre shell. Pour l'éviter, mettez `ZAPBIP_CONNECTION_URL` dans un fichier d'environnement comme dans [Exécuter le connecteur comme un service](/fr/developers/background-running).
 
 6. **Enregistrez le skill zapbip.** Après votre accord, il écrit `~/.claude/skills/zapbip/SKILL.md`, pour que chaque session sache utiliser WhatsApp, y compris quand appeler `check_inbox`.
 
-7. **Choisissez un seul listener.** Une connexion tient un seul listener et un second remplace le premier, il en utilise donc exactement un, jamais deux ensemble. Pour une session arrêtée, il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` en arrière-plan. Le connecteur réveille votre session quand vous écrivez alors que Claude Code est inactif, et reprend une session fermée avec `claude -p --resume`.
+7. **Choisissez un seul listener.** Une connexion tient un seul listener et un second remplace le premier, il en utilise donc exactement un, jamais deux ensemble. Pour une session arrêtée, il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client claude-code` en arrière-plan. Le connecteur réveille votre session quand vous écrivez alors que Claude Code est inactif, et reprend une session fermée avec `claude -p --resume`.
 
-8. **Seulement si les canaux sont indisponibles.** Il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` en arrière-plan et le surveille avec Monitor, en le réarmant à chaque notification de délai dépassé.
+8. **Seulement si les canaux sont indisponibles.** Il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` en arrière-plan et le surveille avec Monitor, en le réarmant à chaque notification de délai dépassé.
 
 9. **Testez.** Dans un processus neuf, il exécute `claude -p "Call send_message with the text '✅ installé'" --allowedTools=mcp__zapbip__send_message`. Un `send_message` avec ✅ installé parvient à votre WhatsApp. Si la commande échoue, il s'arrête et affiche les 20 dernières lignes. Redémarrez ensuite Claude Code pour utiliser les outils zapbip.
 

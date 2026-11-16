@@ -43,7 +43,7 @@ import { Chat } from '/snippets/chat.jsx';
 يقرأ هذا المكوّن الإضافي رسائلك الموجّهة إلى هذا الوكيل من zapbip وينشر ردود الوكيل عائدةً إليها. ولا يفعل شيئًا غير ذلك. يحتاج أمر التثبيت إلى `--accept-capabilities` ليثبّته OpenClaw دون أن يسألك مرة أخرى.
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 ثم اضبط الرابط على قناة `zapbip` وفعّل المكوّن الإضافي في `openclaw.json`:
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 أعد تشغيل البوابة.
 
-شغّل مستمعًا واحدًا فقط لكل وكيل: المكوّن الإضافي أو `npx zapbip@0.1.0 listen`، وليس الاثنين معًا. المستمع الثاني يحل محل الأول.
+شغّل مستمعًا واحدًا فقط لكل وكيل: المكوّن الإضافي أو `npx zapbip@0.2.0 listen`، وليس الاثنين معًا. المستمع الثاني يحل محل الأول.
 
 ### كيف يجيب OpenClaw
 

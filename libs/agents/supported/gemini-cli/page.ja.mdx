@@ -20,7 +20,7 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 段: ローカル。Gemini CLIはzapbipのリスナーをバックグラウンドのターミナルで実行し続けます。WhatsAppで書き込むと、そこに新しい行が現れ、セッションを起こします。そのターミナルは開いたままにしてください。Gemini CLIにはスケジュールの選択肢がありません。
 
 ```bash
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
 質問が開いている間、Gemini CLIは一度に最大50 秒待ちます。あなたが答えていない場合、待機は保留中（pending）で終わり、Gemini CLIは必要なだけ何度でも、もう一度呼び出します。時間制限なしです。
@@ -46,7 +46,7 @@ npx zapbip@0.1.0 listen
 
 4. **zapbipをGemini CLIに追加します。** あなたの「はい」の後、`gemini mcp add --transport http --scope user zapbip <connectionLink>` を実行します。
 
-5. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
+5. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
 
 6. **テストします。** 新しいプロセスで `gemini -p "Call send_message with the text '✅ インストール完了'"` を実行します。✅ インストール完了 を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Gemini CLIを再起動してください。
 

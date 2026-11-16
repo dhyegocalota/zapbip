@@ -32,12 +32,12 @@ zapbip कनेक्टर इसे ठीक करता है। यह �
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client claude-code
+npx zapbip@0.2.0 connect --client claude-code
 ```
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client codex
+npx zapbip@0.2.0 connect --client codex
 ```
 
 अगर आप `ZAPBIP_CONNECTION_URL` सेट नहीं करते, तो कनेक्टर लिंक माँगता है। यह लिंक को कभी आर्गुमेंट के रूप में नहीं लेता, क्योंकि आर्गुमेंट आपकी shell history और प्रोसेस लिस्ट में दिख जाते हैं।
@@ -58,7 +58,7 @@ npx zapbip@0.1.0 connect --client codex
 डिफ़ॉल्ट रूप से कनेक्टर फ़ोल्डर का सबसे नया सेशन इस्तेमाल करता है। अगर वही फ़ोल्डर किसी दूसरी विंडो में खुला है, तो वेक उस बातचीत में जुड़ सकता है। इससे बचने के लिए एक सेशन तय कर दें:
 
 ```bash
-npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+npx zapbip@0.2.0 connect --client claude-code --session <session-id>
 ```
 
 | विकल्प      | क्या करता है                                                           |
@@ -118,7 +118,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 चैनल पहली पसंद है। यह एक छोटा प्रोग्राम है जिसे Claude Code खुद शुरू करता है, ठीक वैसे ही जैसे वह कोई और टूल शुरू करता है। यह WhatsApp पर लिखा आपका हर संदेश सीधे खुले सेशन में डालता है, आपके संदेश के रूप में, वेरिफ़ाइड मार्क के साथ (फ़ॉरवर्ड किया गया संदेश बिना वेरिफ़ाइड मार्क के आता है)। जिस एनवायरनमेंट में Claude Code चलता है, उसमें `ZAPBIP_CONNECTION_URL` सेट करें, और Claude Code इसे इससे शुरू करता है:
 
 ```bash
-npx zapbip@0.1.0 channel
+npx zapbip@0.2.0 channel
 ```
 
 चैनल आपसे लिंक नहीं माँग सकता, इसलिए वह इसे सिर्फ़ `ZAPBIP_CONNECTION_URL` से पढ़ता है। यह कोई आर्गुमेंट नहीं लेता।
@@ -130,7 +130,7 @@ npx zapbip@0.1.0 channel
   "mcpServers": {
     "zapbip-channel": {
       "command": "npx",
-      "args": ["zapbip@0.1.0", "channel"],
+      "args": ["zapbip@0.2.0", "channel"],
       "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
     },
     "zapbip": {
@@ -153,10 +153,10 @@ claude --dangerously-load-development-channels server:zapbip-channel
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
-हर लाइन एक JSON है जिसमें संदेश की id, उसका प्रकार, `"sender":"owner"`, `"verified"` (आपके अपने संदेश के लिए `true`, फ़ॉरवर्ड किए गए के लिए `false`), `"forwarded"` और टेक्स्ट होता है। Monitor की एक निगरानी 30 मिनट तक चलती है, इसलिए हर बार एक खत्म होने पर AI निगरानी फिर से शुरू करता है। दूसरे एजेंट जो कोई बैकग्राउंड कमांड चलाए रख सकते हैं और उसके आउटपुट पर प्रतिक्रिया दे सकते हैं, जैसे OpenClaw और Hermes, वे भी `npx zapbip@0.1.0 listen` को इसी तरह इस्तेमाल कर सकते हैं।
+हर लाइन एक JSON है जिसमें संदेश की id, उसका प्रकार, `"sender":"owner"`, `"verified"` (आपके अपने संदेश के लिए `true`, फ़ॉरवर्ड किए गए के लिए `false`), `"forwarded"` और टेक्स्ट होता है। Monitor की एक निगरानी 30 मिनट तक चलती है, इसलिए हर बार एक खत्म होने पर AI निगरानी फिर से शुरू करता है। दूसरे एजेंट जो कोई बैकग्राउंड कमांड चलाए रख सकते हैं और उसके आउटपुट पर प्रतिक्रिया दे सकते हैं, जैसे OpenClaw और Hermes, वे भी `npx zapbip@0.2.0 listen` को इसी तरह इस्तेमाल कर सकते हैं।
 
 दोनों प्रोग्राम खुले रहते हैं और `connect` की तरह खुद फिर से जुड़ जाते हैं। दोनों किसी संदेश को आगे भेजने के बाद ही उसे संभाला हुआ मार्क करते हैं, इसलिए कोई संदेश न कभी खोता है न दो बार दिखता है। उनके लॉग error output में जाते हैं और उनमें कभी आपके संदेश या आपका लिंक नहीं होता।
 

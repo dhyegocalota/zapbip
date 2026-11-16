@@ -1,7 +1,7 @@
 name: zapbip-platform
 label: zapbip
 kind: platform
-version: 0.1.0
+version: 0.2.0
 description: Owner messages from WhatsApp through zapbip, with replies sent back through the zapbip MCP server
 author: zapbip
 requires_env:

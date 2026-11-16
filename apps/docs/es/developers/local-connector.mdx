@@ -32,12 +32,12 @@ Abre una terminal en la carpeta donde usas tu IA y ejecuta uno de estos:
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client claude-code
+npx zapbip@0.2.0 connect --client claude-code
 ```
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client codex
+npx zapbip@0.2.0 connect --client codex
 ```
 
 Si no defines `ZAPBIP_CONNECTION_URL`, el conector te pide el enlace. Nunca toma el enlace como argumento, porque los argumentos aparecen en el historial de tu shell y en la lista de procesos.
@@ -58,7 +58,7 @@ Si estabas sin conexión o el conector estaba detenido, tus mensajes no se pierd
 Por defecto el conector usa la sesión más reciente de la carpeta. Si tienes la misma carpeta abierta en otra ventana, una activación puede añadirse a esa conversación. Para evitarlo, fija una sesión:
 
 ```bash
-npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+npx zapbip@0.2.0 connect --client claude-code --session <session-id>
 ```
 
 | Opción      | Qué hace                                                                                   |
@@ -118,7 +118,7 @@ Si la app de Codex ya tiene la conversación abierta, Codex se niega a reanudarl
 El canal es la primera opción. Es un programa pequeño que Claude Code inicia por sí mismo, igual que inicia cualquier otra herramienta. Pone cada mensaje que escribes en WhatsApp directamente en la sesión abierta, como un mensaje tuyo, marcado como verificado (un mensaje reenviado se marca como no verificado). Define `ZAPBIP_CONNECTION_URL` en el entorno en el que corre Claude Code, y Claude Code lo inicia con:
 
 ```bash
-npx zapbip@0.1.0 channel
+npx zapbip@0.2.0 channel
 ```
 
 El canal no puede pedirte el enlace, así que solo lo lee de `ZAPBIP_CONNECTION_URL`. No admite argumentos.
@@ -130,7 +130,7 @@ Declara ambos servidores en el `.mcp.json` de la carpeta donde trabajas. El cana
   "mcpServers": {
     "zapbip-channel": {
       "command": "npx",
-      "args": ["zapbip@0.1.0", "channel"],
+      "args": ["zapbip@0.2.0", "channel"],
       "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
     },
     "zapbip": {
@@ -153,10 +153,10 @@ El listener es la copia de seguridad. Imprime una línea por cada mensaje que es
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
-Cada línea es JSON con el id del mensaje, su tipo, `"sender":"owner"`, `"verified"` (`true` para tu propio mensaje, `false` para uno reenviado), `"forwarded"` y el texto. Una vigilancia de Monitor dura hasta 30 minutos, así que la IA vuelve a iniciar la vigilancia cada vez que termina una. Otros agentes que pueden mantener un comando en segundo plano y reaccionar a su salida, como OpenClaw y Hermes, pueden usar `npx zapbip@0.1.0 listen` del mismo modo.
+Cada línea es JSON con el id del mensaje, su tipo, `"sender":"owner"`, `"verified"` (`true` para tu propio mensaje, `false` para uno reenviado), `"forwarded"` y el texto. Una vigilancia de Monitor dura hasta 30 minutos, así que la IA vuelve a iniciar la vigilancia cada vez que termina una. Otros agentes que pueden mantener un comando en segundo plano y reaccionar a su salida, como OpenClaw y Hermes, pueden usar `npx zapbip@0.2.0 listen` del mismo modo.
 
 Ambos programas permanecen abiertos y se reconectan solos, como `connect`. Ambos marcan un mensaje como atendido solo después de pasarlo, así que un mensaje nunca se pierde ni se muestra dos veces. Sus registros van a la salida de error y nunca llevan tus mensajes ni tu enlace.
 

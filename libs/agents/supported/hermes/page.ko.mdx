@@ -43,7 +43,7 @@ Hermes는 작은 zapbip 플러그인을 통해 내 WhatsApp을 계속 들어요.
 Hermes가 실행되는 Python 환경에 패키지를 설치해요.
 
 ```bash
-d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.2.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" 5e3c28d1d8170431504b4fe3780e897ac80c5fd3d134ce8ad5f9abf214ecd3f4 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
 ```
 
 그다음 `~/.hermes/config.yaml`에서 활성화해요.
@@ -69,7 +69,7 @@ chmod 600 <file>
 
 게이트웨이를 다시 시작하세요.
 
-에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 `npx zapbip@0.1.0 listen` 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체해요.
+에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 `npx zapbip@0.2.0 listen` 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체해요.
 
 ### Hermes가 답하는 방식
 

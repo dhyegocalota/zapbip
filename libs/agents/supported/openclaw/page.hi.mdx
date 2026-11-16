@@ -43,7 +43,7 @@ OpenClaw इसकी जगह तय समय पर इनबॉक्स �
 यह प्लगइन इस एजेंट के लिए आए आपके संदेश zapbip से पढ़ता है और एजेंट के जवाब वापस भेजता है। इसके अलावा यह कुछ नहीं करता। इंस्टॉल कमांड में `--accept-capabilities` ज़रूरी है, ताकि OpenClaw आपसे दोबारा पूछे बिना इसे इंस्टॉल कर सके।
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 फिर `openclaw.json` में `zapbip` चैनल पर लिंक सेट करें और प्लगइन चालू करें:
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 gateway को फिर से शुरू करें।
 
-हर एजेंट के लिए सिर्फ़ एक लिसनर चलाएँ: प्लगइन या `npx zapbip@0.1.0 listen`, दोनों कभी नहीं। दूसरा लिसनर पहले वाले की जगह ले लेता है।
+हर एजेंट के लिए सिर्फ़ एक लिसनर चलाएँ: प्लगइन या `npx zapbip@0.2.0 listen`, दोनों कभी नहीं। दूसरा लिसनर पहले वाले की जगह ले लेता है।
 
 ### OpenClaw कैसे जवाब देता है
 

@@ -25,7 +25,7 @@ import InstallPrompt from '/snippets/de/install-prompt.mdx';
 
 ## So hört sie zu
 
-Weckart: **Lokal**. Cursor führt `npx zapbip@0.1.0 listen` in einem Hintergrundterminal aus und lässt es laufen. Schreibst du in WhatsApp, erscheint in diesem Terminal eine neue Zeile und weckt den Chat.
+Weckart: **Lokal**. Cursor führt `npx zapbip@0.2.0 listen` in einem Hintergrundterminal aus und lässt es laufen. Schreibst du in WhatsApp, erscheint in diesem Terminal eine neue Zeile und weckt den Chat.
 
 - Cursor hat keine geplante Option, also lass dieses Terminal laufen.
 
@@ -62,7 +62,7 @@ Wenn deine KI dich etwas fragt, hält zapbip die Frage fest und antwortet höchs
 
 5. **Füge zapbip zu Cursor hinzu.** Es fragt dich zuerst und wartet auf dein Ja. Dann fügt es in den MCP-Einstellungen von Cursor einen MCP-Server namens `zapbip` über HTTP unter `<connectionLink>` hinzu.
 
-6. **Beginne zuzuhören.** Es führt `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in einem Hintergrundterminal aus und lässt dieses Terminal laufen, ohne Zeitlimit. Sobald dort eine neue Zeile erscheint, ruft es `check_inbox` auf und antwortet.
+6. **Beginne zuzuhören.** Es führt `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` in einem Hintergrundterminal aus und lässt dieses Terminal laufen, ohne Zeitlimit. Sobald dort eine neue Zeile erscheint, ruft es `check_inbox` auf und antwortet.
 
 7. **Teste es.** Im Chat ruft es `send_message` mit ✅ installiert auf. Starte danach den Cursor-Chat neu, um die zapbip-Werkzeuge zu nutzen.
 

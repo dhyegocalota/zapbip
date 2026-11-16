@@ -1,5 +1,5 @@
-zapbip-platform @ https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-py3-none-any.whl \
-    --hash=sha256:25e9eade35908bffc09ed502cde3f41bc4eb59ac6f7befefe4a8c0aba0b30ee1
+zapbip-platform @ https://mcp.zapbip.com/pkg/zapbip_platform-0.2.0-py3-none-any.whl \
+    --hash=sha256:8e6fabc2ab416e939864b7ee176d0037ddfdc0ef161641c4cc0d61413ccb6ee7
 anyio==4.16.0 \
     --hash=sha256:59bb03251907983d1603d27c3087ddb1e93299ea2163adcdba37899a4fb12ffb \
     --hash=sha256:c66ae634e0b8228396b801741beb3294326d4b6102f7bba4041c0dfb58c29026

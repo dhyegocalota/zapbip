@@ -43,7 +43,7 @@ OpenClaw can poll instead. Add the MCP server from the setup and create a job ev
 The plugin reads your messages for this agent from zapbip and posts the agent replies back. It does nothing else. The install command needs `--accept-capabilities` so OpenClaw can install it without asking you again.
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 Then set the link on the `zapbip` channel and enable the plugin in `openclaw.json`:
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 Restart the gateway.
 
-Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.
+Run only one listener per agent: the plugin or `npx zapbip@0.2.0 listen`, never both. A second listener replaces the first.
 
 ### How OpenClaw answers
 

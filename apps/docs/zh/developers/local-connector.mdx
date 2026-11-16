@@ -32,12 +32,12 @@ zapbip 连接器解决了这个问题。它是一个在你电脑上保持运行�
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client claude-code
+npx zapbip@0.2.0 connect --client claude-code
 ```
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client codex
+npx zapbip@0.2.0 connect --client codex
 ```
 
 如果你没有设置 `ZAPBIP_CONNECTION_URL`，连接器会向你询问链接。它从不把链接作为参数接收，因为参数会出现在你的 shell 历史和进程列表里。
@@ -58,7 +58,7 @@ npx zapbip@0.1.0 connect --client codex
 默认情况下，连接器使用该文件夹中最新的会话。如果你在另一个窗口里打开了同一个文件夹，一次唤醒可能会加入那个对话。要避免这种情况，请固定一个会话：
 
 ```bash
-npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+npx zapbip@0.2.0 connect --client claude-code --session <session-id>
 ```
 
 | 选项        | 作用                                             |
@@ -118,7 +118,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 渠道是首选。它是一个由 Claude Code 自己启动的小程序，启动方式和其他任何工具一样。它会把你在 WhatsApp 上写的每条消息，作为带“已验证”标记的、你本人发出的消息，直接送入已打开的会话（转发的消息会被标记为未验证）。在 Claude Code 运行的环境中设置 `ZAPBIP_CONNECTION_URL`，Claude Code 会用下面的命令启动它：
 
 ```bash
-npx zapbip@0.1.0 channel
+npx zapbip@0.2.0 channel
 ```
 
 渠道无法向你询问链接，所以它只从 `ZAPBIP_CONNECTION_URL` 读取。它不接受参数。
@@ -130,7 +130,7 @@ npx zapbip@0.1.0 channel
   "mcpServers": {
     "zapbip-channel": {
       "command": "npx",
-      "args": ["zapbip@0.1.0", "channel"],
+      "args": ["zapbip@0.2.0", "channel"],
       "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
     },
     "zapbip": {
@@ -153,10 +153,10 @@ claude --dangerously-load-development-channels server:zapbip-channel
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
-每一行都是 JSON，包含消息 id、类型、`"sender":"owner"`、`"verified"`（你自己的消息为 `true`，转发的为 `false`）、`"forwarded"` 和文本。一次 Monitor 监视最长持续 30 分钟，所以每次结束后 AI 都会重新开始监视。其他能让后台命令保持运行并对其输出作出反应的智能体，例如 OpenClaw 和 Hermes，也可以用同样的方式使用 `npx zapbip@0.1.0 listen`。
+每一行都是 JSON，包含消息 id、类型、`"sender":"owner"`、`"verified"`（你自己的消息为 `true`，转发的为 `false`）、`"forwarded"` 和文本。一次 Monitor 监视最长持续 30 分钟，所以每次结束后 AI 都会重新开始监视。其他能让后台命令保持运行并对其输出作出反应的智能体，例如 OpenClaw 和 Hermes，也可以用同样的方式使用 `npx zapbip@0.2.0 listen`。
 
 两个程序都保持打开，并像 `connect` 一样自动重连。两者都只在把消息传递出去之后才把它标记为已处理，所以消息既不会丢失，也不会重复显示。它们的日志输出到错误输出，从不包含你的消息或链接。
 

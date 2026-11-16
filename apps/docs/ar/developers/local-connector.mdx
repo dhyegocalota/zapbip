@@ -32,12 +32,12 @@ description: 'أوامر zapbip هي connect وlisten وchannel: الوسائط 
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client claude-code
+npx zapbip@0.2.0 connect --client claude-code
 ```
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 connect --client codex
+npx zapbip@0.2.0 connect --client codex
 ```
 
 إذا لم تضبط `ZAPBIP_CONNECTION_URL`، يسألك الموصّل عن الرابط. ولا يقبله وسيطًا أبدًا، لأن الوسائط تظهر في سجل الطرفية وفي قائمة العمليات.
@@ -58,7 +58,7 @@ npx zapbip@0.1.0 connect --client codex
 افتراضيًا يستخدم الموصّل أحدث جلسة في المجلد. وإذا فتحت المجلد نفسه في نافذة أخرى، فقد ينضم إيقاظ إلى تلك المحادثة. ولتجنب ذلك ثبّت جلسة بعينها:
 
 ```bash
-npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+npx zapbip@0.2.0 connect --client claude-code --session <session-id>
 ```
 
 | الخيار      | ما يفعله                                               |
@@ -118,7 +118,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 القناة هي المفضّلة. وهي برنامج صغير يشغّله Claude Code نفسه كأي أداة أخرى. يمرّر كل رسالة تكتبها على WhatsApp مباشرةً إلى الجلسة المفتوحة، على أنها رسالتك أنت بوسم «موثَّقة» (وتوسَم الرسائل المعاد توجيهها بأنها غير موثَّقة). اضبط `ZAPBIP_CONNECTION_URL` في البيئة التي يعمل فيها Claude Code، فيشغّلها بالأمر:
 
 ```bash
-npx zapbip@0.1.0 channel
+npx zapbip@0.2.0 channel
 ```
 
 لا تستطيع القناة أن تسألك عن الرابط، لذا تقرؤه من `ZAPBIP_CONNECTION_URL` فقط. ولا تقبل وسائط.
@@ -130,7 +130,7 @@ npx zapbip@0.1.0 channel
   "mcpServers": {
     "zapbip-channel": {
       "command": "npx",
-      "args": ["zapbip@0.1.0", "channel"],
+      "args": ["zapbip@0.2.0", "channel"],
       "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
     },
     "zapbip": {
@@ -153,10 +153,10 @@ claude --dangerously-load-development-channels server:zapbip-channel
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
-كل سطر هو JSON يحمل معرّف الرسالة ونوعها و`"sender":"owner"` و`"verified"` (قيمته `true` لرسائلك أنت و`false` للمعاد توجيهها) و`"forwarded"` والنص. وتدوم مراقبة Monitor الواحدة 30 دقيقة على الأكثر، فيعيد الذكاء الاصطناعي المراقبة بعد كل انتهاء. ويمكن لوكلاء آخرين يُبقون أمرًا في الخلفية قيد التشغيل ويتفاعلون مع مخرجاته، مثل OpenClaw وHermes، أن يستخدموا `npx zapbip@0.1.0 listen` بالطريقة نفسها.
+كل سطر هو JSON يحمل معرّف الرسالة ونوعها و`"sender":"owner"` و`"verified"` (قيمته `true` لرسائلك أنت و`false` للمعاد توجيهها) و`"forwarded"` والنص. وتدوم مراقبة Monitor الواحدة 30 دقيقة على الأكثر، فيعيد الذكاء الاصطناعي المراقبة بعد كل انتهاء. ويمكن لوكلاء آخرين يُبقون أمرًا في الخلفية قيد التشغيل ويتفاعلون مع مخرجاته، مثل OpenClaw وHermes، أن يستخدموا `npx zapbip@0.2.0 listen` بالطريقة نفسها.
 
 يبقى البرنامجان مفتوحين ويعيدان الاتصال تلقائيًا كما يفعل `connect`. وكلاهما لا يعلّم الرسالة بأنها عولجت إلا بعد تسليمها، فلا تضيع الرسائل ولا تظهر مرتين. وتُكتب سجلاتهما في خرج الأخطاء، ولا تحتوي رسائلك ولا رابطك.
 

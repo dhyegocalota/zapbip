@@ -20,7 +20,7 @@ import InstallPrompt from '/snippets/ko/install-prompt.mdx';
 단계: 로컬. Gemini CLI는 백그라운드 터미널에서 zapbip 리스너를 계속 실행해요. WhatsApp에서 쓰면 거기에 새 줄이 나타나 세션을 깨워요. 그 터미널을 열어 두세요. Gemini CLI에는 예약 옵션이 없어요.
 
 ```bash
-npx zapbip@0.1.0 listen
+npx zapbip@0.2.0 listen
 ```
 
 질문이 열려 있는 동안 Gemini CLI는 한 번에 최대 50초 기다려요. 내가 답하지 않으면 대기가 보류 중(pending)으로 끝나고, Gemini CLI는 필요한 만큼 몇 번이든 다시 호출해요. 시간 제한 없이 기다려요.
@@ -46,7 +46,7 @@ npx zapbip@0.1.0 listen
 
 4. **Gemini CLI에 zapbip을 추가해요.** 내 "예" 뒤에 `gemini mcp add --transport http --scope user zapbip <connectionLink>`를 실행해요.
 
-5. **듣기를 시작해요.** 백그라운드 터미널에서 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`을 실행하고, 그 터미널을 시간 제한 없이 계속 실행해요. 거기에 새 줄이 나타날 때마다 `check_inbox`를 호출하고 답해요.
+5. **듣기를 시작해요.** 백그라운드 터미널에서 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen`을 실행하고, 그 터미널을 시간 제한 없이 계속 실행해요. 거기에 새 줄이 나타날 때마다 `check_inbox`를 호출하고 답해요.
 
 6. **테스트해요.** 새 프로세스에서 `gemini -p "Call send_message with the text '✅ 설치 완료'"`를 실행해요. ✅ 설치 완료가 담긴 `send_message`가 내 WhatsApp에 도착해요. 명령이 실패하면 멈추고 마지막 20줄을 보여 줘요. 그다음 Gemini CLI를 다시 시작하세요.
 

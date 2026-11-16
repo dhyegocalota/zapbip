@@ -465,7 +465,7 @@ describe('docs experience: copy', () => {
   test.each([
     '2026-11-08',
     '2026-11-08 12:30:45',
-    'zapbip@0.1.0',
+    'zapbip@0.2.0',
     'sha256 3fa91c0d77aa1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6071829',
     'v10.4.2-rc.1',
     'port 8787',

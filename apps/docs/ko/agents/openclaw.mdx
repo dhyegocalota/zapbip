@@ -43,7 +43,7 @@ OpenClaw는 작은 zapbip 채널을 통해 내 WhatsApp을 계속 들어요. 내
 플러그인은 이 에이전트를 향한 내 메시지를 zapbip에서 읽고 에이전트의 답을 다시 게시해요. 그 밖의 일은 하지 않아요. 설치 명령에는 `--accept-capabilities`가 필요하며, 이를 통해 OpenClaw가 다시 묻지 않고 설치할 수 있어요.
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+openclaw plugins install @zapbip/openclaw-plugin@0.2.0 --force --accept-capabilities
 ```
 
 그다음 `zapbip` 채널에 링크를 설정하고 `openclaw.json`에서 플러그인을 활성화해요.
@@ -63,7 +63,7 @@ chmod 600 <file>
 
 게이트웨이를 다시 시작하세요.
 
-에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 `npx zapbip@0.1.0 listen` 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체해요.
+에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 `npx zapbip@0.2.0 listen` 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체해요.
 
 ### OpenClaw가 답하는 방식
 

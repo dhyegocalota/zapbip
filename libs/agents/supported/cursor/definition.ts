@@ -8,7 +8,7 @@ export const definition: AgentDefinition = {
   docs: {
     matrixName: perLanguage({ valueOf: () => 'Cursor' }),
     linkName: perLanguage({ valueOf: () => 'Cursor' }),
-    pageFacts: perLanguage({ valueOf: () => ['npx zapbip@0.1.0 listen'] }),
+    pageFacts: perLanguage({ valueOf: () => ['npx zapbip@0.2.0 listen'] }),
     speakerNames: ['Cursor'],
   },
   listen: {

@@ -25,7 +25,7 @@ import InstallPrompt from '/snippets/fr/install-prompt.mdx';
 
 ## Comment elle écoute
 
-Type de réveil : **Local**. Cursor exécute `npx zapbip@0.1.0 listen` dans un terminal en arrière-plan et le garde en marche. Quand vous écrivez sur WhatsApp, une nouvelle ligne apparaît dans ce terminal et réveille le chat.
+Type de réveil : **Local**. Cursor exécute `npx zapbip@0.2.0 listen` dans un terminal en arrière-plan et le garde en marche. Quand vous écrivez sur WhatsApp, une nouvelle ligne apparaît dans ce terminal et réveille le chat.
 
 - Cursor n'a pas d'option planifiée, gardez donc ce terminal en marche.
 
@@ -62,7 +62,7 @@ Quand votre IA vous demande quelque chose, zapbip garde la question et répond �
 
 5. **Ajoutez zapbip à Cursor.** Il vous demande d'abord et attend votre accord. Puis il ajoute un serveur MCP nommé `zapbip` via HTTP à `<connectionLink>` dans les réglages MCP de Cursor.
 
-6. **Commencez à écouter.** Il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` dans un terminal en arrière-plan et garde ce terminal en marche, sans limite de temps. Chaque fois qu'une nouvelle ligne y apparaît, il appelle `check_inbox` et répond.
+6. **Commencez à écouter.** Il exécute `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` dans un terminal en arrière-plan et garde ce terminal en marche, sans limite de temps. Chaque fois qu'une nouvelle ligne y apparaît, il appelle `check_inbox` et répond.
 
 7. **Testez.** Dans le chat, il appelle `send_message` avec ✅ installé. Redémarrez ensuite le chat Cursor pour utiliser les outils zapbip.
 

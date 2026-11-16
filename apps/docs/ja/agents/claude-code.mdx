@@ -33,7 +33,7 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
 AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最大でも50 秒ごとに「保留中」と答えます。AIはそのたびにもう一度呼び出し、あなたが答えるまで呼び出しを続けます。時間制限なしで待ち続けます。
 
-リスナーは1つだけを使い、2つ同時には使わないでください。チャネルがオンになっていない場合、Claude Codeは `npx zapbip@0.1.0 listen` を動かし続け、Monitorで監視します。監視は最長30 分続くので、Claude Codeはタイムアウトの通知のたびに監視を設定し直します。
+リスナーは1つだけを使い、2つ同時には使わないでください。チャネルがオンになっていない場合、Claude Codeは `npx zapbip@0.2.0 listen` を動かし続け、Monitorで監視します。監視は最長30 分続くので、Claude Codeはタイムアウトの通知のたびに監視を設定し直します。
 
 ## ゼロから設定する
 
@@ -62,15 +62,15 @@ AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最
 
 4. **「はい」と答えます。** その後はClaude Codeが、この順番で残りを行います。
 
-5. **zapbipをClaude Codeに追加します。** 古い `zapbip` や `zapbip-channel` のエントリがある場合、Claude Codeは `claude mcp remove --scope user zapbip` または `claude mcp remove --scope user zapbip-channel` で削除します。そのあと、ツール用に `claude mcp add --transport http --scope user zapbip <connectionLink>` を、ライブのチャネル用に `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` を実行します。
+5. **zapbipをClaude Codeに追加します。** 古い `zapbip` や `zapbip-channel` のエントリがある場合、Claude Codeは `claude mcp remove --scope user zapbip` または `claude mcp remove --scope user zapbip-channel` で削除します。そのあと、ツール用に `claude mcp add --transport http --scope user zapbip <connectionLink>` を、ライブのチャネル用に `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.2.0 channel` を実行します。
 
    これらの手順のコマンドにはあなたの接続リンクが含まれるため、シェルの履歴に残ります。残したくない場合は、[コネクタをサービスとして実行する](/ja/developers/background-running)のように、`ZAPBIP_CONNECTION_URL` を環境変数のファイルに入れてください。
 
 6. **zapbipのスキルを保存します。** あなたの「はい」の後、`~/.claude/skills/zapbip/SKILL.md` を書き込み、`check_inbox` を呼ぶタイミングなど、WhatsAppの使い方をすべてのセッションが把握できるようにします。
 
-7. **リスナーを1つ選びます。** 1つの接続が持てるリスナーは1つで、2つ目は最初のものを置き換えるため、次のうちちょうど1つだけを使い、2つ同時には使いません。停止しているセッションには、`ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` をバックグラウンドで実行します。コネクタは、Claude Codeが待機中にあなたが書き込むとセッションを起こし、閉じているセッションは `claude -p --resume` で再開します。
+7. **リスナーを1つ選びます。** 1つの接続が持てるリスナーは1つで、2つ目は最初のものを置き換えるため、次のうちちょうど1つだけを使い、2つ同時には使いません。停止しているセッションには、`ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client claude-code` をバックグラウンドで実行します。コネクタは、Claude Codeが待機中にあなたが書き込むとセッションを起こし、閉じているセッションは `claude -p --resume` で再開します。
 
-8. **チャネルが使えない場合のみ。** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` をバックグラウンドで実行し、Monitorで監視して、タイムアウトの通知のたびに設定し直します。
+8. **チャネルが使えない場合のみ。** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen` をバックグラウンドで実行し、Monitorで監視して、タイムアウトの通知のたびに設定し直します。
 
 9. **テストします。** 新しいプロセスで `claude -p "Call send_message with the text '✅ インストール完了'" --allowedTools=mcp__zapbip__send_message` を実行します。✅ インストール完了 を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Claude Codeを再起動して、zapbipのツールを使えるようにしてください。
 

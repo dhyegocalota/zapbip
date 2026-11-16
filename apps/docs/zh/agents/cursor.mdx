@@ -25,7 +25,7 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
 ## 监听方式
 
-唤醒方式：**本地**。Cursor 在后台终端中运行 `npx zapbip@0.1.0 listen` 并保持运行。你在 WhatsApp 上发消息时，那个终端里会出现新的一行，并唤醒聊天。
+唤醒方式：**本地**。Cursor 在后台终端中运行 `npx zapbip@0.2.0 listen` 并保持运行。你在 WhatsApp 上发消息时，那个终端里会出现新的一行，并唤醒聊天。
 
 - Cursor 没有定时选项，所以请保持那个终端运行。
 
@@ -60,7 +60,7 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
 5. **把 zapbip 添加到 Cursor。** 它会先询问你，并等你说“好”。然后在 Cursor 的 MCP 设置中添加一个名为 `zapbip` 的 MCP 服务器，通过 HTTP 指向 `<connectionLink>`。
 
-6. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
+6. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
 
 7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ 安装完成。然后重启 Cursor 聊天，以使用 zapbip 的工具。
 

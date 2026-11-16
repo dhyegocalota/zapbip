@@ -66,7 +66,7 @@ Codex espera hasta 15 minutos una sola respuesta y vuelve a preguntar, así que 
 
 5. **Añade zapbip a Codex.** Tras tu sí, sustituye la tabla `[mcp_servers.zapbip]` de `~/.codex/config.toml` por `url = "<connectionLink>"`, `tool_timeout_sec = 900` y `default_tools_approval_mode = "approve"`. El modo de aprobación deja que las herramientas de zapbip se ejecuten sin preguntarte cada vez, y Codex te lo dice.
 
-6. **Inicia el conector.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` en segundo plano. Sigue escuchando y reanuda tu sesión con `codex exec resume`.
+6. **Inicia el conector.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.2.0 connect --client codex` en segundo plano. Sigue escuchando y reanuda tu sesión con `codex exec resume`.
 
 7. **Pruébalo.** En un proceso nuevo ejecuta `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ listo'"`. Un `send_message` con ✅ listo llega a tu WhatsApp. Si el comando falla, se detiene y muestra las últimas 20 líneas. Después reinicia Codex.
 
