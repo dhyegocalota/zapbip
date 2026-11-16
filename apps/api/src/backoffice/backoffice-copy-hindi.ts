@@ -44,6 +44,7 @@ export const HINDI_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: 'नंबर',
   [BackofficeCopyKey.NumbersCaption]: 'WhatsApp नंबर, पहले स्थिति फिर लेबल के क्रम में',
   [BackofficeCopyKey.NumbersConnect]: 'WhatsApp नंबर जोड़ें',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'अपने ही बिज़नेस का नंबर कनेक्ट करें',
   [BackofficeCopyKey.NumbersEmptyTitle]: 'अभी कोई नंबर नहीं',
   [BackofficeCopyKey.NumbersEmptyBody]: 'जब तक आप कोई नंबर रजिस्टर और सक्रिय नहीं करते, कुछ भी न आएगा न जाएगा।',
   [BackofficeCopyKey.NumbersColumnLabel]: 'लेबल',
@@ -87,6 +88,16 @@ export const HINDI_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     'वैकल्पिक, 6 अंक। नए नंबर के लिए खाली छोड़ें, zapbip एक बना देगा। जिस नंबर पर टू-स्टेप वेरिफ़िकेशन पहले से है, उसे उसी का PIN चाहिए। इसे एन्क्रिप्ट करके सहेजा जाता है।',
   [BackofficeCopyKey.ConnectButton]: 'Meta से जोड़ें',
+  [BackofficeCopyKey.ConnectOwnTitle]: 'अपने ही बिज़नेस का नंबर कनेक्ट करें',
+  [BackofficeCopyKey.ConnectOwnIntro]: 'ऑथेंटिकेटर कोड से पुष्टि करें। फिर वह नंबर चुनें जो पहले से Meta ऐप के मालिक बिज़नेस का है।',
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    'नंबर चुनें, उसे लेबल दें और चाहें तो दो-चरणीय PIN सेट करें। zapbip नंबर रजिस्टर करता है और वेबहुक सब्सक्राइब करता है।',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'नंबर',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]:
+    'बिज़नेस में कोई अपंजीकृत नंबर नहीं मिला। सभी पहले से पंजीकृत हैं या टोकन उन तक नहीं पहुँच सकता।',
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    'सिस्टम यूज़र टोकन कॉन्फ़िगर नहीं है। इस विकल्प के लिए Worker में META_SYSTEM_USER_TOKEN सेट करें।',
+  [BackofficeCopyKey.ConnectOwnSubmit]: 'नंबर कनेक्ट करें',
   [BackofficeCopyKey.ConnectStatusWorking]: 'साइन-अप पूरा हो रहा है…',
   [BackofficeCopyKey.ConnectStatusCancelled]: 'साइन-अप रद्द हुआ। कुछ भी सेव नहीं हुआ।',
   [BackofficeCopyKey.ConnectStatusError]: 'Meta ने साइन-अप पूरा नहीं किया। फिर कोशिश करें।',
@@ -236,6 +247,7 @@ export const HINDI_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: 'स्टेप-अप कोड अस्वीकार',
   [BackofficeCopyKey.AuditActionSignOut]: 'लॉग आउट',
   [BackofficeCopyKey.AuditActionNumberRegistered]: 'नंबर रजिस्टर हुआ',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: 'अपने बिज़नेस का नंबर कनेक्ट हुआ',
   [BackofficeCopyKey.AuditActionNumberVerified]: 'नंबर वेरिफ़ाई हुआ',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'एक्सेस टोकन बदला गया',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'ऐप सीक्रेट बदला गया',

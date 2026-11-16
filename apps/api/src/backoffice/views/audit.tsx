@@ -24,6 +24,7 @@ const ACTION_LABELS: Record<BackofficeAuditAction, BackofficeCopyKey> = {
   [BackofficeAuditAction.StepUpFailed]: BackofficeCopyKey.AuditActionStepUpFailed,
   [BackofficeAuditAction.SignOut]: BackofficeCopyKey.AuditActionSignOut,
   [BackofficeAuditAction.NumberRegistered]: BackofficeCopyKey.AuditActionNumberRegistered,
+  [BackofficeAuditAction.NumberConnectedFromOwnBusiness]: BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness,
   [BackofficeAuditAction.NumberVerified]: BackofficeCopyKey.AuditActionNumberVerified,
   [BackofficeAuditAction.NumberAccessTokenRotated]: BackofficeCopyKey.AuditActionNumberAccessTokenRotated,
   [BackofficeAuditAction.MetaAppSecretRotated]: BackofficeCopyKey.AuditActionMetaAppSecretRotated,

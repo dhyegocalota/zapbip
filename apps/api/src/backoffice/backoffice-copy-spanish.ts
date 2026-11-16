@@ -45,6 +45,7 @@ export const SPANISH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: 'Números',
   [BackofficeCopyKey.NumbersCaption]: 'Números de WhatsApp, por estado y luego por etiqueta',
   [BackofficeCopyKey.NumbersConnect]: 'Conectar un número de WhatsApp',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'Conectar un número de nuestro propio negocio',
   [BackofficeCopyKey.NumbersEmptyTitle]: 'Aún no hay números',
   [BackofficeCopyKey.NumbersEmptyBody]: 'No se recibe ni se envía nada hasta que registres y actives un número.',
   [BackofficeCopyKey.NumbersColumnLabel]: 'Etiqueta',
@@ -88,6 +89,17 @@ export const SPANISH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     'Opcional, 6 dígitos. Déjalo vacío en un número nuevo y zapbip crea uno. Un número que ya tiene verificación en dos pasos necesita su PIN. Se guarda cifrado.',
   [BackofficeCopyKey.ConnectButton]: 'Conectar con Meta',
+  [BackofficeCopyKey.ConnectOwnTitle]: 'Conectar un número de nuestro propio negocio',
+  [BackofficeCopyKey.ConnectOwnIntro]:
+    'Confirma con el código de tu autenticador. Después eliges un número que ya pertenece al negocio dueño de la app de Meta.',
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    'Elige el número, ponle una etiqueta y, si quieres, define el PIN de dos pasos. zapbip registra el número y suscribe el webhook.',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Número',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]:
+    'No se encontró ningún número sin registrar en el negocio. Todos ya están registrados o el token no tiene acceso a ellos.',
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    'El token del usuario del sistema no está configurado. Define META_SYSTEM_USER_TOKEN en el Worker para usar esta opción.',
+  [BackofficeCopyKey.ConnectOwnSubmit]: 'Conectar número',
   [BackofficeCopyKey.ConnectStatusWorking]: 'Terminando el registro…',
   [BackofficeCopyKey.ConnectStatusCancelled]: 'Registro cancelado. No se guardó nada.',
   [BackofficeCopyKey.ConnectStatusError]: 'Meta no terminó el registro. Inténtalo de nuevo.',
@@ -237,6 +249,7 @@ export const SPANISH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: 'Código de verificación reforzada rechazado',
   [BackofficeCopyKey.AuditActionSignOut]: 'Cierre de sesión',
   [BackofficeCopyKey.AuditActionNumberRegistered]: 'Número registrado',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: 'Número conectado del negocio propio',
   [BackofficeCopyKey.AuditActionNumberVerified]: 'Número verificado',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'Token de acceso reemplazado',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'Secreto de la app reemplazado',

@@ -3,6 +3,10 @@ export enum WarnedWorkerSecret {
   ResendApiKey = 'RESEND_API_KEY',
 }
 
+export enum OptionalWorkerSecret {
+  MetaSystemUserToken = 'META_SYSTEM_USER_TOKEN',
+}
+
 export enum WorkerSecret {
   WhatsAppVerifyToken = 'WHATSAPP_VERIFY_TOKEN',
   MediaLinkSigningKey = 'MEDIA_LINK_SIGNING_KEY',

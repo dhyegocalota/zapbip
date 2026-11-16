@@ -44,6 +44,7 @@ export const KOREAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: '번호',
   [BackofficeCopyKey.NumbersCaption]: 'WhatsApp 번호, 상태순 다음 레이블순',
   [BackofficeCopyKey.NumbersConnect]: 'WhatsApp 번호 연결',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: '자체 비즈니스의 번호 연결',
   [BackofficeCopyKey.NumbersEmptyTitle]: '아직 번호가 없습니다',
   [BackofficeCopyKey.NumbersEmptyBody]: '번호를 등록하고 활성화하기 전에는 아무것도 받거나 보내지 않습니다.',
   [BackofficeCopyKey.NumbersColumnLabel]: '레이블',
@@ -86,6 +87,16 @@ export const KOREAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     '선택 사항, 6자리. 새 번호는 비워 두면 zapbip이 만들어 줍니다. 이미 2단계 인증이 있는 번호는 그 PIN이 필요합니다. PIN은 암호화되어 저장됩니다.',
   [BackofficeCopyKey.ConnectButton]: 'Meta로 연결',
+  [BackofficeCopyKey.ConnectOwnTitle]: '자체 비즈니스의 번호 연결',
+  [BackofficeCopyKey.ConnectOwnIntro]: '인증 앱 코드로 확인하세요. 그런 다음 Meta 앱을 소유한 비즈니스에 이미 있는 번호를 고릅니다.',
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    '번호를 고르고 라벨을 붙이고, 원하면 2단계 PIN을 설정하세요. zapbip이 번호를 등록하고 웹훅을 구독합니다.',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: '번호',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]:
+    '비즈니스에서 등록되지 않은 번호를 찾지 못했습니다. 모두 이미 등록되었거나 토큰이 접근할 수 없습니다.',
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    '시스템 사용자 토큰이 설정되지 않았습니다. 이 옵션을 쓰려면 Worker에 META_SYSTEM_USER_TOKEN을 설정하세요.',
+  [BackofficeCopyKey.ConnectOwnSubmit]: '번호 연결',
   [BackofficeCopyKey.ConnectStatusWorking]: '가입을 마무리하는 중…',
   [BackofficeCopyKey.ConnectStatusCancelled]: '가입이 취소되었습니다. 저장된 내용은 없습니다.',
   [BackofficeCopyKey.ConnectStatusError]: 'Meta가 가입을 마치지 못했습니다. 다시 시도하세요.',
@@ -235,6 +246,7 @@ export const KOREAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: '추가 인증 코드 거부됨',
   [BackofficeCopyKey.AuditActionSignOut]: '로그아웃',
   [BackofficeCopyKey.AuditActionNumberRegistered]: '번호 등록',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: '자체 비즈니스의 번호 연결됨',
   [BackofficeCopyKey.AuditActionNumberVerified]: '번호 검증',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: '액세스 토큰 교체',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: '앱 시크릿 교체',

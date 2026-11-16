@@ -15,6 +15,12 @@ export type OnboardingRequest = {
 
 export type OnboardingParse = { isValid: true; request: OnboardingRequest } | { isValid: false; errors: FieldErrors };
 
+export type OwnBusinessRequest = Pick<OnboardingRequest, 'phoneNumberId' | 'label' | 'pin'>;
+
+export type OwnBusinessParse = { isValid: true; request: OwnBusinessRequest } | { isValid: false; errors: FieldErrors };
+
+type FieldEntry = [NumberFormField, BackofficeCopyKey | null];
+
 const DIGITS_PATTERN = /^\d+$/;
 
 function valueOf(input: { form: FormBody; field: NumberFormField }): string {
@@ -45,6 +51,10 @@ function pinOf(input: { form: FormBody }): string | null {
   return value.length === 0 ? null : value;
 }
 
+function errorsOf(input: { entries: FieldEntry[] }): FieldErrors {
+  return Object.fromEntries(input.entries.filter(([, error]) => error !== null));
+}
+
 export function parseOnboarding(input: { form: FormBody }): OnboardingParse {
   const { form } = input;
   const request: OnboardingRequest = {
@@ -54,14 +64,31 @@ export function parseOnboarding(input: { form: FormBody }): OnboardingParse {
     label: valueOf({ form, field: NumberFormField.Label }),
     pin: pinOf({ form }),
   };
-  const entries: [NumberFormField, BackofficeCopyKey | null][] = [
+  const entries: FieldEntry[] = [
     [NumberFormField.SignupCode, requiredError({ value: request.signupCode })],
     [NumberFormField.PhoneNumberId, digitsError({ value: request.phoneNumberId })],
     [NumberFormField.WabaId, digitsError({ value: request.wabaId })],
     [NumberFormField.Label, labelError({ value: request.label })],
     [NumberFormField.Pin, pinError({ value: valueOf({ form, field: NumberFormField.Pin }) })],
   ];
-  const errors: FieldErrors = Object.fromEntries(entries.filter(([, error]) => error !== null));
+  const errors = errorsOf({ entries });
+  if (Object.keys(errors).length > 0) return { isValid: false, errors };
+  return { isValid: true, request };
+}
+
+export function parseOwnBusiness(input: { form: FormBody }): OwnBusinessParse {
+  const { form } = input;
+  const request: OwnBusinessRequest = {
+    phoneNumberId: valueOf({ form, field: NumberFormField.OwnNumber }),
+    label: valueOf({ form, field: NumberFormField.Label }),
+    pin: pinOf({ form }),
+  };
+  const entries: FieldEntry[] = [
+    [NumberFormField.OwnNumber, digitsError({ value: request.phoneNumberId })],
+    [NumberFormField.Label, labelError({ value: request.label })],
+    [NumberFormField.Pin, pinError({ value: valueOf({ form, field: NumberFormField.Pin }) })],
+  ];
+  const errors = errorsOf({ entries });
   if (Object.keys(errors).length > 0) return { isValid: false, errors };
   return { isValid: true, request };
 }

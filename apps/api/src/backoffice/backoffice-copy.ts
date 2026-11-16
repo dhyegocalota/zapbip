@@ -56,6 +56,7 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.NumbersTitle]: 'Números',
     [BackofficeCopyKey.NumbersCaption]: 'Números de WhatsApp, por estado e rótulo',
     [BackofficeCopyKey.NumbersConnect]: 'Conectar um número de WhatsApp',
+    [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'Conectar um número do nosso negócio',
     [BackofficeCopyKey.NumbersEmptyTitle]: 'Nenhum número ainda',
     [BackofficeCopyKey.NumbersEmptyBody]: 'Nada é recebido nem enviado até você cadastrar e ativar um número.',
     [BackofficeCopyKey.NumbersColumnLabel]: 'Rótulo',
@@ -99,6 +100,17 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.ConnectPinHelp]:
       'Opcional, 6 dígitos. Deixe vazio para um número novo e a zapbip cria um. Um número que já tem verificação em duas etapas precisa do PIN dele. Fica guardado criptografado.',
     [BackofficeCopyKey.ConnectButton]: 'Conectar com a Meta',
+    [BackofficeCopyKey.ConnectOwnTitle]: 'Conectar um número do nosso negócio',
+    [BackofficeCopyKey.ConnectOwnIntro]:
+      'Confirme com o código do autenticador. Depois você escolhe um número que já pertence ao negócio dono do app da Meta.',
+    [BackofficeCopyKey.ConnectOwnSelectIntro]:
+      'Escolha o número, dê um rótulo e, se quiser, defina o PIN de duas etapas. O zapbip cadastra o número e assina o webhook.',
+    [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Número',
+    [BackofficeCopyKey.ConnectOwnNoNumbers]:
+      'Nenhum número livre foi encontrado no negócio. Todos já estão cadastrados ou o token não tem acesso a eles.',
+    [BackofficeCopyKey.ConnectOwnNotConfigured]:
+      'O token do usuário de sistema não está configurado. Defina META_SYSTEM_USER_TOKEN no Worker para usar esta opção.',
+    [BackofficeCopyKey.ConnectOwnSubmit]: 'Conectar número',
     [BackofficeCopyKey.ConnectStatusWorking]: 'Concluindo o cadastro…',
     [BackofficeCopyKey.ConnectStatusCancelled]: 'Cadastro cancelado. Nada foi salvo.',
     [BackofficeCopyKey.ConnectStatusError]: 'A Meta não concluiu o cadastro. Tente de novo.',
@@ -248,6 +260,7 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.AuditActionStepUpFailed]: 'Código de confirmação recusado',
     [BackofficeCopyKey.AuditActionSignOut]: 'Saída',
     [BackofficeCopyKey.AuditActionNumberRegistered]: 'Número cadastrado',
+    [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: 'Número conectado do negócio próprio',
     [BackofficeCopyKey.AuditActionNumberVerified]: 'Número verificado',
     [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'Token de acesso trocado',
     [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'Segredo do app trocado',
@@ -457,6 +470,7 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.NumbersTitle]: 'Numbers',
     [BackofficeCopyKey.NumbersCaption]: 'WhatsApp numbers, by state then label',
     [BackofficeCopyKey.NumbersConnect]: 'Connect a WhatsApp number',
+    [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'Connect a number from our own business',
     [BackofficeCopyKey.NumbersEmptyTitle]: 'No numbers yet',
     [BackofficeCopyKey.NumbersEmptyBody]: 'Nothing is received or sent until you register and activate a number.',
     [BackofficeCopyKey.NumbersColumnLabel]: 'Label',
@@ -499,6 +513,17 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.ConnectPinHelp]:
       'Optional, 6 digits. Leave it empty for a new number and zapbip creates one. A number that already has two-step verification needs its PIN. It is stored encrypted.',
     [BackofficeCopyKey.ConnectButton]: 'Connect with Meta',
+    [BackofficeCopyKey.ConnectOwnTitle]: 'Connect a number from our own business',
+    [BackofficeCopyKey.ConnectOwnIntro]:
+      'Confirm with your authenticator code. Then you pick a number that already belongs to the business that owns the Meta app.',
+    [BackofficeCopyKey.ConnectOwnSelectIntro]:
+      'Pick the number, give it a label and, if you want, set the two-step PIN. zapbip registers the number and subscribes the webhook.',
+    [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Number',
+    [BackofficeCopyKey.ConnectOwnNoNumbers]:
+      'No unregistered number was found in the business. Every one is already registered or the token cannot reach them.',
+    [BackofficeCopyKey.ConnectOwnNotConfigured]:
+      'The system user token is not configured. Set META_SYSTEM_USER_TOKEN on the Worker to use this option.',
+    [BackofficeCopyKey.ConnectOwnSubmit]: 'Connect number',
     [BackofficeCopyKey.ConnectStatusWorking]: 'Finishing the sign-up…',
     [BackofficeCopyKey.ConnectStatusCancelled]: 'Sign-up cancelled. Nothing was saved.',
     [BackofficeCopyKey.ConnectStatusError]: 'Meta did not finish the sign-up. Try again.',
@@ -648,6 +673,7 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.AuditActionStepUpFailed]: 'Step-up code rejected',
     [BackofficeCopyKey.AuditActionSignOut]: 'Sign-out',
     [BackofficeCopyKey.AuditActionNumberRegistered]: 'Number registered',
+    [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: 'Number connected from own business',
     [BackofficeCopyKey.AuditActionNumberVerified]: 'Number verified',
     [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'Access token replaced',
     [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'App secret replaced',

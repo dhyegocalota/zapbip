@@ -9,10 +9,14 @@ import type { FormFlash } from '../../flash/form-flash';
 import { Layout } from '../../layout';
 import type { PageContext } from '../../page-context';
 import { NumberFormField } from '../number-form-fields';
-import { NumberSegment } from '../number-paths';
+
+export type Translate = (key: BackofficeCopyKey, values?: Record<string, string>) => string;
 
 export type ConnectNumberPageProps = {
   page: PageContext;
+  action: string;
+  title: BackofficeCopyKey;
+  intro: BackofficeCopyKey;
   flash: Pick<FormFlash, 'failure' | 'errors' | 'onboarding'> | null;
 };
 
@@ -36,11 +40,9 @@ const KIND_COPY: Record<GraphErrorKind, BackofficeCopyKey> = {
   [GraphErrorKind.WebhookClaimedElsewhere]: BackofficeCopyKey.OnboardingKindWebhookClaimedElsewhere,
 };
 
-export function ConnectNumberPage(props: ConnectNumberPageProps) {
-  const { page, flash } = props;
-  const { locale } = page;
-  const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
-  const failureMessages = [
+export function failureMessagesOf(input: { flash: ConnectNumberPageProps['flash']; translate: Translate }): string[] {
+  const { flash, translate } = input;
+  return [
     flash === null || flash.failure === null ? null : translate(flash.failure),
     flash === null || flash.onboarding === null
       ? null
@@ -50,11 +52,18 @@ export function ConnectNumberPage(props: ConnectNumberPageProps) {
         }),
     ...(flash === null ? [] : Object.values(flash.errors).map((key) => translate(key))),
   ].filter((message) => message !== null);
+}
+
+export function ConnectNumberPage(props: ConnectNumberPageProps) {
+  const { page, flash, action, title, intro } = props;
+  const { locale } = page;
+  const translate: Translate = (key, values) => renderBackofficeCopy({ key, locale, values });
+  const failureMessages = failureMessagesOf({ flash, translate });
   return (
     <Layout
       locale={locale}
       environment={page.environment}
-      title={translate(BackofficeCopyKey.ConnectTitle)}
+      title={translate(title)}
       stylesheetHref={page.stylesheetHref}
       csrfToken={page.csrfToken}
       signedIn
@@ -64,12 +73,12 @@ export function ConnectNumberPage(props: ConnectNumberPageProps) {
       returnPath={page.returnPath}
     >
       <section class="card form-card" aria-labelledby="connect-title">
-        <h1 id="connect-title">{translate(BackofficeCopyKey.ConnectTitle)}</h1>
+        <h1 id="connect-title">{translate(title)}</h1>
         {failureMessages.map((message) => (
           <Notice variant={NoticeVariant.Error} locale={locale} message={message} />
         ))}
-        <p>{translate(BackofficeCopyKey.ConnectIntro)}</p>
-        <form method="post" action={`${BackofficePath.Numbers}/${NumberSegment.Connect}`}>
+        <p>{translate(intro)}</p>
+        <form method="post" action={action}>
           <input type="hidden" name={NumberFormField.Csrf} value={page.csrfToken} />
           <fieldset>
             <legend>{translate(BackofficeCopyKey.ConnectConfirmLegend)}</legend>

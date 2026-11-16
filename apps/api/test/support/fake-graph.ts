@@ -16,6 +16,7 @@ const CONTROL_PREFIX = '/__fake';
 const REQUESTS_PATH = `${CONTROL_PREFIX}/requests`;
 const RESPONSES_PATH = `${CONTROL_PREFIX}/responses`;
 const RESET_PATH = `${CONTROL_PREFIX}/reset`;
+const GRANTS_PATH = `${CONTROL_PREFIX}/grants`;
 const RESOURCE_IDS_QUERY = 'resourceIds';
 const RESOURCE_ID_SEPARATOR = ',';
 const RESOURCE_ID_PATTERN = /^\/v\d+\.\d+\/(\d+)/;
@@ -44,6 +45,7 @@ const BAD_REQUEST_STATUS = 400;
 const NOT_FOUND_STATUS = 404;
 
 const sendBodySchema = z.object({ to: z.string() });
+const grantsBodySchema = z.object({ wabaIds: z.array(z.string()) });
 const resetBodySchema = z.object({ resourceIds: z.array(z.string()).optional() });
 const queuedResponseSchema = z.object({
   method: z.string(),
@@ -122,6 +124,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
   const recorded: { request: RecordedRequest; resourceId: string | null }[] = [];
   const queued: (FakeGraphResponse & { resourceId: string | null })[] = [];
   const sentCounts = new Map<string, number>();
+  const grantedWabaIds = new Set<string>();
 
   function resourceKeyOf(input: { path: string }): string {
     const resourceId = resourceIdOf({ path: input.path });
@@ -148,7 +151,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
       const match = PHONE_NUMBERS_WABA_PATTERN.exec(entry.request.path);
       return entry.request.method === 'GET' && match !== null && match[1] !== undefined ? [match[1]] : [];
     });
-    const targetIds = [...new Set(readWabaIds)].filter((id) => !id.startsWith(FAKE_UNGRANTED_WABA_PREFIX));
+    const targetIds = [...new Set([...readWabaIds, ...grantedWabaIds])].filter((id) => !id.startsWith(FAKE_UNGRANTED_WABA_PREFIX));
     const body = { data: { is_valid: true, granular_scopes: [{ scope: MANAGEMENT_SCOPE, target_ids: targetIds }] } };
     reply({ response: request.response, status: OK_STATUS, body });
   }
@@ -175,12 +178,19 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
       const owned = recorded.filter((entry) => isOwned({ resourceId: entry.resourceId, resourceIds }));
       return reply({ response, status: OK_STATUS, body: owned.map((entry) => entry.request) });
     }
+    if (request.path === GRANTS_PATH) {
+      const { wabaIds } = grantsBodySchema.parse(await readBody({ request: request.request }));
+      wabaIds.forEach((wabaId) => grantedWabaIds.add(wabaId));
+      return reply({ response, status: OK_STATUS, body: {} });
+    }
     if (request.path === RESET_PATH) {
       const body = await readBody({ request: request.request });
       const { resourceIds } = resetBodySchema.parse(body === null ? {} : body);
       const scope = resourceIds === undefined ? null : resourceIds;
       keepUnowned({ entries: recorded, scope });
       keepUnowned({ entries: queued, scope });
+      if (scope === null) grantedWabaIds.clear();
+      else scope.forEach((resourceId) => grantedWabaIds.delete(resourceId));
       if (scope === null) sentCounts.clear();
       else scope.forEach((resourceId) => sentCounts.delete(resourceId));
       return reply({ response, status: OK_STATUS, body: {} });
@@ -270,6 +280,10 @@ export class FakeGraph {
 
   async respondWith(input: FakeGraphResponse): Promise<void> {
     await fetch(`${this.baseUrl}${RESPONSES_PATH}`, { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(input) });
+  }
+
+  async grantWabas(input: { wabaIds: string[] }): Promise<void> {
+    await fetch(`${this.baseUrl}${GRANTS_PATH}`, { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(input) });
   }
 
   async reset(): Promise<void> {

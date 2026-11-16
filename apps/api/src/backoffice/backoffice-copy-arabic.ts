@@ -44,6 +44,7 @@ export const ARABIC_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: 'الأرقام',
   [BackofficeCopyKey.NumbersCaption]: 'أرقام WhatsApp، مرتبة بالحالة ثم بالتسمية',
   [BackofficeCopyKey.NumbersConnect]: 'ربط رقم WhatsApp',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'ربط رقم من نشاطنا التجاري الخاص',
   [BackofficeCopyKey.NumbersEmptyTitle]: 'لا أرقام بعد',
   [BackofficeCopyKey.NumbersEmptyBody]: 'لا شيء يُستقبل أو يُرسل حتى تسجّل رقمًا وتفعّله.',
   [BackofficeCopyKey.NumbersColumnLabel]: 'التسمية',
@@ -85,6 +86,16 @@ export const ARABIC_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     'اختياري، 6 أرقام. اتركه فارغًا لرقم جديد وسينشئ zapbip رمزًا. الرقم الذي له تحقق بخطوتين يحتاج إلى رمزه. يُخزَّن مشفّرًا.',
   [BackofficeCopyKey.ConnectButton]: 'الربط عبر Meta',
+  [BackofficeCopyKey.ConnectOwnTitle]: 'ربط رقم من نشاطنا التجاري الخاص',
+  [BackofficeCopyKey.ConnectOwnIntro]: 'أكّد برمز تطبيق المصادقة. ثم اختر رقمًا ينتمي بالفعل إلى النشاط التجاري الذي يملك تطبيق Meta.',
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    'اختر الرقم وأعطه تسمية، وإن أردت فحدد رمز PIN للتحقق بخطوتين. يسجّل zapbip الرقم ويشترك في الويب هوك.',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'الرقم',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]:
+    'لم يُعثر على أي رقم غير مسجّل في النشاط التجاري. جميعها مسجّلة بالفعل أو لا يستطيع الرمز المميز الوصول إليها.',
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    'الرمز المميز لمستخدم النظام غير مهيأ. اضبط META_SYSTEM_USER_TOKEN في Worker لاستخدام هذا الخيار.',
+  [BackofficeCopyKey.ConnectOwnSubmit]: 'ربط الرقم',
   [BackofficeCopyKey.ConnectStatusWorking]: 'جارٍ إنهاء التسجيل…',
   [BackofficeCopyKey.ConnectStatusCancelled]: 'أُلغي التسجيل. لم يُحفظ شيء.',
   [BackofficeCopyKey.ConnectStatusError]: 'لم تُنهِ Meta عملية التسجيل. حاول مرة أخرى.',
@@ -233,6 +244,7 @@ export const ARABIC_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: 'رُفض رمز التأكيد',
   [BackofficeCopyKey.AuditActionSignOut]: 'تسجيل الخروج',
   [BackofficeCopyKey.AuditActionNumberRegistered]: 'تسجيل رقم',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: 'تم ربط رقم من النشاط التجاري الخاص',
   [BackofficeCopyKey.AuditActionNumberVerified]: 'التحقق من رقم',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'استبدال رمز الوصول',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'استبدال سرّ التطبيق',

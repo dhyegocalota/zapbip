@@ -1,4 +1,5 @@
 import type { Bindings } from '../../contract/env';
+import { OptionalWorkerSecret } from '../../operations/worker-secret';
 
 export type WebhookEnvironment = {
   verifyToken: string;
@@ -23,6 +24,12 @@ export function readWebhookEnvironment(input: { env: Bindings }): WebhookEnviron
 
 export function readMetaAppSecret(input: { env: Bindings }): string {
   return requireBinding({ env: input.env, name: 'META_APP_SECRET' });
+}
+
+export function readMetaSystemUserToken(input: { env: Bindings }): string | null {
+  const value = input.env[OptionalWorkerSecret.MetaSystemUserToken];
+  const isPresent = value !== undefined && value.trim().length > 0;
+  return isPresent ? value : null;
 }
 
 export function readWhatsAppEnvironment(input: { env: Bindings }): WhatsAppEnvironment {
