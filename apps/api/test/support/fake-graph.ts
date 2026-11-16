@@ -18,6 +18,7 @@ const RESPONSES_PATH = `${CONTROL_PREFIX}/responses`;
 const RESET_PATH = `${CONTROL_PREFIX}/reset`;
 const GRANTS_PATH = `${CONTROL_PREFIX}/grants`;
 const RESOURCE_IDS_QUERY = 'resourceIds';
+const INSPECTED_TOKEN_QUERY = 'input_token';
 const RESOURCE_ID_SEPARATOR = ',';
 const RESOURCE_ID_PATTERN = /^\/v\d+\.\d+\/(\d+)/;
 const SEND_PATH_PATTERN = /^\/v\d+\.\d+\/\d+\/messages$/;
@@ -83,6 +84,10 @@ function isOwned(input: { resourceId: string | null; resourceIds: string[] | nul
 function resourceIdsOf(input: { url: string | undefined }): string[] | null {
   const query = new URL(input.url === undefined ? '' : input.url, `http://${LOCAL_HOST}`).searchParams.get(RESOURCE_IDS_QUERY);
   return query === null ? null : query.split(RESOURCE_ID_SEPARATOR);
+}
+
+function inspectedTokenOf(input: { url: string | undefined }): string | null {
+  return new URL(input.url === undefined ? '' : input.url, `http://${LOCAL_HOST}`).searchParams.get(INSPECTED_TOKEN_QUERY);
 }
 
 function keepUnowned(input: { entries: { resourceId: string | null }[]; scope: string[] | null }): void {
@@ -213,7 +218,8 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
       const previous = sentCounts.get(key);
       sentCounts.set(key, previous === undefined ? 1 : previous + 1);
     }
-    const scopeId = scopeIdOf({ path: request.path, body });
+    const isInspection = method === 'GET' && DEBUG_TOKEN_PATH_PATTERN.test(request.path);
+    const scopeId = isInspection ? inspectedTokenOf({ url: request.request.url }) : scopeIdOf({ path: request.path, body });
     const isQueuedFor = (entry: FakeGraphResponse) =>
       entry.method === method && entry.path === request.path && (entry.scopeId === undefined || entry.scopeId === scopeId);
     const queuedAt = queued.findIndex(isQueuedFor);

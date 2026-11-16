@@ -97,6 +97,9 @@ export const SPANISH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Número',
   [BackofficeCopyKey.ConnectOwnNoNumbers]:
     'No se encontró ningún número sin registrar en el negocio. Todos ya están registrados o el token no tiene acceso a ellos.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    'El token alcanza {accounts} cuentas de WhatsApp Business. Se encontraron {found} números y {connected} ya están conectados.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: 'Falló la búsqueda del negocio dueño de la app: {reason}',
   [BackofficeCopyKey.ConnectOwnNotConfigured]:
     'El token del usuario del sistema no está configurado. Define META_SYSTEM_USER_TOKEN en el Worker para usar esta opción.',
   [BackofficeCopyKey.ConnectOwnSubmit]: 'Conectar número',

@@ -7,19 +7,31 @@ export const GRAPH_NO_RESPONSE_STATUS = 0;
 const JSON_CONTENT_TYPE = 'application/json';
 
 const graphErrorSchema = z.object({
-  error: z.object({ code: z.number(), error_user_title: z.string().nullable().default(null) }),
+  error: z.object({
+    code: z.number(),
+    error_user_title: z.string().nullable().default(null),
+    message: z.string().nullable().default(null),
+  }),
 });
 
 export class GraphRequestError extends Error {
   readonly status: number;
   readonly errorCode: number | null;
   readonly errorTitle: string | null;
+  readonly errorDetail: string | null;
 
-  constructor(input: { status: number; errorCode: number | null; errorTitle: string | null; message: string }) {
+  constructor(input: {
+    status: number;
+    errorCode: number | null;
+    errorTitle: string | null;
+    errorDetail?: string | null;
+    message: string;
+  }) {
     super(input.message);
     this.status = input.status;
     this.errorCode = input.errorCode;
     this.errorTitle = input.errorTitle;
+    this.errorDetail = input.errorDetail === undefined ? null : input.errorDetail;
   }
 }
 
@@ -42,6 +54,7 @@ async function failureOf(input: { response: Response }): Promise<GraphRequestErr
     status: response.status,
     errorCode: parsed.success ? parsed.data.error.code : null,
     errorTitle: parsed.success ? parsed.data.error.error_user_title : null,
+    errorDetail: parsed.success ? parsed.data.error.message : null,
     message: `Graph request failed with status ${response.status}`,
   });
 }

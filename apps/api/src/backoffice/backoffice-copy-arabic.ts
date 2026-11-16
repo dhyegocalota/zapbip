@@ -93,6 +93,9 @@ export const ARABIC_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'الرقم',
   [BackofficeCopyKey.ConnectOwnNoNumbers]:
     'لم يُعثر على أي رقم غير مسجّل في النشاط التجاري. جميعها مسجّلة بالفعل أو لا يستطيع الرمز المميز الوصول إليها.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    'يصل الرمز المميز إلى {accounts} من حسابات WhatsApp Business. عُثر على {found} من الأرقام و{connected} منها متصل بالفعل.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: 'فشل البحث عن النشاط التجاري المالك للتطبيق: {reason}',
   [BackofficeCopyKey.ConnectOwnNotConfigured]:
     'الرمز المميز لمستخدم النظام غير مهيأ. اضبط META_SYSTEM_USER_TOKEN في Worker لاستخدام هذا الخيار.',
   [BackofficeCopyKey.ConnectOwnSubmit]: 'ربط الرقم',

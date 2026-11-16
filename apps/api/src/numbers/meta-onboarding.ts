@@ -14,6 +14,11 @@ const PHONE_NUMBER_FIELDS = 'id,display_phone_number,verified_name';
 const WEBHOOK_FIELDS = 'webhook_configuration';
 const EXCHANGE_FAILURE_MESSAGE = 'Graph token exchange failed';
 const MANAGEMENT_SCOPE = 'whatsapp_business_management';
+const OWNER_BUSINESS_FIELDS = 'owner_business';
+const BUSINESS_WABA_EDGES = ['owned_whatsapp_business_accounts', 'client_whatsapp_business_accounts'];
+const BUSINESS_WABA_PAGE_QUERY = 'fields=id&limit=100';
+const FAILURE_PART_SEPARATOR = ' · ';
+const UNEXPECTED_RESPONSE_FAILURE = 'unexpected response';
 const EXCHANGE_REJECTION_CODES: number[] = [WhatsAppErrorCode.InvalidParameter, WhatsAppErrorCode.AuthOAuth];
 
 export enum OnboardingStep {
@@ -54,6 +59,8 @@ export type OwnBusinessNumber = { phoneNumberId: string; wabaId: string; display
 
 export type OnboardOwnBusinessNumberInput = Omit<OnboardNumberInput, 'appSecret' | 'code'> & { systemUserToken: string };
 
+export type OwnBusinessDiscovery = { numbers: OwnBusinessNumber[]; accountCount: number; ownerLookupFailure: string | null };
+
 export type DiscoverOwnBusinessNumbersInput = Pick<OnboardOwnBusinessNumberInput, 'graphBaseUrl' | 'systemUserToken' | 'fetcher'>;
 
 type Graph = ReturnType<typeof createGraphClient>;
@@ -61,6 +68,7 @@ type Graph = ReturnType<typeof createGraphClient>;
 type FinishOnboardingInput = Pick<OnboardNumberInput, 'webhookUrl' | 'verifyToken' | 'phoneNumberId' | 'wabaId' | 'pin'> & {
   graph: Graph;
   accessToken: string;
+  grantedWabaIdsOf: () => Promise<string[]>;
 };
 
 const exchangeResponseSchema = z.object({ access_token: z.string().min(1) });
@@ -73,6 +81,8 @@ const debugTokenResponseSchema = z.object({
     granular_scopes: z.array(z.object({ scope: z.string(), target_ids: z.array(z.string()).default([]) })).default([]),
   }),
 });
+const ownerBusinessResponseSchema = z.object({ owner_business: z.object({ id: z.string() }) });
+const businessWabasResponseSchema = z.object({ data: z.array(z.object({ id: z.string() })) });
 const webhookConfigurationResponseSchema = z.object({
   webhook_configuration: z.object({ phone_number: z.string().optional() }).optional(),
 });
@@ -149,9 +159,39 @@ async function grantedWabaIdsOf(input: { graph: Graph; accessToken: string }): P
   return [...new Set(managed.flatMap((granted) => granted.target_ids))];
 }
 
-async function assertWabaGranted(input: { graph: Graph; accessToken: string; wabaId: string }): Promise<void> {
-  const { graph, accessToken, wabaId } = input;
-  const isGranted = (await grantedWabaIdsOf({ graph, accessToken })).includes(wabaId);
+async function ownerBusinessWabaIdsOf(input: { graph: Graph }): Promise<string[]> {
+  const { graph } = input;
+  const app = ownerBusinessResponseSchema.parse(await graph.get({ path: `/${META_APP_ID}?fields=${OWNER_BUSINESS_FIELDS}` }));
+  const listed = await Promise.all(
+    BUSINESS_WABA_EDGES.map((edge) => graph.get({ path: `/${app.owner_business.id}/${edge}?${BUSINESS_WABA_PAGE_QUERY}` })),
+  );
+  return listed.flatMap((business) => businessWabasResponseSchema.parse(business).data.map((account) => account.id));
+}
+
+function lookupFailureOf(input: { error: unknown }): string {
+  const { error } = input;
+  if (error instanceof z.ZodError) return UNEXPECTED_RESPONSE_FAILURE;
+  if (!(error instanceof GraphRequestError)) throw error;
+  const parts = [`HTTP ${error.status}`, error.errorCode === null ? null : `code ${error.errorCode}`, error.errorDetail];
+  return parts.filter((part) => part !== null).join(FAILURE_PART_SEPARATOR);
+}
+
+async function reachableWabaIdsOf(input: {
+  graph: Graph;
+  accessToken: string;
+}): Promise<{ wabaIds: string[]; ownerLookupFailure: string | null }> {
+  const { graph, accessToken } = input;
+  const grantedIds = await inStep({ step: OnboardingStep.Inspect, run: () => grantedWabaIdsOf({ graph, accessToken }) });
+  try {
+    const ownerIds = await ownerBusinessWabaIdsOf({ graph });
+    return { wabaIds: [...new Set([...grantedIds, ...ownerIds])], ownerLookupFailure: null };
+  } catch (error) {
+    return { wabaIds: grantedIds, ownerLookupFailure: lookupFailureOf({ error }) };
+  }
+}
+
+async function assertWabaGranted(input: { grantedWabaIds: string[]; wabaId: string }): Promise<void> {
+  const isGranted = input.grantedWabaIds.includes(input.wabaId);
   if (!isGranted) throw new OnboardingError({ step: OnboardingStep.Inspect, kind: GraphErrorKind.NotGranted });
 }
 
@@ -168,7 +208,10 @@ async function finishOnboarding(input: FinishOnboardingInput): Promise<Onboarded
   const { graph, accessToken, webhookUrl, verifyToken, phoneNumberId, wabaId } = input;
   const pin = input.pin === null ? generateTwoStepPin() : input.pin;
   const phoneNumber = await inStep({ step: OnboardingStep.Read, run: () => readPhoneNumber({ graph, wabaId, phoneNumberId }) });
-  await inStep({ step: OnboardingStep.Inspect, run: () => assertWabaGranted({ graph, accessToken, wabaId }) });
+  await inStep({
+    step: OnboardingStep.Inspect,
+    run: async () => assertWabaGranted({ grantedWabaIds: await input.grantedWabaIdsOf(), wabaId }),
+  });
   await inStep({ step: OnboardingStep.Read, run: () => assertWebhookUnclaimed({ graph, phoneNumberId, webhookUrl }) });
   await inStep({ step: OnboardingStep.Subscribe, run: () => graph.post({ path: `/${wabaId}/subscribed_apps`, body: {} }) });
   await inStep({
@@ -190,13 +233,24 @@ export async function onboardNumber(input: OnboardNumberInput): Promise<Onboarde
   const { graphBaseUrl, webhookUrl, verifyToken, phoneNumberId, wabaId, pin, fetcher } = input;
   const accessToken = await inStep({ step: OnboardingStep.Exchange, run: () => exchangeCode(input) });
   const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken, developmentMediaOrigin: null, fetcher });
-  return finishOnboarding({ graph, accessToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin });
+  const grantedWabaIds = () => grantedWabaIdsOf({ graph, accessToken });
+  return finishOnboarding({ graph, accessToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin, grantedWabaIdsOf: grantedWabaIds });
 }
 
 export async function onboardOwnBusinessNumber(input: OnboardOwnBusinessNumberInput): Promise<OnboardedNumber> {
   const { graphBaseUrl, systemUserToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin, fetcher } = input;
   const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken: systemUserToken, developmentMediaOrigin: null, fetcher });
-  return finishOnboarding({ graph, accessToken: systemUserToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin });
+  const grantedWabaIds = async () => (await reachableWabaIdsOf({ graph, accessToken: systemUserToken })).wabaIds;
+  return finishOnboarding({
+    graph,
+    accessToken: systemUserToken,
+    webhookUrl,
+    verifyToken,
+    phoneNumberId,
+    wabaId,
+    pin,
+    grantedWabaIdsOf: grantedWabaIds,
+  });
 }
 
 async function listWabaNumbers(input: { graph: Graph; wabaId: string }): Promise<OwnBusinessNumber[]> {
@@ -210,13 +264,13 @@ async function listWabaNumbers(input: { graph: Graph; wabaId: string }): Promise
   }));
 }
 
-export async function discoverOwnBusinessNumbers(input: DiscoverOwnBusinessNumbersInput): Promise<OwnBusinessNumber[]> {
+export async function discoverOwnBusinessNumbers(input: DiscoverOwnBusinessNumbersInput): Promise<OwnBusinessDiscovery> {
   const { graphBaseUrl, systemUserToken, fetcher } = input;
   const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken: systemUserToken, developmentMediaOrigin: null, fetcher });
-  const wabaIds = await inStep({ step: OnboardingStep.Inspect, run: () => grantedWabaIdsOf({ graph, accessToken: systemUserToken }) });
+  const { wabaIds, ownerLookupFailure } = await reachableWabaIdsOf({ graph, accessToken: systemUserToken });
   const listed = await inStep({
     step: OnboardingStep.Read,
     run: () => Promise.all(wabaIds.map((wabaId) => listWabaNumbers({ graph, wabaId }))),
   });
-  return listed.flat();
+  return { numbers: listed.flat(), accountCount: wabaIds.length, ownerLookupFailure };
 }

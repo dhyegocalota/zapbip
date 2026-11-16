@@ -94,6 +94,9 @@ export const KOREAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectOwnNumbersLegend]: '번호',
   [BackofficeCopyKey.ConnectOwnNoNumbers]:
     '비즈니스에서 등록되지 않은 번호를 찾지 못했습니다. 모두 이미 등록되었거나 토큰이 접근할 수 없습니다.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticCounts]:
+    '토큰이 WhatsApp Business 계정 {accounts}개에 접근합니다. 번호 {found}개를 찾았고 {connected}개는 이미 연결되어 있습니다.',
+  [BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed]: '앱을 소유한 비즈니스 조회에 실패했습니다: {reason}',
   [BackofficeCopyKey.ConnectOwnNotConfigured]:
     '시스템 사용자 토큰이 설정되지 않았습니다. 이 옵션을 쓰려면 Worker에 META_SYSTEM_USER_TOKEN을 설정하세요.',
   [BackofficeCopyKey.ConnectOwnSubmit]: '번호 연결',
