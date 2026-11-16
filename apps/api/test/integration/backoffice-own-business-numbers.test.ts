@@ -1,4 +1,4 @@
-import { META_APP_ID, ONBOARDING_PIN_PATTERN, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { ONBOARDING_PIN_PATTERN, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { numberAdminOf } from '../../src/adapters/d1/d1-number-admin';
 import { numberRegistryOf } from '../../src/adapters/d1/d1-number-registry';
@@ -31,6 +31,8 @@ const OWNER_BUSINESS_ID = '3000000000000700';
 const GRAPH_INVALID_REQUEST_CODE = 100;
 const OWNER_LOOKUP_REFUSAL = 'Unsupported get request';
 const MANAGEMENT_SCOPE = 'whatsapp_business_management';
+const BUSINESS_SCOPE = 'business_management';
+const NO_BUSINESS_GRANTED_FAILURE = 'the token is granted business_management on no business';
 const PIN = '482915';
 const LABEL = 'Own line';
 const WRONG_CODE = '000000';
@@ -59,18 +61,25 @@ function respondToGet(input: { path: string; status: number; body: unknown }): P
   return fakeGraph.respondWith({ method: 'GET', path: `/${GRAPH_API_VERSION}${input.path}`, status: input.status, body: input.body });
 }
 
-async function tokenTargets(input: { wabaIds: string[] }): Promise<void> {
+async function tokenGrants(input: { wabaIds: string[]; businessIds: string[] }): Promise<void> {
+  const granularScopes = [
+    { scope: MANAGEMENT_SCOPE, target_ids: input.wabaIds },
+    { scope: BUSINESS_SCOPE, target_ids: input.businessIds },
+  ];
   await fakeGraph.respondWith({
     method: 'GET',
     path: `/${GRAPH_API_VERSION}/debug_token`,
     status: STATUS_OK,
-    body: { data: { is_valid: true, granular_scopes: [{ scope: MANAGEMENT_SCOPE, target_ids: input.wabaIds }] } },
+    body: { data: { is_valid: true, granular_scopes: granularScopes } },
     scopeId: SYSTEM_USER_TOKEN,
   });
 }
 
+function tokenTargets(input: { wabaIds: string[] }): Promise<void> {
+  return tokenGrants({ wabaIds: input.wabaIds, businessIds: [OWNER_BUSINESS_ID] });
+}
+
 async function ownerBusinessHolds(input: { wabaIds: string[] }): Promise<void> {
-  await respondToGet({ path: `/${META_APP_ID}`, status: STATUS_OK, body: { owner_business: { id: OWNER_BUSINESS_ID } } });
   await respondToGet({
     path: `/${OWNER_BUSINESS_ID}/owned_whatsapp_business_accounts`,
     status: STATUS_OK,
@@ -81,7 +90,7 @@ async function ownerBusinessHolds(input: { wabaIds: string[] }): Promise<void> {
 
 async function ownerBusinessRefuses(): Promise<void> {
   await respondToGet({
-    path: `/${META_APP_ID}`,
+    path: `/${OWNER_BUSINESS_ID}/owned_whatsapp_business_accounts`,
     status: STATUS_BAD_REQUEST,
     body: { error: { code: GRAPH_INVALID_REQUEST_CODE, message: OWNER_LOOKUP_REFUSAL } },
   });
@@ -191,6 +200,19 @@ describe('the own business connect path', () => {
         key: BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed,
         locale: OwnerLocale.PortugueseBrazil,
         values: { reason: `HTTP ${STATUS_BAD_REQUEST} · code ${GRAPH_INVALID_REQUEST_CODE} · ${OWNER_LOOKUP_REFUSAL}` },
+      }),
+    );
+  });
+
+  test('explains an empty list when the token is granted no business', async () => {
+    await tokenGrants({ wabaIds: [], businessIds: [] });
+    const body = await selectionPage();
+    expect(body).toContain(diagnosticCountsOf({ accounts: 0, found: 0, connected: 0 }));
+    expect(body).toContain(
+      renderBackofficeCopy({
+        key: BackofficeCopyKey.ConnectOwnDiagnosticLookupFailed,
+        locale: OwnerLocale.PortugueseBrazil,
+        values: { reason: NO_BUSINESS_GRANTED_FAILURE },
       }),
     );
   });

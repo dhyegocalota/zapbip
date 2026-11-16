@@ -14,7 +14,8 @@ const PHONE_NUMBER_FIELDS = 'id,display_phone_number,verified_name';
 const WEBHOOK_FIELDS = 'webhook_configuration';
 const EXCHANGE_FAILURE_MESSAGE = 'Graph token exchange failed';
 const MANAGEMENT_SCOPE = 'whatsapp_business_management';
-const OWNER_BUSINESS_FIELDS = 'owner_business';
+const BUSINESS_SCOPE = 'business_management';
+const NO_BUSINESS_GRANTED_FAILURE = 'the token is granted business_management on no business';
 const BUSINESS_WABA_EDGES = ['owned_whatsapp_business_accounts', 'client_whatsapp_business_accounts'];
 const BUSINESS_WABA_PAGE_QUERY = 'fields=id&limit=100';
 const FAILURE_PART_SEPARATOR = ' · ';
@@ -81,7 +82,6 @@ const debugTokenResponseSchema = z.object({
     granular_scopes: z.array(z.object({ scope: z.string(), target_ids: z.array(z.string()).default([]) })).default([]),
   }),
 });
-const ownerBusinessResponseSchema = z.object({ owner_business: z.object({ id: z.string() }) });
 const businessWabasResponseSchema = z.object({ data: z.array(z.object({ id: z.string() })) });
 const webhookConfigurationResponseSchema = z.object({
   webhook_configuration: z.object({ phone_number: z.string().optional() }).optional(),
@@ -150,20 +150,31 @@ async function readPhoneNumber(input: { graph: Graph; wabaId: string; phoneNumbe
   return { displayNumber, verifiedName: phoneNumber.verified_name };
 }
 
-async function grantedWabaIdsOf(input: { graph: Graph; accessToken: string }): Promise<string[]> {
+type GrantedScope = { scope: string; target_ids: string[] };
+
+async function grantedScopesOf(input: { graph: Graph; accessToken: string }): Promise<GrantedScope[]> {
   const { graph, accessToken } = input;
   const inspected = debugTokenResponseSchema.parse(
     await graph.get({ path: `/debug_token?input_token=${encodeURIComponent(accessToken)}` }),
   );
-  const managed = inspected.data.granular_scopes.filter((granted) => granted.scope === MANAGEMENT_SCOPE);
-  return [...new Set(managed.flatMap((granted) => granted.target_ids))];
+  return inspected.data.granular_scopes;
 }
 
-async function ownerBusinessWabaIdsOf(input: { graph: Graph }): Promise<string[]> {
-  const { graph } = input;
-  const app = ownerBusinessResponseSchema.parse(await graph.get({ path: `/${META_APP_ID}?fields=${OWNER_BUSINESS_FIELDS}` }));
+function targetIdsOf(input: { grantedScopes: GrantedScope[]; scope: string }): string[] {
+  const matching = input.grantedScopes.filter((granted) => granted.scope === input.scope);
+  return [...new Set(matching.flatMap((granted) => granted.target_ids))];
+}
+
+async function grantedWabaIdsOf(input: { graph: Graph; accessToken: string }): Promise<string[]> {
+  return targetIdsOf({ grantedScopes: await grantedScopesOf(input), scope: MANAGEMENT_SCOPE });
+}
+
+async function businessWabaIdsOf(input: { graph: Graph; businessIds: string[] }): Promise<string[]> {
+  const { graph, businessIds } = input;
   const listed = await Promise.all(
-    BUSINESS_WABA_EDGES.map((edge) => graph.get({ path: `/${app.owner_business.id}/${edge}?${BUSINESS_WABA_PAGE_QUERY}` })),
+    businessIds.flatMap((businessId) =>
+      BUSINESS_WABA_EDGES.map((edge) => graph.get({ path: `/${businessId}/${edge}?${BUSINESS_WABA_PAGE_QUERY}` })),
+    ),
   );
   return listed.flatMap((business) => businessWabasResponseSchema.parse(business).data.map((account) => account.id));
 }
@@ -181,10 +192,13 @@ async function reachableWabaIdsOf(input: {
   accessToken: string;
 }): Promise<{ wabaIds: string[]; ownerLookupFailure: string | null }> {
   const { graph, accessToken } = input;
-  const grantedIds = await inStep({ step: OnboardingStep.Inspect, run: () => grantedWabaIdsOf({ graph, accessToken }) });
+  const grantedScopes = await inStep({ step: OnboardingStep.Inspect, run: () => grantedScopesOf({ graph, accessToken }) });
+  const grantedIds = targetIdsOf({ grantedScopes, scope: MANAGEMENT_SCOPE });
+  const businessIds = targetIdsOf({ grantedScopes, scope: BUSINESS_SCOPE });
+  if (businessIds.length === 0) return { wabaIds: grantedIds, ownerLookupFailure: NO_BUSINESS_GRANTED_FAILURE };
   try {
-    const ownerIds = await ownerBusinessWabaIdsOf({ graph });
-    return { wabaIds: [...new Set([...grantedIds, ...ownerIds])], ownerLookupFailure: null };
+    const businessAccountIds = await businessWabaIdsOf({ graph, businessIds });
+    return { wabaIds: [...new Set([...grantedIds, ...businessAccountIds])], ownerLookupFailure: null };
   } catch (error) {
     return { wabaIds: grantedIds, ownerLookupFailure: lookupFailureOf({ error }) };
   }
