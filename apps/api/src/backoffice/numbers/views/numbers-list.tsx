@@ -19,6 +19,11 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
       {translate(BackofficeCopyKey.NumbersConnect)}
     </a>
   );
+  const ownBusinessLink = (
+    <a href={`${BackofficePath.Numbers}/${NumberSegment.Connect}/${NumberSegment.Own}`} class="button button-secondary">
+      {translate(BackofficeCopyKey.NumbersConnectOwnBusiness)}
+    </a>
+  );
   const hasPending = entries.some((entry) => entry.state === WhatsAppNumberState.Pending);
   return (
     <Layout
@@ -35,13 +40,21 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
     >
       <div class="page-head">
         <h1>{translate(BackofficeCopyKey.NumbersTitle)}</h1>
-        {entries.length === 0 ? null : registerLink}
+        {entries.length === 0 ? null : (
+          <div class="title-row">
+            {ownBusinessLink}
+            {registerLink}
+          </div>
+        )}
       </div>
       {entries.length === 0 ? (
         <section class="card empty-state" aria-labelledby="numbers-empty-title">
           <h2 id="numbers-empty-title">{translate(BackofficeCopyKey.NumbersEmptyTitle)}</h2>
           <p>{translate(BackofficeCopyKey.NumbersEmptyBody)}</p>
-          {registerLink}
+          <div class="title-row">
+            {ownBusinessLink}
+            {registerLink}
+          </div>
         </section>
       ) : (
         <table class="data-table">

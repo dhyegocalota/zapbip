@@ -6,6 +6,7 @@ export enum BackofficeAuditAction {
   StepUpFailed = 'step_up.failed',
   SignOut = 'sign_out',
   NumberRegistered = 'number.registered',
+  NumberConnectedFromOwnBusiness = 'number.connected_from_own_business',
   NumberVerified = 'number.verified',
   NumberAccessTokenRotated = 'number.access_token_rotated',
   MetaAppSecretRotated = 'meta_app.app_secret_rotated',

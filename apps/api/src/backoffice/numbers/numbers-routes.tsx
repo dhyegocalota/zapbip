@@ -4,6 +4,7 @@ import type { BackofficeEnv } from '../backoffice-env';
 import { BackofficePath } from '../backoffice-paths';
 import { signedInPageContext } from '../page-context';
 import { connectRoutes } from './routes/connect-routes';
+import { ownBusinessRoutes } from './routes/own-business-routes';
 import { numberRoutes } from './routes/number-routes';
 import { NumbersListPage } from './views/numbers-list';
 
@@ -15,4 +16,5 @@ numbersRoutes.get(BackofficePath.Numbers, async (context) => {
 });
 
 numbersRoutes.route('/', connectRoutes);
+numbersRoutes.route('/', ownBusinessRoutes);
 numbersRoutes.route('/', numberRoutes);

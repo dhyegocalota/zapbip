@@ -13,7 +13,8 @@ import { HomePage } from '../../src/backoffice/views/home';
 import { StateBadge } from '../../src/backoffice/numbers/components/state-badge';
 import { DATA_REPORT, EMPTY_REPORT, homeOverview, METRICS_FILTER, NOW, numberEntry, PAGE } from './backoffice-page-fixtures';
 
-const PAGE_HEAD_WITH_ACTION_PATTERN = /<div class="page-head"><h1>[^<]+<\/h1><a [^>]*button-primary/;
+const PAGE_HEAD_WITH_ACTION_PATTERN =
+  /<div class="page-head"><h1>[^<]+<\/h1><div class="title-row"><a [^>]*button-secondary[^>]*>[^<]+<\/a><a [^>]*button-primary/;
 const PAGE_HEAD_ALONE_PATTERN = /<div class="page-head"><h1>[^<]+<\/h1><\/div>/;
 const EMPTY_STATE_PATTERN = /class="[^"]*\bempty-state\b/g;
 const PRIMARY_BUTTON_PATTERN = /button-primary/g;

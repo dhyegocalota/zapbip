@@ -46,6 +46,7 @@ export const FRENCH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: 'Numéros',
   [BackofficeCopyKey.NumbersCaption]: 'Numéros WhatsApp, par état puis par libellé',
   [BackofficeCopyKey.NumbersConnect]: 'Connecter un numéro WhatsApp',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'Connecter un numéro de notre propre entreprise',
   [BackofficeCopyKey.NumbersEmptyTitle]: 'Aucun numéro pour l’instant',
   [BackofficeCopyKey.NumbersEmptyBody]: 'Rien n’est reçu ni envoyé tant que vous n’avez pas enregistré et activé un numéro.',
   [BackofficeCopyKey.NumbersColumnLabel]: 'Libellé',
@@ -89,6 +90,17 @@ export const FRENCH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     'Facultatif, 6 chiffres. Laissez vide pour un nouveau numéro et zapbip en crée un. Un numéro qui a déjà la vérification en deux étapes a besoin de son PIN. Il est conservé chiffré.',
   [BackofficeCopyKey.ConnectButton]: 'Se connecter avec Meta',
+  [BackofficeCopyKey.ConnectOwnTitle]: 'Connecter un numéro de notre propre entreprise',
+  [BackofficeCopyKey.ConnectOwnIntro]:
+    "Confirmez avec le code de votre authentificateur. Ensuite, vous choisissez un numéro qui appartient déjà à l'entreprise propriétaire de l'application Meta.",
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    'Choisissez le numéro, donnez-lui une étiquette et, si vous le souhaitez, définissez le code PIN en deux étapes. zapbip enregistre le numéro et abonne le webhook.',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Numéro',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]:
+    "Aucun numéro non enregistré n'a été trouvé dans l'entreprise. Tous sont déjà enregistrés ou le jeton n'y a pas accès.",
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    "Le jeton de l'utilisateur système n'est pas configuré. Définissez META_SYSTEM_USER_TOKEN dans le Worker pour utiliser cette option.",
+  [BackofficeCopyKey.ConnectOwnSubmit]: 'Connecter le numéro',
   [BackofficeCopyKey.ConnectStatusWorking]: 'Finalisation de l’inscription…',
   [BackofficeCopyKey.ConnectStatusCancelled]: 'Inscription annulée. Rien n’a été enregistré.',
   [BackofficeCopyKey.ConnectStatusError]: 'Meta n’a pas terminé l’inscription. Réessayez.',
@@ -238,6 +250,7 @@ export const FRENCH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: 'Code de vérification renforcée refusé',
   [BackofficeCopyKey.AuditActionSignOut]: 'Déconnexion',
   [BackofficeCopyKey.AuditActionNumberRegistered]: 'Numéro enregistré',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: "Numéro connecté depuis l'entreprise propre",
   [BackofficeCopyKey.AuditActionNumberVerified]: 'Numéro vérifié',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'Jeton d’accès remplacé',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'Secret de l’application remplacé',

@@ -88,3 +88,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0065](0065-a-new-owner-speaks-the-language-they-write-then-the-calling-code-then-english.md) | A new owner's language is the language they write in, then the calling code, then English | Accepted | 2026-11-14 |
 | [0066](0066-the-connector-runtime-is-set-by-one-zapbip-json-file.md) | The connector runtime is set by one zapbip.json file | Accepted | 2026-11-14 |
 | [0067](0067-the-two-step-pin-is-optional-and-sealed-per-number.md) | The two-step PIN is optional and sealed per number | Accepted | 2026-11-16 |
+| [0068](0068-numbers-of-the-business-that-owns-the-meta-app-connect-through-a-system-user-token.md) | Numbers of the business that owns the Meta app connect through a system user token | Accepted | 2026-11-16 |

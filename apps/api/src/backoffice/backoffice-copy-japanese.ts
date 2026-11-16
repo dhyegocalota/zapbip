@@ -44,6 +44,7 @@ export const JAPANESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: '番号',
   [BackofficeCopyKey.NumbersCaption]: 'WhatsApp番号（状態順、次にラベル順）',
   [BackofficeCopyKey.NumbersConnect]: 'WhatsApp番号を接続',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: '自社ビジネスの番号を接続',
   [BackofficeCopyKey.NumbersEmptyTitle]: '番号はまだありません',
   [BackofficeCopyKey.NumbersEmptyBody]: '番号を登録して有効にするまで、送受信はできません。',
   [BackofficeCopyKey.NumbersColumnLabel]: 'ラベル',
@@ -86,6 +87,15 @@ export const JAPANESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     '任意、6桁。新しい番号は空欄のままにするとzapbipが作成します。すでに2段階認証がある番号にはそのPINが必要です。PINは暗号化して保存されます。',
   [BackofficeCopyKey.ConnectButton]: 'Metaで接続',
+  [BackofficeCopyKey.ConnectOwnTitle]: '自社ビジネスの番号を接続',
+  [BackofficeCopyKey.ConnectOwnIntro]: '認証アプリのコードで確認します。その後、Metaアプリを所有するビジネスにすでにある番号を選びます。',
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    '番号を選び、ラベルを付け、必要なら2段階認証のPINを設定します。zapbipが番号を登録し、Webhookを購読します。',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: '番号',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]: 'ビジネスに未登録の番号が見つかりませんでした。すべて登録済みか、トークンから見えません。',
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    'システムユーザートークンが設定されていません。このオプションを使うには、WorkerにMETA_SYSTEM_USER_TOKENを設定してください。',
+  [BackofficeCopyKey.ConnectOwnSubmit]: '番号を接続',
   [BackofficeCopyKey.ConnectStatusWorking]: 'サインアップを完了しています…',
   [BackofficeCopyKey.ConnectStatusCancelled]: 'サインアップをキャンセルしました。何も保存されていません。',
   [BackofficeCopyKey.ConnectStatusError]: 'Metaがサインアップを完了できませんでした。もう一度お試しください。',
@@ -235,6 +245,7 @@ export const JAPANESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: 'ステップアップコードが拒否されました',
   [BackofficeCopyKey.AuditActionSignOut]: 'ログアウト',
   [BackofficeCopyKey.AuditActionNumberRegistered]: '番号を登録',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: '自社ビジネスの番号を接続しました',
   [BackofficeCopyKey.AuditActionNumberVerified]: '番号を検証',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'アクセストークンを入れ替え',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'アプリシークレットを入れ替え',

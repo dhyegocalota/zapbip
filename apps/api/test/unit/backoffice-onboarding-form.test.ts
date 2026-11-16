@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
-import { parseOnboarding } from '../../src/backoffice/numbers/onboarding-form';
+import { parseOnboarding, parseOwnBusiness } from '../../src/backoffice/numbers/onboarding-form';
 
 const VALID_FORM = {
   [NumberFormField.SignupCode]: 'signup-code',
@@ -50,5 +50,33 @@ describe('the onboarding form', () => {
     [NumberFormField.Pin, 'abcdef', BackofficeCopyKey.FieldErrorPin],
   ])('reports only %s when it is %j', (field, value, error) => {
     expect(parseOnboarding({ form: { ...VALID_FORM, [field]: value } })).toEqual({ isValid: false, errors: { [field]: error } });
+  });
+});
+
+describe('the own business form', () => {
+  const OWN_FORM = {
+    [NumberFormField.OwnNumber]: ' 1000000000000601 ',
+    [NumberFormField.Label]: ' Own line ',
+    [NumberFormField.Pin]: '',
+  };
+
+  it('parses a chosen number, trims the label and reads an empty PIN as no PIN', () => {
+    expect(parseOwnBusiness({ form: OWN_FORM })).toEqual({
+      isValid: true,
+      request: { phoneNumberId: '1000000000000601', label: 'Own line', pin: null },
+    });
+  });
+
+  it('asks for a chosen number, a label and a six digit PIN', () => {
+    expect(
+      parseOwnBusiness({ form: { [NumberFormField.OwnNumber]: '', [NumberFormField.Label]: '', [NumberFormField.Pin]: '12345' } }),
+    ).toEqual({
+      isValid: false,
+      errors: {
+        [NumberFormField.OwnNumber]: BackofficeCopyKey.FieldErrorRequired,
+        [NumberFormField.Label]: BackofficeCopyKey.FieldErrorLabelLength,
+        [NumberFormField.Pin]: BackofficeCopyKey.FieldErrorPin,
+      },
+    });
   });
 });

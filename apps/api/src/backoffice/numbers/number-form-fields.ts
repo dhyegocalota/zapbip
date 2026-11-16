@@ -6,6 +6,7 @@ export enum NumberFormField {
   Label = 'label',
   SignupCode = 'signupCode',
   Pin = 'pin',
+  OwnNumber = 'ownNumber',
   AccessToken = 'accessToken',
   State = 'state',
   ConfirmDisable = 'confirmDisable',

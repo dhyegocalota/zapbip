@@ -18,6 +18,7 @@ export type Bindings = {
   INSTALL_PAGE_LIMITER: RateLimit;
   WHATSAPP_VERIFY_TOKEN?: string;
   META_APP_SECRET?: string;
+  META_SYSTEM_USER_TOKEN?: string;
   WHATSAPP_GRAPH_BASE_URL?: string;
   WHATSAPP_MEDIA_DOWNLOAD_ORIGIN?: string;
   WHATSAPP_SEND_THROUGH_GRAPH?: string;

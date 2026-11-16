@@ -50,7 +50,18 @@ export type OnboardNumberInput = {
   fetcher: typeof fetch;
 };
 
+export type OwnBusinessNumber = { phoneNumberId: string; wabaId: string; displayNumber: string; verifiedName: string | null };
+
+export type OnboardOwnBusinessNumberInput = Omit<OnboardNumberInput, 'appSecret' | 'code'> & { systemUserToken: string };
+
+export type DiscoverOwnBusinessNumbersInput = Pick<OnboardOwnBusinessNumberInput, 'graphBaseUrl' | 'systemUserToken' | 'fetcher'>;
+
 type Graph = ReturnType<typeof createGraphClient>;
+
+type FinishOnboardingInput = Pick<OnboardNumberInput, 'webhookUrl' | 'verifyToken' | 'phoneNumberId' | 'wabaId' | 'pin'> & {
+  graph: Graph;
+  accessToken: string;
+};
 
 const exchangeResponseSchema = z.object({ access_token: z.string().min(1) });
 const errorBodySchema = z.object({ error: z.object({ code: z.number() }) });
@@ -129,14 +140,18 @@ async function readPhoneNumber(input: { graph: Graph; wabaId: string; phoneNumbe
   return { displayNumber, verifiedName: phoneNumber.verified_name };
 }
 
-async function assertWabaGranted(input: { graph: Graph; accessToken: string; wabaId: string }): Promise<void> {
-  const { graph, accessToken, wabaId } = input;
+async function grantedWabaIdsOf(input: { graph: Graph; accessToken: string }): Promise<string[]> {
+  const { graph, accessToken } = input;
   const inspected = debugTokenResponseSchema.parse(
     await graph.get({ path: `/debug_token?input_token=${encodeURIComponent(accessToken)}` }),
   );
-  const isGranted = inspected.data.granular_scopes.some(
-    (granted) => granted.scope === MANAGEMENT_SCOPE && granted.target_ids.includes(wabaId),
-  );
+  const managed = inspected.data.granular_scopes.filter((granted) => granted.scope === MANAGEMENT_SCOPE);
+  return [...new Set(managed.flatMap((granted) => granted.target_ids))];
+}
+
+async function assertWabaGranted(input: { graph: Graph; accessToken: string; wabaId: string }): Promise<void> {
+  const { graph, accessToken, wabaId } = input;
+  const isGranted = (await grantedWabaIdsOf({ graph, accessToken })).includes(wabaId);
   if (!isGranted) throw new OnboardingError({ step: OnboardingStep.Inspect, kind: GraphErrorKind.NotGranted });
 }
 
@@ -149,11 +164,9 @@ async function assertWebhookUnclaimed(input: { graph: Graph; phoneNumberId: stri
   if (!isOwnOrigin) throw new OnboardingError({ step: OnboardingStep.Read, kind: GraphErrorKind.WebhookClaimedElsewhere });
 }
 
-export async function onboardNumber(input: OnboardNumberInput): Promise<OnboardedNumber> {
-  const { graphBaseUrl, webhookUrl, verifyToken, phoneNumberId, wabaId, fetcher } = input;
+async function finishOnboarding(input: FinishOnboardingInput): Promise<OnboardedNumber> {
+  const { graph, accessToken, webhookUrl, verifyToken, phoneNumberId, wabaId } = input;
   const pin = input.pin === null ? generateTwoStepPin() : input.pin;
-  const accessToken = await inStep({ step: OnboardingStep.Exchange, run: () => exchangeCode(input) });
-  const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken, developmentMediaOrigin: null, fetcher });
   const phoneNumber = await inStep({ step: OnboardingStep.Read, run: () => readPhoneNumber({ graph, wabaId, phoneNumberId }) });
   await inStep({ step: OnboardingStep.Inspect, run: () => assertWabaGranted({ graph, accessToken, wabaId }) });
   await inStep({ step: OnboardingStep.Read, run: () => assertWebhookUnclaimed({ graph, phoneNumberId, webhookUrl }) });
@@ -171,4 +184,39 @@ export async function onboardNumber(input: OnboardNumberInput): Promise<Onboarde
       }),
   });
   return { accessToken, pin, ...phoneNumber };
+}
+
+export async function onboardNumber(input: OnboardNumberInput): Promise<OnboardedNumber> {
+  const { graphBaseUrl, webhookUrl, verifyToken, phoneNumberId, wabaId, pin, fetcher } = input;
+  const accessToken = await inStep({ step: OnboardingStep.Exchange, run: () => exchangeCode(input) });
+  const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken, developmentMediaOrigin: null, fetcher });
+  return finishOnboarding({ graph, accessToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin });
+}
+
+export async function onboardOwnBusinessNumber(input: OnboardOwnBusinessNumberInput): Promise<OnboardedNumber> {
+  const { graphBaseUrl, systemUserToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin, fetcher } = input;
+  const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken: systemUserToken, developmentMediaOrigin: null, fetcher });
+  return finishOnboarding({ graph, accessToken: systemUserToken, webhookUrl, verifyToken, phoneNumberId, wabaId, pin });
+}
+
+async function listWabaNumbers(input: { graph: Graph; wabaId: string }): Promise<OwnBusinessNumber[]> {
+  const { graph, wabaId } = input;
+  const listed = phoneNumbersResponseSchema.parse(await graph.get({ path: `/${wabaId}/phone_numbers?fields=${PHONE_NUMBER_FIELDS}` }));
+  return listed.data.map((phoneNumber) => ({
+    phoneNumberId: phoneNumber.id,
+    wabaId,
+    displayNumber: phoneNumber.display_phone_number,
+    verifiedName: phoneNumber.verified_name,
+  }));
+}
+
+export async function discoverOwnBusinessNumbers(input: DiscoverOwnBusinessNumbersInput): Promise<OwnBusinessNumber[]> {
+  const { graphBaseUrl, systemUserToken, fetcher } = input;
+  const graph = createGraphClient({ baseUrl: graphBaseUrl, accessToken: systemUserToken, developmentMediaOrigin: null, fetcher });
+  const wabaIds = await inStep({ step: OnboardingStep.Inspect, run: () => grantedWabaIdsOf({ graph, accessToken: systemUserToken }) });
+  const listed = await inStep({
+    step: OnboardingStep.Read,
+    run: () => Promise.all(wabaIds.map((wabaId) => listWabaNumbers({ graph, wabaId }))),
+  });
+  return listed.flat();
 }

@@ -101,3 +101,9 @@ zapbip has one Meta app, `714836811568009`, for staging and production ([ADR 003
     Expect: each translated template changes from Pending to Approved with the category Utility.
 
     If it fails: as in step 11. A rejected translated template changes nothing for the owner, who keeps receiving the English one.
+
+13. **Create the system user token for the app's own business (optional).** Embedded Signup never lets the business portfolio that owns the app (Logic Bit, app `714836811568009`) be picked, so its numbers connect through a system user token instead ([ADR 0068](../adr/0068-numbers-of-the-business-that-owns-the-meta-app-connect-through-a-system-user-token.md)). In Business settings, Users, System users, add an admin system user. Choose Add assets: assign the app `714836811568009` and each Logic Bit WhatsApp Business account with full control. Choose Generate token for that app, token expiration Never, with `whatsapp_business_management`, `whatsapp_business_messaging` and `business_management`. Copy the token once, then in your own terminal run `pnpm --filter @zapbip/api exec wrangler secret put META_SYSTEM_USER_TOKEN` (production) and type the token at that prompt, nowhere else; for staging add `--env staging`. Never paste it into chat, a ticket or the repository. Without the secret the backoffice shows "not configured" for this path and everything else works.
+
+    Expect: `pnpm --filter @zapbip/api exec wrangler secret list` shows `META_SYSTEM_USER_TOKEN`, and Numbers, "Connect a number from our own business", lists the numbers of those accounts that are not connected yet ([backoffice.md](backoffice.md), step 2).
+
+    If it fails: an empty list means the system user lacks the app or an account, or the token lacks `whatsapp_business_management`; assign them and generate a token again. A failure naming `inspect` with `auth` is a revoked or wrong token.

@@ -45,6 +45,7 @@ export const GERMAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.NumbersTitle]: 'Nummern',
   [BackofficeCopyKey.NumbersCaption]: 'WhatsApp-Nummern, nach Status, dann nach Bezeichnung',
   [BackofficeCopyKey.NumbersConnect]: 'WhatsApp-Nummer verbinden',
+  [BackofficeCopyKey.NumbersConnectOwnBusiness]: 'Nummer aus unserem eigenen Unternehmen verbinden',
   [BackofficeCopyKey.NumbersEmptyTitle]: 'Noch keine Nummern',
   [BackofficeCopyKey.NumbersEmptyBody]: 'Es wird nichts empfangen oder gesendet, bis du eine Nummer registrierst und aktivierst.',
   [BackofficeCopyKey.NumbersColumnLabel]: 'Bezeichnung',
@@ -88,6 +89,17 @@ export const GERMAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.ConnectPinHelp]:
     'Optional, 6 Ziffern. Für eine neue Nummer leer lassen, zapbip erstellt eine. Eine Nummer mit Zwei-Schritt-Verifizierung braucht ihre PIN. Sie wird verschlüsselt gespeichert.',
   [BackofficeCopyKey.ConnectButton]: 'Mit Meta verbinden',
+  [BackofficeCopyKey.ConnectOwnTitle]: 'Nummer aus unserem eigenen Unternehmen verbinden',
+  [BackofficeCopyKey.ConnectOwnIntro]:
+    'Bestätige mit deinem Authenticator-Code. Danach wählst du eine Nummer, die bereits dem Unternehmen gehört, das die Meta-App besitzt.',
+  [BackofficeCopyKey.ConnectOwnSelectIntro]:
+    'Wähle die Nummer, gib ihr eine Bezeichnung und lege bei Bedarf die Zwei-Schritt-PIN fest. zapbip registriert die Nummer und abonniert den Webhook.',
+  [BackofficeCopyKey.ConnectOwnNumbersLegend]: 'Nummer',
+  [BackofficeCopyKey.ConnectOwnNoNumbers]:
+    'Im Unternehmen wurde keine unregistrierte Nummer gefunden. Alle sind bereits registriert oder das Token erreicht sie nicht.',
+  [BackofficeCopyKey.ConnectOwnNotConfigured]:
+    'Das Token des Systembenutzers ist nicht konfiguriert. Setze META_SYSTEM_USER_TOKEN im Worker, um diese Option zu nutzen.',
+  [BackofficeCopyKey.ConnectOwnSubmit]: 'Nummer verbinden',
   [BackofficeCopyKey.ConnectStatusWorking]: 'Registrierung wird abgeschlossen…',
   [BackofficeCopyKey.ConnectStatusCancelled]: 'Registrierung abgebrochen. Es wurde nichts gespeichert.',
   [BackofficeCopyKey.ConnectStatusError]: 'Meta hat die Registrierung nicht abgeschlossen. Versuche es erneut.',
@@ -237,6 +249,7 @@ export const GERMAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AuditActionStepUpFailed]: 'Step-up-Code abgelehnt',
   [BackofficeCopyKey.AuditActionSignOut]: 'Abmeldung',
   [BackofficeCopyKey.AuditActionNumberRegistered]: 'Nummer registriert',
+  [BackofficeCopyKey.AuditActionNumberConnectedFromOwnBusiness]: 'Nummer aus eigenem Unternehmen verbunden',
   [BackofficeCopyKey.AuditActionNumberVerified]: 'Nummer verifiziert',
   [BackofficeCopyKey.AuditActionNumberAccessTokenRotated]: 'Zugriffstoken ersetzt',
   [BackofficeCopyKey.AuditActionMetaAppSecretRotated]: 'App-Geheimnis ersetzt',

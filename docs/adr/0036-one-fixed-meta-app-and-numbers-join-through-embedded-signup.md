@@ -28,7 +28,7 @@ A webhook override on `subscribed_apps` routes one WABA's deliveries to its own 
    3. calls `POST /{phone_number_id}/register` with the PIN;
    4. reads `GET /{waba_id}/phone_numbers`. The posted phone number ID must appear there, which proves the number belongs to the WABA; the display number and the verified name come from the same read.
 
-   The number is stored as `pending` with the sealed business token. Verify and activate stay as they are.
+   The number is stored as `pending` with the sealed business token. Verify and activate stay as they are. (Amended 2026-11-16 by [ADR 0068](0068-numbers-of-the-business-that-owns-the-meta-app-connect-through-a-system-user-token.md): the business portfolio that owns the app cannot be picked in the popup, so its numbers connect through a system user token and the same steps after the exchange.)
 5. **The PIN is typed by the operator.** It is never stored, logged or put in a flash. A new number takes it as its two-step PIN. A number that already has one needs that PIN. (Amended 2026-11-16 by [ADR 0067](0067-the-two-step-pin-is-optional-and-sealed-per-number.md): the PIN is optional, generated when empty, and always sealed on the number row. The text above is kept for history.)
 6. **Step-up before the popup.** The 30-second code cannot wait for a TOTP code typed after the flow. A fresh code is verified first, and it grants the session one onboarding submission for 10 minutes (`backoffice_sessions.onboarding_grant_until`). The final post consumes the grant atomically before anything else happens.
 7. **Graph API version.** The calls use `GRAPH_API_VERSION` (`v24.0`), the version the repository already pins. `FB.init` takes the same constant.
